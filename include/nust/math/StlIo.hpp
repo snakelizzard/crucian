@@ -44,7 +44,7 @@ namespace nupic {
 //--------------------------------------------------------------------------------
 // IO CONTROL AND MANIPULATORS
 //--------------------------------------------------------------------------------
-typedef enum { CSR = 0, CSR_01, BINARY, AS_DENSE } SPARSE_IO_TYPE;
+typedef enum { BINARY, AS_DENSE } SPARSE_IO_TYPE;
 
 struct IOControl {
   int abbr;           // shorten long vectors output
@@ -61,7 +61,7 @@ struct IOControl {
   bool bit_vector; // output 0/1 vector compactly
 
   inline IOControl(int a = -1, bool s = true, bool pp = false,
-                   const char *psep = " ", SPARSE_IO_TYPE smio = CSR,
+                   const char *psep = " ", SPARSE_IO_TYPE smio = BINARY,
                    bool cts = false, bool cfs = false, bool bv = false)
       : abbr(a), output_n_elts(s), pair_paren(pp), pair_sep(psep),
         convert_to_sparse(cts), convert_from_sparse(cfs), sparse_io(smio),
@@ -74,7 +74,7 @@ struct IOControl {
     pair_sep = " ";
     convert_to_sparse = false;
     convert_from_sparse = false;
-    sparse_io = CSR;
+    sparse_io = BINARY;
     bit_vector = false;
   }
 };
@@ -147,20 +147,6 @@ operator<<(std::basic_ostream<CharT, Traits> &out_stream, debug d) {
   io_control.output_n_elts = false;
   io_control.pair_sep = ",";
   io_control.pair_paren = true;
-  return out_stream;
-}
-
-template <typename CharT, typename Traits>
-inline std::basic_istream<CharT, Traits> &
-from_csr_01(std::basic_istream<CharT, Traits> &in_stream) {
-  io_control.convert_from_sparse = CSR_01;
-  return in_stream;
-}
-
-template <typename CharT, typename Traits>
-inline std::basic_ostream<CharT, Traits> &
-to_csr_01(std::basic_ostream<CharT, Traits> &out_stream) {
-  io_control.convert_to_sparse = CSR_01;
   return out_stream;
 }
 
@@ -344,17 +330,7 @@ template <typename T, bool> struct vector_loader {
  */
 template <typename T> struct vector_loader<T, true> {
   inline void load(size_t n, std::istream &in_stream, std::vector<T> &v) {
-    if (io_control.convert_from_sparse == CSR_01) {
-
-      std::fill(v.begin(), v.end(), static_cast<T> (0));
-
-      for (size_t i = 0; i != n; ++i) {
-        int index = 0;
-        in_stream >> index;
-        v[index] = static_cast<T> (1);
-      }
-
-    } else if (io_control.bit_vector) {
+    if (io_control.bit_vector) {
 
       for (size_t i = 0; i != n; ++i) {
         float x = 0;
@@ -415,13 +391,7 @@ template <typename T> struct vector_saver<T, true> {
     if (io_control.abbr > 0)
       n = std::min(static_cast<size_t> (io_control.abbr), n);
 
-    if (io_control.convert_to_sparse == CSR_01) {
-
-      for (size_t i = 0; i != n; ++i)
-        if (!is_zero(v[i]))
-          out_stream << i << ' ';
-
-    } else if (io_control.bit_vector) {
+    if (io_control.bit_vector) {
 
       size_t k = 7;
       for (size_t i = 0; i != v.size(); ++i) {

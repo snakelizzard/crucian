@@ -27,7 +27,7 @@
 #ifndef NTA_TYPES_HPP
 #define NTA_TYPES_HPP
 
-#include <nust/types/Types.h>
+#include <nust/types/NtaTypes.hpp>
 
 //----------------------------------------------------------------------
 
