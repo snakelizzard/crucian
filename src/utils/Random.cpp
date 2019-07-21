@@ -34,7 +34,7 @@
 #include <nust/utils/Log.hpp>
 #include <nust/utils/Random.hpp>
 
-using namespace nupic;
+using namespace nust;
 Random *Random::theInstanceP_ = nullptr;
 RandomSeedFuncPtr Random::seeder_ = nullptr;
 
@@ -56,7 +56,7 @@ static NTA_UInt64 badSeeder() {
 // When we have different algorithms RandomImpl will become an interface
 // class and subclasses will implement specific algorithms
 
-namespace nupic {
+namespace nust {
 class RandomImpl {
 public:
   RandomImpl(UInt64 seed);
@@ -78,7 +78,7 @@ private:
   int rptr_;
   int fptr_;
 };
-}; // namespace nupic
+}; // namespace nust
 
 Random::Random(const Random &r) {
   NTA_CHECK(r.impl_ != nullptr);
@@ -263,7 +263,7 @@ RandomImpl::RandomImpl(UInt64 seed) {
 #endif
 }
 
-namespace nupic {
+namespace nust {
 std::ostream &operator<<(std::ostream &outStream, const Random &r) {
   outStream << "random-v1 ";
   outStream << r.seed_ << " ";
@@ -353,10 +353,10 @@ bool RandomImpl::operator==(const RandomImpl &o) const {
 // Unless there is a logic error, should not be called if
 // the Random singleton has not been initialized.
 NTA_UInt64 GetRandomSeed() {
-  Random *r = nupic::Random::theInstanceP_;
+  Random *r = nust::Random::theInstanceP_;
   NTA_CHECK(r != nullptr);
   NTA_UInt64 result = r->getUInt64();
   return result;
 }
 
-} // namespace nupic
+} // namespace nust

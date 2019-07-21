@@ -27,9 +27,9 @@
 #include <nust/utils/Log.hpp>
 
 #include <vector>
-using namespace nupic;
+using namespace nust;
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -174,6 +174,6 @@ inline std::ostream &operator<<(std::ostream &outStream,
 // End namespace
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust
 
 #endif // NTA_SEGMENTUPDATE_HPP

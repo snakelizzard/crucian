@@ -65,7 +65,7 @@
  * pointers to numpy array buffers, avoiding a copy step.
  */
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -251,7 +251,7 @@ public:
   static const UInt VERSION = 2;
 
 private:
-  nupic::Random _rng;
+  nust::Random _rng;
 
   //-----------------------------------------------------------------------
   /**
@@ -1119,7 +1119,7 @@ std::ostream &operator<<(std::ostream &outStream, const Cells4 &cells);
 //-----------------------------------------------------------------------
 } // end namespace Cells4
 } // end namespace algorithms
-} // end namespace nupic
+} // end namespace nust
 
 //-----------------------------------------------------------------------
 #endif // NTA_Cells4_HPP

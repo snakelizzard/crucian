@@ -21,7 +21,7 @@
  */
 
 /** @file
- * A few types used in nupic/math and nupic/algorithms.
+ * A few types used in nust/math and nust/algorithms.
  */
 
 #ifndef NTA_MATH_TYPES_HPP
@@ -37,7 +37,7 @@
 
 /* This file is used by array_algo.hpp */
 
-namespace nupic {
+namespace nust {
 
 //--------------------------------------------------------------------------------
 // BYTE VECTOR
@@ -47,9 +47,9 @@ namespace nupic {
  * Going to a real vector of bits is slower when accessing the individual bits,
  * but this vector of bytes can still be fed to the SSE with good results.
  */
-struct ByteVector : public std::vector<nupic::Byte> {
+struct ByteVector : public std::vector<nust::Byte> {
   inline ByteVector(size_t n = 0)
-      : std::vector<nupic::Byte>(n, static_cast<nupic::Byte> (0)) {}
+      : std::vector<nust::Byte>(n, static_cast<nust::Byte> (0)) {}
 
   /**
    * Use these two functions when converting with a vector of int or float
@@ -57,7 +57,7 @@ struct ByteVector : public std::vector<nupic::Byte> {
    * the same as the byte representation of ints and floats.
    */
   template <typename It>
-  inline ByteVector(It begin, size_t n) : std::vector<nupic::Byte>(n, 0) {
+  inline ByteVector(It begin, size_t n) : std::vector<nust::Byte>(n, 0) {
     for (size_t i = 0; i != this->size(); ++i)
       (*this)[i] = *begin++ != 0;
   }
@@ -312,6 +312,6 @@ struct SparseVector : public Buffer<std::pair<T1, T2>> {
 };
 
 //--------------------------------------------------------------------------------
-}; // end namespace nupic
+}; // end namespace nust
 
 #endif // NTA_MATH_TYPES_HPP

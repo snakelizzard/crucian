@@ -30,7 +30,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace nupic {
+namespace nust {
 
 /**
  * @b Description
@@ -74,6 +74,6 @@ private:
   static std::ostream *ostream_;
 };
 
-} // namespace nupic
+} // namespace nust
 
 #endif // NTA_LOG_ITEM_HPP

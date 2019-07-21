@@ -79,7 +79,7 @@
 
 //-----------------------------------------------------------------------
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -817,7 +817,7 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate);
 //-----------------------------------------------------------------------
 } // end namespace Cells4
 } // end namespace algorithms
-} // end namespace nupic
+} // end namespace nust
 
 //-----------------------------------------------------------------------
 #endif // NTA_SEGMENT_HPP

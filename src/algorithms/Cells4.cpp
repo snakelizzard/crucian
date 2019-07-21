@@ -40,7 +40,7 @@
 #include <nust/utils/Log.hpp>
 #include <nust/utils/Random.hpp>
 
-using namespace nupic::algorithms::Cells4;
+using namespace nust::algorithms::Cells4;
 
 Cells4::Cells4(UInt nColumns, UInt nCellsPerCol, UInt activationThreshold,
                UInt minThreshold, UInt newSynapseCount,
@@ -202,19 +202,19 @@ void Cells4::addOutSynapses(UInt dstCellIdx, UInt dstSegIdx, It newSynapse,
 }
 
 // explicit instantiations for the method above
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
-template void Cells4::addOutSynapses(nupic::UInt, nupic::UInt,
-                                     std::set<nupic::UInt>::const_iterator,
-                                     std::set<nupic::UInt>::const_iterator);
-template void Cells4::addOutSynapses(nupic::UInt, nupic::UInt,
-                                     std::vector<nupic::UInt>::const_iterator,
-                                     std::vector<nupic::UInt>::const_iterator);
+template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
+                                     std::set<nust::UInt>::const_iterator,
+                                     std::set<nust::UInt>::const_iterator);
+template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
+                                     std::vector<nust::UInt>::const_iterator,
+                                     std::vector<nust::UInt>::const_iterator);
 
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust
 
 //--------------------------------------------------------------------------------
 /**

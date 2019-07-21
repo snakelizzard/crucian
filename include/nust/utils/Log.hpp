@@ -32,27 +32,27 @@
 #include <nust/utils/LoggingException.hpp>
 
 #define NTA_DEBUG                                                              \
-  nupic::LogItem(__FILE__, __LINE__, nupic::LogItem::debug).stream()
+  nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 // Can be used in Loggable classes
 #define NTA_LDEBUG(level)                                                      \
   if (logLevel_ < (level)) {                                                   \
   } else                                                                       \
-    nupic::LogItem(__FILE__, __LINE__, nupic::LogItem::debug).stream()
+    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 // For informational messages that report status but do not indicate that
 // anything is wrong
 #define NTA_INFO                                                               \
-  nupic::LogItem(__FILE__, __LINE__, nupic::LogItem::info).stream()
+  nust::LogItem(__FILE__, __LINE__, nust::LogItem::info).stream()
 
 // For messages that indicate a recoverable error or something else that it may
 // be important for the end user to know about.
 #define NTA_WARN                                                               \
-  nupic::LogItem(__FILE__, __LINE__, nupic::LogItem::warn).stream()
+  nust::LogItem(__FILE__, __LINE__, nust::LogItem::warn).stream()
 
 // To throw an exception and make sure the exception message is logged
 // appropriately
-#define NTA_THROW throw nupic::LoggingException(__FILE__, __LINE__)
+#define NTA_THROW throw nust::LoggingException(__FILE__, __LINE__)
 
 // The difference between CHECK and ASSERT is that ASSERT is for
 // performance critical code and can be disabled in a release
@@ -78,7 +78,7 @@
 #define NTA_ASSERT(condition)                                                  \
   if (1) {                                                                     \
   } else                                                                       \
-    nupic::LogItem(__FILE__, __LINE__, nupic::LogItem::debug).stream()
+    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 #endif // NTA_ASSERTIONS_ON
 

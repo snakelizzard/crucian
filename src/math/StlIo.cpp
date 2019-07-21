@@ -27,8 +27,8 @@
 
 #include <nust/math/StlIo.hpp>
 
-namespace nupic {
+namespace nust {
 
 IOControl io_control;
 
-} // end namespace nupic
+} // end namespace nust

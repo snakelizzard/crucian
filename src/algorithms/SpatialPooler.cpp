@@ -34,9 +34,9 @@
 #include <nust/math/Topology.hpp>
 
 using namespace std;
-using namespace nupic;
-using namespace nupic::algorithms::spatial_pooler;
-using namespace nupic::math::topology;
+using namespace nust;
+using namespace nust::algorithms::spatial_pooler;
+using namespace nust::math::topology;
 
 static const Real PERMANENCE_EPSILON = 0.000001;
 
@@ -1329,4 +1329,4 @@ void SpatialPooler::printState(vector<Real> &state) {
   std::cout << "]\n";
 }
 
-nupic::UInt nupic::algorithms::spatial_pooler::SpatialPooler::version() const { return version_; }
+nust::UInt nust::algorithms::spatial_pooler::SpatialPooler::version() const { return version_; }

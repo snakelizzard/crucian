@@ -27,7 +27,7 @@
 #include "nust/utils/LoggingException.hpp"
 #include "nust/utils/LogItem.hpp"
 #include <iostream>
-using namespace nupic;
+using namespace nust;
 
 LoggingException::~LoggingException() {
   try {

@@ -22,8 +22,8 @@
 
 #include <nust/algorithms/Cell.hpp>
 
-using namespace nupic::algorithms::Cells4;
-using namespace nupic;
+using namespace nust::algorithms::Cells4;
+using namespace nust;
 
 Cell::Cell() : _segments(0), _freeSegments(0) {}
 

@@ -37,7 +37,7 @@
 
 using namespace std;
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace spatial_pooler {
 
@@ -1282,5 +1282,5 @@ protected:
 
 } // end namespace spatial_pooler
 } // end namespace algorithms
-} // end namespace nupic
+} // end namespace nust
 #endif // NTA_spatial_pooler_HPP

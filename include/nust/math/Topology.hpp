@@ -31,7 +31,7 @@
 
 #include <nust/types/Types.hpp>
 
-namespace nupic {
+namespace nust {
 namespace math {
 namespace topology {
 
@@ -205,6 +205,6 @@ private:
 
 } // end namespace topology
 } // namespace math
-} // end namespace nupic
+} // end namespace nust
 
 #endif // NTA_TOPOLOGY_HPP

@@ -26,9 +26,9 @@
 #include <nust/types/Types.hpp>
 #include <nust/utils/Log.hpp> // NTA_ASSERT
 
-using namespace nupic;
+using namespace nust;
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -95,6 +95,6 @@ bool operator==(const OutSynapse &a, const OutSynapse &b);
 // End namespace
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust
 
 #endif // NTA_OUTSYNAPSE_HPP

@@ -32,7 +32,7 @@
 
 #include <nust/types/Exception.hpp>
 
-namespace nupic {
+namespace nust {
 class LoggingException : public Exception {
 public:
   LoggingException(const std::string &filename, UInt32 lineno)
@@ -57,7 +57,7 @@ public:
 
   // for Index.hpp: // because stringstream cant take << vector
   LoggingException &
-  operator<<(std::vector<nupic::UInt32, std::allocator<nupic::UInt32>> v) {
+  operator<<(std::vector<nust::UInt32, std::allocator<nust::UInt32>> v) {
     lmessageValid_ = false;
     ss_ << "[";
     for (auto &elem : v)
@@ -90,6 +90,6 @@ private:
   bool alreadyLogged_;
 }; // class LoggingException
 
-} // namespace nupic
+} // namespace nust
 
 #endif // NTA_LOGGING_EXCEPTION_HPP

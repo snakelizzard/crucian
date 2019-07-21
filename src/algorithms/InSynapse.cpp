@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <nust/algorithms/InSynapse.hpp>
 
-using namespace nupic::algorithms::Cells4;
+using namespace nust::algorithms::Cells4;
 
 inline void InSynapse::print(std::ostream &outStream) const {
   outStream << _srcCellIdx << ',' << std::setprecision(4) << _permanence;
@@ -31,7 +31,7 @@ inline void InSynapse::print(std::ostream &outStream) const {
 
 //--------------------------------------------------------------------------------
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -41,4 +41,4 @@ std::ostream &operator<<(std::ostream &outStream, const InSynapse &s) {
 }
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust

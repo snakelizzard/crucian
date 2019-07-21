@@ -24,7 +24,7 @@
 #include <nust/algorithms/SegmentUpdate.hpp>
 #include <nust/utils/Log.hpp>
 
-using namespace nupic::algorithms::Cells4;
+using namespace nust::algorithms::Cells4;
 
 SegmentUpdate::SegmentUpdate()
     : _sequenceSegment(false), _cellIdx(static_cast<UInt> (-1)), _segIdx(static_cast<UInt> (-1)),

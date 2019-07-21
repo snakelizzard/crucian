@@ -35,7 +35,7 @@
 
 //----------------------------------------------------------------------
 
-namespace nupic {
+namespace nust {
 /**
  * @b Responsibility
  *  The Exception class is the standard Numenta exception class.
@@ -55,7 +55,7 @@ namespace nupic {
  *  that makes it much simpler by automatically retreiving the __FILE__
  *  and __LINE__ for you and also using a wrapping LogItem that allows
  *  you to construct the exception message conveniently using the <<
- *  streame operator (see nupic/utils/Log.hpp for further details).
+ *  streame operator (see nust/utils/Log.hpp for further details).
  *
  * @b Notes:
  *  1. Exception is a subclass of the standard std::runtime_error.
@@ -154,6 +154,6 @@ protected:
   std::string stackTrace_;
 
 }; // end class Exception
-} // end namespace nupic
+} // end namespace nust
 
 #endif // NTA_EXCEPTION_HPP

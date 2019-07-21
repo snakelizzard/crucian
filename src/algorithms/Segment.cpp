@@ -36,7 +36,7 @@
 
 #include <nust/algorithms/Segment.hpp>
 
-using namespace nupic::algorithms::Cells4;
+using namespace nust::algorithms::Cells4;
 
 //----------------------------------------------------------------------
 /**
@@ -426,7 +426,7 @@ void Segment::print(std::ostream &outStream, UInt nCellsPerCol) const {
   }
 }
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -446,4 +446,4 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate) {
 }
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust

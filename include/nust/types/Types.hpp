@@ -21,7 +21,7 @@
  */
 
 /** @file
- * Basic C++ type definitions used throughout `nupic.core` and rely on `Types.h`
+ * Basic C++ type definitions used throughout `nust.core` and rely on `Types.h`
  */
 
 #ifndef NTA_TYPES_HPP
@@ -31,7 +31,7 @@
 
 //----------------------------------------------------------------------
 
-namespace nupic {
+namespace nust {
 /**
  * @name Basic types
  *
@@ -110,7 +110,7 @@ typedef NTA_UIntPtr UIntPtr;
 /**
  * Represents a real number(a floating-point number).
  *
- * Same as nupic::Real64 if `NTA_DOUBLE_PRECISION` is defined, nupic::Real32
+ * Same as nust::Real64 if `NTA_DOUBLE_PRECISION` is defined, nust::Real32
  * otherwise.
  */
 typedef NTA_Real Real;
@@ -118,14 +118,14 @@ typedef NTA_Real Real;
 /**
  * Represents a signed integer.
  *
- * Same as nupic::Int64 if `NTA_BIG_INTEGER` is defined, nupic::Int32 otherwise.
+ * Same as nust::Int64 if `NTA_BIG_INTEGER` is defined, nust::Int32 otherwise.
  */
 typedef NTA_Int Int;
 
 /**
  * Represents a unsigned integer.
  *
- * Same as nupic::UInt64 if `NTA_BIG_INTEGER` is defined, nupic::UInt32
+ * Same as nust::UInt64 if `NTA_BIG_INTEGER` is defined, nust::UInt32
  * otherwise.
  */
 typedef NTA_UInt UInt;
@@ -142,7 +142,7 @@ typedef NTA_Size Size;
 /**
  * This enum represents the documented logging level of the debug logger.
  *
- * Use it like `LDEBUG(nupic::LogLevel_XXX)`.
+ * Use it like `LDEBUG(nust::LogLevel_XXX)`.
  */
 enum LogLevel {
   /**
@@ -163,7 +163,7 @@ enum LogLevel {
   LogLevel_Verbose,
 };
 
-} // end namespace nupic
+} // end namespace nust
 
 #ifdef SWIG
 #undef NTA_INTERNAL

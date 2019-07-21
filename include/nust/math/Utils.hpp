@@ -47,7 +47,7 @@
 #include <nust/types/Types.hpp>
 #include <nust/utils/Log.hpp>
 
-namespace nupic {
+namespace nust {
 
 //--------------------------------------------------------------------------------
 /**
@@ -122,7 +122,7 @@ template <typename T> inline void swapBytes(T *pxOut, Size n, const T *pxIn) {
 
 /**
  * Calculates sizeof() types named by string names of types in
- * nupic/types/types. Throws if the requested type cannot be found.
+ * nust/types/types. Throws if the requested type cannot be found.
  *
  * Supported type names include:
  * bool,
@@ -141,7 +141,7 @@ extern size_t GetTypeSize(const std::string &name, bool &isNumeric);
 
 /**
  * Calculates sizeof() types named by string names of types in
- * nupic/types/types. Throws if the requested type cannot be found.
+ * nust/types/types. Throws if the requested type cannot be found.
  *
  * Supported type names include:
  * bool,
@@ -379,6 +379,6 @@ struct select2nd
   }
 };
 
-}; // namespace nupic
+}; // namespace nust
 
 #endif // NTA_UTILS_HPP

@@ -27,7 +27,7 @@
 #include <nust/types/Types.hpp>
 #include <vector>
 
-namespace nupic {
+namespace nust {
 namespace algorithms {
 namespace Cells4 {
 
@@ -249,5 +249,5 @@ public:
 // end namespace
 } // namespace Cells4
 } // namespace algorithms
-} // namespace nupic
+} // namespace nust
 #endif // NTA_CELL_HPP

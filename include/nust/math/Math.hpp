@@ -69,7 +69,7 @@
       boost::BinaryFunctionConcept<BinaryFunction, Ret, Arg1, Arg2>>();
 
 //--------------------------------------------------------------------------------
-namespace nupic {
+namespace nust {
 
 //--------------------------------------------------------------------------------
 // ASSERTIONS
@@ -108,29 +108,29 @@ void ASSERT_VALID_RANGE(It begin, It end, const char *message) {
  * numbers. numeric_limits<float>::epsilon() == 1.19209e-7
  *   numeric_limits<double>::epsilon() == 2.22045e-16
  */
-constexpr nupic::Real Epsilon = nupic::Real(1e-6);
+constexpr nust::Real Epsilon = nust::Real(1e-6);
 
 //--------------------------------------------------------------------------------
 /**
- * Functions that test for positivity or negativity based on nupic::Epsilon.
+ * Functions that test for positivity or negativity based on nust::Epsilon.
  */
 template <typename T> inline bool strictlyNegative(const T &a) {
-  return a < -nupic::Epsilon;
+  return a < -nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool strictlyPositive(const T &a) {
-  return a > nupic::Epsilon;
+  return a > nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool negative(const T &a) {
-  return a <= nupic::Epsilon;
+  return a <= nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool positive(const T &a) {
-  return a >= -nupic::Epsilon;
+  return a >= -nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ template <typename T> struct DistanceToOne {
 //--------------------------------------------------------------------------------
 /**
  * This functor decides whether a number is almost zero or not, using the
- * platform-wide nupic::Epsilon.
+ * platform-wide nust::Epsilon.
  */
 template <typename D> struct IsNearlyZero {
   typedef typename D::result_type value_type;
@@ -188,7 +188,7 @@ template <typename D> struct IsNearlyZero {
   D dist_;
 
   // In the case where D::result_type is integral
-  // we convert nupic::Epsilon to zero!
+  // we convert nust::Epsilon to zero!
   inline IsNearlyZero() : dist_() {}
 
   inline IsNearlyZero(const IsNearlyZero &other) : dist_(other.dist_) {}
@@ -201,7 +201,7 @@ template <typename D> struct IsNearlyZero {
   }
 
   inline bool operator()(const typename D::argument_type &x) const {
-    return dist_(x) <= nupic::Epsilon;
+    return dist_(x) <= nust::Epsilon;
   }
 };
 
@@ -237,18 +237,18 @@ template <typename D> struct IsNearlyZero {
  *  In our application, we are anticipating numbers mostly between 0 and 1,
  *  because they represent probabilities.
  *
- *  Not clear why this is namespace std instead of nupic , but FA says there was
+ *  Not clear why this is namespace std instead of nust , but FA says there was
  *  a "good, ugly" reason to do it this way that he can't remember. - WCS 0206
  */
 template <typename T>
-inline bool nearlyZero(const T &a, const T &epsilon = T(nupic::Epsilon)) {
+inline bool nearlyZero(const T &a, const T &epsilon = T(nust::Epsilon)) {
   return a >= -epsilon && a <= epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline bool nearlyEqual(const T &a, const T &b,
-                        const T &epsilon = nupic::Epsilon) {
+                        const T &epsilon = nust::Epsilon) {
   return nearlyZero((b - a), epsilon);
 }
 
@@ -644,7 +644,7 @@ struct Derivative : public std::unary_function<Float, Float> {
    * Approximates the derivative of F at x.
    */
   inline const Float operator()(const Float &x) const {
-    const Float h = nupic::Epsilon;
+    const Float h = nust::Epsilon;
     return (-f_(x + 2 * h) + 8 * f_(x + h) - 8 * f_(x - h) + f_(x - 2 * h)) /
            (12 * h);
   }
@@ -894,6 +894,6 @@ template <typename T> struct ClipBelow : public std::unary_function<T, T> {
 
 //--------------------------------------------------------------------------------
 
-}; // namespace nupic
+}; // namespace nust
 
 #endif // NTA_MATH_HPP

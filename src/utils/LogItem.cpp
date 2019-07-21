@@ -29,7 +29,7 @@
 #include <nust/utils/LogItem.hpp>
 #include <stdexcept> // runtime_error
 
-using namespace nupic;
+using namespace nust;
 
 std::ostream *LogItem::ostream_ = nullptr;
 

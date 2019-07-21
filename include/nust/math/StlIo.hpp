@@ -39,7 +39,7 @@
 #include <nust/types/Types.hpp>
 #include <nust/math/ArrayAlgo.hpp>
 
-namespace nupic {
+namespace nust {
 
 //--------------------------------------------------------------------------------
 // IO CONTROL AND MANIPULATORS
@@ -281,13 +281,13 @@ inline void binary_load(std::istream &in_stream, It begin, It end) {
 //--------------------------------------------------------------------------------
 template <typename T>
 inline void binary_save(std::ostream &out_stream, const std::vector<T> &v) {
-  nupic::binary_save(out_stream, v.begin(), v.end());
+  nust::binary_save(out_stream, v.begin(), v.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline void binary_load(std::istream &in_stream, std::vector<T> &v) {
-  nupic::binary_load(in_stream, v.begin(), v.end());
+  nust::binary_load(in_stream, v.begin(), v.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -335,7 +335,7 @@ template <typename T> struct vector_loader<T, true> {
       for (size_t i = 0; i != n; ++i) {
         float x = 0;
         in_stream >> x;
-        if (std::abs(x) < nupic::Epsilon)
+        if (std::abs(x) < nust::Epsilon)
           v[i] = 1;
         else
           v[i] = 0;
@@ -567,5 +567,5 @@ inline void show_all_differences(const std::vector<T> &x,
 }
 
 //--------------------------------------------------------------------------------
-} // end namespace nupic
+} // end namespace nust
 #endif // NTA_STL_IO_HPP

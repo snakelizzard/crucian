@@ -28,10 +28,10 @@
 #include <nust/utils/Log.hpp>
 
 using std::vector;
-using namespace nupic;
-using namespace nupic::math::topology;
+using namespace nust;
+using namespace nust::math::topology;
 
-namespace nupic {
+namespace nust {
 namespace math {
 namespace topology {
 
@@ -66,7 +66,7 @@ UInt indexFromCoordinates(const vector<UInt> &coordinates,
 
 } // end namespace topology
 } // namespace math
-} // end namespace nupic
+} // end namespace nust
 
 // ============================================================================
 // NEIGHBORHOOD
