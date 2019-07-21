@@ -26,13 +26,10 @@
 #include <nust/types/Types.hpp>
 #include <nust/utils/Log.hpp> // NTA_ASSERT
 
-using namespace nust;
-
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 class Cells4;
+
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
 /**
@@ -92,9 +89,6 @@ public:
 //--------------------------------------------------------------------------------
 bool operator==(const OutSynapse &a, const OutSynapse &b);
 
-// End namespace
-} // namespace Cells4
-} // namespace algorithms
 } // namespace nust
 
 #endif // NTA_OUTSYNAPSE_HPP

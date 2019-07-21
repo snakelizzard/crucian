@@ -40,7 +40,7 @@
 #include <nust/utils/Log.hpp>
 #include <nust/utils/Random.hpp>
 
-using namespace nust::algorithms::Cells4;
+namespace nust {
 
 Cells4::Cells4(UInt nColumns, UInt nCellsPerCol, UInt activationThreshold,
                UInt minThreshold, UInt newSynapseCount,
@@ -201,20 +201,12 @@ void Cells4::addOutSynapses(UInt dstCellIdx, UInt dstSegIdx, It newSynapse,
   }
 }
 
-// explicit instantiations for the method above
-namespace nust {
-namespace algorithms {
-namespace Cells4 {
 template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
                                      std::set<nust::UInt>::const_iterator,
                                      std::set<nust::UInt>::const_iterator);
 template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
                                      std::vector<nust::UInt>::const_iterator,
                                      std::vector<nust::UInt>::const_iterator);
-
-} // namespace Cells4
-} // namespace algorithms
-} // namespace nust
 
 //--------------------------------------------------------------------------------
 /**
@@ -2023,10 +2015,8 @@ void Cells4::load(std::istream &inStream) {
  * but it's indispensable in development.
  */
 bool Cells4::invariants(bool verbose) const {
-  using namespace std;
-
-  set<string> back_map;
-  set<string> forward_map;
+  std::set<std::string> back_map;
+  std::set<std::string> forward_map;
 
   bool consistent = true;
 
@@ -2052,7 +2042,7 @@ bool Cells4::invariants(bool verbose) const {
 
       for (UInt k = 0; k != seg.size(); ++k) {
 
-        stringstream buf;
+        std::stringstream buf;
         buf << i << '.' << j << '.' << seg[k].srcCellIdx();
 
         if (is_in(buf.str(), back_map)) {
@@ -2071,7 +2061,7 @@ bool Cells4::invariants(bool verbose) const {
 
       const OutSynapse &syn = _outSynapses[i][j];
 
-      stringstream buf;
+      std::stringstream buf;
       buf << syn.dstCellIdx() << '.' << syn.dstSegIdx() << '.' << i;
 
       if (is_in(buf.str(), forward_map)) {
@@ -2851,3 +2841,5 @@ void Cells4::computeForwardPropagation(CState &state) {
 #endif // NTA_ARCH_32/64
 }
 #endif // SOME_STATES_NOT_INDEXED
+
+} //namespace nust

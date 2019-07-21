@@ -66,8 +66,6 @@
  */
 
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 class Cell;
 class Cells4;
@@ -1117,8 +1115,7 @@ std::ostream &operator<<(std::ostream &outStream, const Cells4 &cells);
 #endif
 
 //-----------------------------------------------------------------------
-} // end namespace Cells4
-} // end namespace algorithms
+
 } // end namespace nust
 
 //-----------------------------------------------------------------------

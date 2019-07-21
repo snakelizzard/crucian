@@ -5466,6 +5466,7 @@ dendritic_activation(S nsegs, S max_dendrite_size,
 */
 
 //--------------------------------------------------------------------------------
+
 } // end namespace nust
 
 #endif // NTA_ARRAY_ALGO_HPP

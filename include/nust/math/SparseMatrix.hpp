@@ -33,7 +33,7 @@
 #include <iomanip>
 #include <vector>
 
-#include <boost/unordered_set.hpp>
+#include <unordered_set>
 
 #include <nust/math/ArrayAlgo.hpp>
 #include <nust/math/Math.hpp>
@@ -111,10 +111,6 @@ template <typename UI = nust::UInt32, typename Real_stor = nust::Real32,
           typename I = nust::Int32, typename Real_prec = nust::Real64,
           typename DTZ = nust::DistanceToZero<Real_stor>>
 class SparseMatrix {
-  // TODO find boost config flag to enable ullong as UnsignedInteger
-  // BOOST_CLASS_REQUIRE(UI, boost, UnsignedIntegerConcept);
-  BOOST_CLASS_REQUIRE(I, boost, SignedIntegerConcept);
-
 public:
   typedef UI size_type;              // unsigned integral for sizes
   typedef I difference_type;         // signed integral for differences
@@ -292,9 +288,6 @@ protected:
                                                InputIterator1 ind_end,
                                                const char *where) const {
 #ifdef NTA_ASSERTIONS_ON
-
-    ASSERT_INPUT_ITERATOR(InputIterator1);
-
     NTA_ASSERT(ind_end - ind_it >= 0)
         << "SparseMatrix " << where << ": Invalid iterators";
 
@@ -325,10 +318,6 @@ protected:
                                       const char *where) const {
 
 #ifdef NTA_ASSERTIONS_ON
-
-    ASSERT_INPUT_ITERATOR(InputIterator1);
-    ASSERT_INPUT_ITERATOR(InputIterator2);
-
     NTA_ASSERT(ind_end - ind_it >= 0)
         << "SparseMatrix " << where << ": Invalid iterators";
 
@@ -573,8 +562,6 @@ protected:
   inline void set_row_(size_type row, InputIterator nz_begin,
                        InputIterator nz_end) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-
       assert_valid_row_(row, "set_row_");
 
       NTA_ASSERT(nz_begin <= nz_end)
@@ -928,7 +915,6 @@ protected:
   inline size_type nZerosInRowOnColumns_(size_type row, InputIterator col_begin,
                                          InputIterator col_end) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_(row, "nZerosInRowOnColumns_");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
                                        "nZerosInRowOnColumns_");
@@ -981,7 +967,6 @@ protected:
                                    size_type numZerosAvailable,
                                    value_type value, Random &rng) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       NTA_ASSERT(numToInsert <= numZerosAvailable);
       assert_valid_row_(row, "insertRandomNonZerosIntoColumns_");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
@@ -1143,8 +1128,6 @@ public:
       : nrows_(0), nrows_max_(0), ncols_(0), nnzr_(0), ind_mem_(0), nz_mem_(0),
         ind_(0), nz_(0), indb_(0), nzb_(0), isZero_() {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-
       NTA_CHECK(nrows >= 0)
           << "SparseMatrix::SparseMatrix(nrows, ncols, dense): "
           << "Invalid number of rows: " << nrows << " - Should be >= 0";
@@ -1580,10 +1563,6 @@ public:
    */
   template <typename OutputIterator>
   inline void nNonZerosPerRow(OutputIterator it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       *it = nNonZerosOnRow(row);
       ++it;
@@ -1607,7 +1586,6 @@ public:
                               OutputIterator out_begin) const {
     { // Pre-conditions
       assert_valid_row_it_range_(rows_begin, rows_end, "nNonZerosPerRow");
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
     } // End pre-conditions
 
     InputIterator row;
@@ -1642,7 +1620,6 @@ public:
       assert_valid_row_it_range_(rows_begin, rows_end, "nNonZerosPerRowOnCols");
       assert_valid_sorted_index_range_(nCols(), cols_begin, cols_end,
                                        "nNonZerosPerRowOnCols");
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
     } // End pre-conditions
 
     InputIterator row;
@@ -1687,10 +1664,6 @@ public:
    */
   template <typename OutputIterator>
   inline void nNonZerosPerCol(OutputIterator it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
-    } // End pre-conditions
-
     std::fill(it, it + nCols(), 0);
 
     ITERATE_ON_ALL_ROWS {
@@ -1916,10 +1889,6 @@ public:
    */
   template <typename OutputIterator>
   inline void rowBandwidths(OutputIterator it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       *it = rowBandwidth(row);
       ++it;
@@ -2043,10 +2012,6 @@ public:
    */
   template <typename OutputIterator>
   inline void colBandwidths(OutputIterator it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, size_type);
-    } // End pre-conditions
-
     const size_type ncols = nCols();
     for (size_type col = 0; col != ncols; ++col, ++it)
       *it = colBandwidth(col);
@@ -2172,7 +2137,6 @@ public:
                   InputIterator col_inds_begin, InputIterator col_inds_end,
                   Summary &summary) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       ASSERT_VALID_RANGE(row_inds_begin, row_inds_end,
                          "SparseMatrix nNonZerosPerBox");
       ASSERT_VALID_RANGE(col_inds_begin, col_inds_end,
@@ -2644,8 +2608,6 @@ public:
   template <typename InputIterator>
   inline void fromDense(size_type nrows, size_type ncols, InputIterator dense) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-
       NTA_CHECK(nrows >= 0)
           << "SparseMatrix::fromDense(): "
           << "Invalid number of rows: " << nrows << " - Should be >= 0";
@@ -2677,10 +2639,6 @@ public:
    */
   template <typename OutputIterator>
   inline void toDense(OutputIterator dense) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
-    } // End pre-conditions
-
     const size_type ncols = nCols();
 
     ITERATE_ON_ALL_ROWS
@@ -2948,8 +2906,6 @@ public:
       return;
 
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-
       if (n_del > 0) {
 
         NTA_CHECK(n_del <= (ptrdiff_t)nRows())
@@ -3110,8 +3066,6 @@ public:
       return;
 
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-
       if (n_del > 0) {
 
         NTA_ASSERT(n_del <= (ptrdiff_t)nCols())
@@ -3233,9 +3187,6 @@ public:
   inline size_type addRow(InputIterator1 ind_it, InputIterator1 ind_end,
                           InputIterator2 nz_it, bool zero_permissive = false) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
-
       if (!zero_permissive)
         assert_valid_ivp_range_(nCols(), ind_it, ind_end, nz_it, "addRow");
     } // End pre-conditions
@@ -3293,10 +3244,6 @@ public:
    */
   template <typename InputIterator>
   inline size_type addRow(InputIterator x_begin) {
-    { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     size_type *indb_it = indb_;
     value_type val, *nzb_it = nzb_;
     InputIterator x_it = x_begin, x_end = x_begin + nCols();
@@ -3336,8 +3283,6 @@ public:
   inline void addCol(InputIterator1 ind_it, InputIterator1 ind_end,
                      InputIterator2 nz_it) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_ivp_range_(nRows(), ind_it, ind_end, nz_it, "addCol");
     } // End pre-conditions
 
@@ -3381,10 +3326,6 @@ public:
    * TODO add flag for case where row is already "clean"
    */
   template <typename InputIterator> inline void addCol(InputIterator x_begin) {
-    { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     if (isCompact())
       decompact();
 
@@ -3746,7 +3687,6 @@ public:
                                   InputIterator j_begin, InputIterator j_end,
                                   value_type delta = 1) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
                                        "incrementOnOuterWNZ");
       assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
@@ -3805,7 +3745,6 @@ public:
                                 InputIterator j_begin, InputIterator j_end,
                                 value_type threshold, value_type delta = 1) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
                                        "incrementOnOuterWNZ");
       assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
@@ -3857,8 +3796,6 @@ public:
                            InputIterator2 col_begin, InputIterator2 col_end,
                            value_type delta) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(row_begin, row_end,
                                  "incrementNonZerosOnOuter");
       assert_valid_col_it_range_(col_begin, col_end,
@@ -3911,8 +3848,6 @@ public:
                                                    InputIterator2 col_end,
                                                    value_type delta) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(row_begin, row_end,
                                  "incrementNonZerosOnRowsExcludingCols");
       assert_valid_col_it_range_(col_begin, col_end,
@@ -3967,7 +3902,6 @@ public:
                                     InputIterator row_end, value_type a,
                                     value_type b) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_it_range_(row_begin, row_end, "clipRowsBelowAndAbove");
     } // End pre-conditions
 
@@ -4007,8 +3941,6 @@ public:
                               InputIterator2 col_begin, InputIterator2 col_end,
                               value_type value) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(row_begin, row_end, "setZerosOnOuter");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
                                        "setZerosOnOuter");
@@ -4127,8 +4059,6 @@ public:
                         difference_type numNewNonZerosPerRow, value_type value,
                         Random &rng) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(row_begin, row_end, "setRandomZerosOnOuter");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
                                        "setRandomZerosOnOuter");
@@ -4186,9 +4116,6 @@ public:
                         InputIterator3 numNew_begin, InputIterator3 numNew_end,
                         value_type value, Random &rng) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
-      ASSERT_INPUT_ITERATOR(InputIterator3);
       assert_valid_row_it_range_(row_begin, row_end, "setRandomZerosOnOuter");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
                                        "setRandomZerosOnOuter");
@@ -4255,8 +4182,6 @@ public:
       difference_type numDesiredNonzeros, value_type initialValue,
       Random &rng) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(row_begin, row_end,
                                  "increaseRowNonZeroCountsOnOuterTo");
       assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
@@ -4391,11 +4316,6 @@ public:
   template <typename OutputIterator1, typename OutputIterator2>
   inline void getAllNonZeros(OutputIterator1 nz_i, OutputIterator1 nz_j,
                              OutputIterator2 nz_val) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator2, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       ITERATE_ON_ROW {
         *nz_i = row;
@@ -4435,9 +4355,6 @@ public:
                              bool clean = true) {
     { // Pre-conditions
       const char *where = "SparseMatrix::setAllNonZeros: ";
-
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
 
       NTA_ASSERT(i_end - i_begin == j_end - j_begin)
           << where << "Inconsistent index ranges";
@@ -4613,11 +4530,6 @@ public:
    */
   template <typename OutputIterator>
   inline size_type getDiagonalToSparse(OutputIterator out) const {
-    { // Pre-conditions
-      // boost::function_requires<boost::OutputIterator<OutputIterator,
-      //  std::pair<size_type, value_type> > >;
-    } // End pre-conditions
-
     size_type count = 0;
 
     ITERATE_ON_ALL_ROWS {
@@ -4637,10 +4549,6 @@ public:
    */
   template <typename OutputIterator>
   inline void getDiagonalToDense(OutputIterator out) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       difference_type offset = col_(row, row);
       if (offset >= 0) {
@@ -4662,8 +4570,6 @@ public:
   inline void setElements(InputIterator1 i_begin, InputIterator1 i_end,
                           InputIterator1 j_begin, InputIterator2 v_begin) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(i_begin, i_end, "setElements");
     } // End pre-conditions
 
@@ -4688,8 +4594,6 @@ public:
                           InputIterator1 j_begin,
                           OutputIterator1 v_begin) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, value_type);
       assert_valid_row_it_range_(i_begin, i_end, "getElements");
     } // End pre-conditions
 
@@ -4711,7 +4615,6 @@ public:
                        InputIterator1 j_begin, InputIterator1 j_end,
                        const Other &values) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
       NTA_ASSERT((size_type)values.nRows() >= (size_type)(i_end - i_begin))
           << "SparseMatrix setOuter: "
           << "Matrix to set has too few rows: " << values.nRows()
@@ -4745,8 +4648,6 @@ public:
                        InputIterator2 j_begin, InputIterator2 j_end,
                        Other &values) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
       assert_valid_row_it_range_(i_begin, i_end, "getOuter");
       assert_valid_col_it_range_(i_begin, i_end, "getOuter");
     } // End pre-conditions
@@ -5007,7 +4908,7 @@ public:
       // check that column indices in strictly increasing order
     }
 
-    boost::unordered_set<size_type> skip(it, end);
+    std::unordered_set<size_type> skip(it, end);
 
     ITERATE_ON_ALL_ROWS {
       size_type k = 0;
@@ -5165,10 +5066,6 @@ public:
    */
   template <typename InputIterator>
   inline void setRowFromDense(size_type row, InputIterator begin) {
-    { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     set_row_(row, begin, begin + nCols());
   }
 
@@ -5210,9 +5107,6 @@ public:
   inline void setRowFromSparse(size_type row, InputIterator1 ind_it,
                                InputIterator1 ind_end, InputIterator2 nz_it) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
-
       assert_valid_row_(row, "setRowFromSparse");
       assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
                                        "setRowFromSparse");
@@ -5247,7 +5141,6 @@ public:
                                        value_type init_val) {
     { // Pre-conditions
       NTA_ASSERT(init_val != 0);
-      ASSERT_INPUT_ITERATOR(InputIterator1);
 
       assert_valid_row_(row, "setRowFromSparseWInitVal");
       assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
@@ -5290,7 +5183,6 @@ public:
   template <typename OutputIterator>
   inline void getRowToDense(size_type row, OutputIterator it) const {
     { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
       assert_valid_row_(row, "getRowToDense");
     } // End pre-conditions
 
@@ -5335,8 +5227,6 @@ public:
   inline size_type getRowToSparse(size_type row, OutputIterator1 indIt,
                                   OutputIterator2 nzIt) const {
     { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator2, value_type);
       assert_valid_row_(row, "getRowToSparse");
     } // End pre-conditions
 
@@ -5354,7 +5244,6 @@ public:
   inline size_type getRowIndicesToSparse(size_type row,
                                          OutputIterator1 indIt) const {
     { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
       assert_valid_row_(row, "getRowIndicesToSparse");
     } // End pre-conditions
 
@@ -5438,7 +5327,6 @@ public:
   template <typename OutputIterator>
   inline void getColToDense(size_type col, OutputIterator dense) const {
     { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
       assert_valid_col_(col, "getColToDense");
     } // End pre-conditions
 
@@ -5481,8 +5369,6 @@ public:
   inline size_type getColToSparse(size_type col, OutputIterator1 indIt,
                                   OutputIterator2 nzIt) const {
     { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator2, value_type);
       assert_valid_col_(col, "getColToSparse");
     } // End pre-conditions
 
@@ -5587,7 +5473,6 @@ public:
   template <typename UnaryFunction>
   inline void filterRow(size_type row, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, bool, value_type);
       assert_valid_row_(row, "filterRow");
     } // End pre-conditions
 
@@ -5609,7 +5494,6 @@ public:
   inline size_type filterRow(size_type row, const UnaryFunction &f1,
                              OutputIterator1 cut_ind, OutputIterator2 cut_nz) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, bool, value_type);
       assert_valid_row_(row, "filterRow");
     } // End pre-conditions
 
@@ -5650,7 +5534,6 @@ public:
   template <typename UnaryFunction>
   inline void filterCol(size_type col, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, bool, value_type);
       assert_valid_col_(col, "filterCol");
     } // End pre-conditions
 
@@ -5680,10 +5563,6 @@ public:
    */
   template <typename UnaryFunction>
   inline void filter(const UnaryFunction &f1) {
-    { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, bool, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS
     filterRow(row, f1);
   }
@@ -5692,10 +5571,6 @@ public:
             typename OutputIterator2>
   inline size_type filter(const UnaryFunction &f1, OutputIterator1 cut_i,
                           OutputIterator1 cut_j, OutputIterator2 cut_nz) {
-    { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, bool, value_type);
-    } // End pre-conditions
-
     size_type count = 0;
     std::vector<size_type> indb(nCols());
     ITERATE_ON_ALL_ROWS {
@@ -5943,7 +5818,6 @@ public:
   template <typename UnaryFunction>
   inline void elementRowNZApply(size_type row, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
       assert_valid_row_(row, "elementRowNZApply");
     } // End pre-conditions
 
@@ -5981,7 +5855,6 @@ public:
   template <typename UnaryFunction>
   inline void elementColNZApply(size_type col, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
       assert_valid_col_(col, "elementColNZApply");
     } // End pre-conditions
 
@@ -6011,10 +5884,6 @@ public:
    */
   template <typename UnaryFunction>
   inline void elementNZApply(const UnaryFunction &f1) {
-    { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS
     elementRowNZApply(row, f1);
   }
@@ -6040,7 +5909,6 @@ public:
   template <typename UnaryFunction>
   inline void elementRowApply(size_type row, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
       assert_valid_row_(row, "elementRowApply");
     } // End pre-conditions
 
@@ -6076,7 +5944,6 @@ public:
   template <typename UnaryFunction>
   inline void elementColApply(size_type col, const UnaryFunction &f1) {
     { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
       assert_valid_col_(col, "elementColApply");
     } // End pre-conditions
 
@@ -6100,10 +5967,6 @@ public:
    */
   template <typename UnaryFunction>
   inline void elementApply(const UnaryFunction &f1) {
-    { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS
     elementRowApply(row, f1);
   }
@@ -6129,9 +5992,6 @@ public:
   inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
                                 InputIterator x_begin) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_(row, "elementRowNZApply");
     } // End pre-conditions
 
@@ -6162,9 +6022,6 @@ public:
   inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
                                 InputIterator x, OutputIterator y) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_(row, "elementRowNZApply");
     } // End pre-conditions
 
@@ -6208,9 +6065,6 @@ public:
   inline void elementRowApply(size_type row, const BinaryFunction &f2,
                               InputIterator x_begin) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_(row, "elementRowApply");
     } // End pre-conditions
 
@@ -6234,9 +6088,6 @@ public:
   inline void elementRowApply(size_type row, const BinaryFunction &f2,
                               InputIterator x, OutputIterator y) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_row_(row, "elementRowApply");
     } // End pre-conditions
 
@@ -6282,9 +6133,6 @@ public:
   inline void elementColNZApply(size_type col, const BinaryFunction &f2,
                                 InputIterator x_begin) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_col_(col, "elementColNZApply");
     } // End pre-conditions
 
@@ -6305,9 +6153,6 @@ public:
   inline void elementColNZApply(size_type col, const BinaryFunction &f2,
                                 InputIterator x, OutputIterator y) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_col_(col, "elementColNZApply");
     } // End pre-conditions
 
@@ -6340,9 +6185,6 @@ public:
   inline void elementColApply(size_type col, const BinaryFunction &f2,
                               InputIterator x_begin) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
       assert_valid_col_(col, "elementColApply");
     } // End pre-conditions
 
@@ -6369,8 +6211,6 @@ public:
   inline void elementNZApply(const SparseMatrix &other,
                              const BinaryFunction &f2) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       NTA_ASSERT(other.nRows() == nRows())
           << "SparseMatrix elementNZApply: Number of rows don't match: "
           << nRows() << " and " << other.nRows();
@@ -6409,8 +6249,6 @@ public:
   inline void elementApply(const SparseMatrix &other,
                            const BinaryFunction &f2) {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       NTA_ASSERT(other.nRows() == nRows())
           << "SparseMatrix elementApply: Number of rows don't match: "
           << nRows() << " and " << other.nRows();
@@ -6438,11 +6276,6 @@ public:
   inline void applyOuter(InputIterator row_begin, InputIterator row_end,
                          InputIterator col_begin, InputIterator col_end,
                          const UnaryFunction &f1) {
-    { // Pre-conditions
-      ASSERT_UNARY_FUNCTION(UnaryFunction, value_type, value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     for (InputIterator row = row_begin; row != row_end; ++row) {
       for (InputIterator col = col_begin; col != col_end; ++col) {
         size_type i = *row, j = *col;
@@ -6466,12 +6299,6 @@ public:
   inline void applyOuter(InputIterator row_begin, InputIterator row_end,
                          InputIterator col_begin, InputIterator col_end,
                          const BinaryFunction &f2, const Other &other) {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     size_type i_other = 0;
     for (InputIterator row = row_begin; row != row_end; ++row, ++i_other) {
       size_type j_other = 0;
@@ -6504,8 +6331,6 @@ public:
   inline value_type accumulateRowNZ(size_type row, const BinaryFunction &f2,
                                     const value_type &init = 0) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       assert_valid_row_(row, "accumulateRowNZ");
     } // End pre-conditions
 
@@ -6550,11 +6375,6 @@ public:
   inline void accumulateAllRowsNZ(OutputIterator result,
                                   const BinaryFunction &f2,
                                   const value_type &init = 0) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       *result = accumulateRowNZ(row, f2, init);
       ++result;
@@ -6579,8 +6399,6 @@ public:
   inline value_type accumulateRow(size_type row, const BinaryFunction &f2,
                                   const value_type &init = 0) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       assert_valid_row_(row, "accumulateRow");
     } // End pre-conditions
 
@@ -6620,12 +6438,6 @@ public:
   template <typename OutputIterator, typename BinaryFunction>
   inline void accumulateAllRows(OutputIterator result, const BinaryFunction &f2,
                                 const value_type &init = 0) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
-    } // End pre-conditions
-
     ITERATE_ON_ALL_ROWS {
       *result = accumulateRow(row, f2, init);
       ++result;
@@ -6650,8 +6462,6 @@ public:
   inline value_type accumulateColNZ(size_type col, const BinaryFunction &f2,
                                     const value_type &init = 0) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       assert_valid_col_(col, "accumulateColNZ");
     } // End pre-conditions
 
@@ -6688,12 +6498,6 @@ public:
   inline void accumulateAllColsNZ(OutputIterator result,
                                   const BinaryFunction &f2,
                                   const value_type &init = 0) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
-    } // End pre-conditions
-
     std::fill(result, result + nCols(), (value_type)init);
 
     ITERATE_ON_ALL_ROWS {
@@ -6723,8 +6527,6 @@ public:
   inline value_type accumulateCol(size_type col, const BinaryFunction &f2,
                                   const value_type &init = 0) const {
     { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
       assert_valid_col_(col, "accumulate");
     } // End pre-conditions
 
@@ -6762,12 +6564,6 @@ public:
   template <typename OutputIterator, typename BinaryFunction>
   inline void accumulateAllCols(OutputIterator result, const BinaryFunction &f2,
                                 const value_type &init = 0) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, value_type);
-    } // End pre-conditions
-
     const size_type ncols = nCols();
 
     std::fill(result, result + nCols(), (value_type)init);
@@ -6806,11 +6602,6 @@ public:
   template <typename BinaryFunction>
   inline value_type accumulateNZ(BinaryFunction f2,
                                  const value_type &init) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-    } // End pre-conditions
-
     value_type result = init;
 
     ITERATE_ON_ALL_ROWS
@@ -6838,11 +6629,6 @@ public:
   template <typename BinaryFunction>
   inline value_type accumulate(BinaryFunction f2,
                                const value_type &init) const {
-    { // Pre-conditions
-      ASSERT_BINARY_FUNCTION(BinaryFunction, value_type, value_type,
-                             value_type);
-    } // End pre-conditions
-
     value_type result = init;
 
     ITERATE_ON_ALL_ROWS
@@ -6865,10 +6651,8 @@ public:
    *  @li Not enough memory (error)
    */
   inline void transpose(SparseMatrix &tr) const {
-    using namespace std;
-
-    vector<vector<size_type>> tind(nCols());
-    vector<vector<value_type>> tnz(nCols());
+    std::vector<std::vector<size_type>> tind(nCols());
+    std::vector<std::vector<value_type>> tnz(nCols());
 
     ITERATE_ON_ALL_ROWS {
       ITERATE_ON_ROW {
@@ -6892,8 +6676,8 @@ public:
     value_type *nzp = tr.nz_mem_;
 
     for (size_type row = 0; row != tnrows; ++row) {
-      const vector<size_type> &rind = tind[row];
-      const vector<value_type> &rnz = tnz[row];
+      const std::vector<size_type> &rind = tind[row];
+      const std::vector<value_type> &rnz = tnz[row];
       size_type nk = (size_type)rind.size();
       tr.nnzr_[row] = nk;
       tr.ind_[row] = indp;
@@ -6909,10 +6693,8 @@ public:
    * In place transpose.
    */
   inline void transpose() {
-    using namespace std;
-
-    vector<vector<size_type>> tind(nCols());
-    vector<vector<value_type>> tnz(nCols());
+    std::vector<std::vector<size_type>> tind(nCols());
+    std::vector<std::vector<value_type>> tnz(nCols());
 
     ITERATE_ON_ALL_ROWS {
       ITERATE_ON_ROW {
@@ -6937,8 +6719,8 @@ public:
     value_type *nzp = nz_mem_;
 
     for (size_type row = 0; row != tnrows; ++row) {
-      const vector<size_type> &rind = tind[row];
-      const vector<value_type> &rnz = tnz[row];
+      const std::vector<size_type> &rind = tind[row];
+      const std::vector<value_type> &rnz = tnz[row];
       size_type nk = rind.size();
       nnzr_[row] = nk;
       ind_[row] = indp;
@@ -7202,7 +6984,6 @@ public:
                               size_type begin_col, size_type end_col,
                               const UnaryPredicate &f1) const {
     { // Pre-conditions
-      ASSERT_UNARY_PREDICATE(UnaryPredicate, value_type);
       assert_valid_box_(begin_row, end_row, begin_col, end_col, "countWhere");
     } // End pre-conditions
 
@@ -7263,8 +7044,6 @@ public:
                           const UnaryPredicate &f1, OutputIterator1 row_it,
                           OutputIterator1 col_it) const {
     { // Pre-conditions
-      ASSERT_UNARY_PREDICATE(UnaryPredicate, value_type);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
       assert_valid_box_(begin_row, end_row, begin_col, end_col, "findIndices");
     } // End pre-conditions
 
@@ -7371,10 +7150,6 @@ public:
                          size_type begin_col, size_type end_col,
                          const value_type &value, OutputIterator1 row_it,
                          OutputIterator1 col_it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-    } // End pre-conditions
-
     findIndices(
         begin_row, end_row, begin_col, end_col,
         std::bind(std::equal_to<value_type>(), std::placeholders::_1, value),
@@ -7438,10 +7213,6 @@ public:
                            size_type begin_col, size_type end_col,
                            const value_type &value, OutputIterator1 row_it,
                            OutputIterator1 col_it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-    } // End pre-conditions
-
     findIndices(
         begin_row, end_row, begin_col, end_col,
         std::bind(std::greater<value_type>(), std::placeholders::_1, value),
@@ -7507,10 +7278,6 @@ public:
                                 size_type begin_col, size_type end_col,
                                 const value_type &value, OutputIterator1 row_it,
                                 OutputIterator1 col_it) const {
-    { // Pre-conditions
-      ASSERT_OUTPUT_ITERATOR(OutputIterator1, size_type);
-    } // End pre-conditions
-
     findIndices(begin_row, end_row, begin_col, end_col,
                 std::bind(std::greater_equal<value_type>(),
                           std::placeholders::_1, value),
@@ -8328,9 +8095,7 @@ public:
       assert_not_zero_value_(val, "normalizeBlockByRows");
     } // End pre-conditions
 
-    using namespace std;
-
-    vector<value_type *> nz_ptrs(nCols());
+    std::vector<value_type *> nz_ptrs(nCols());
 
     for (InputIterator i = begin; i != end; ++i) {
       size_type row = *i;
@@ -8382,9 +8147,7 @@ public:
       assert_not_zero_value_(val, "normalizeBlockByRows_binary");
     } // End pre-conditions
 
-    using namespace std;
-
-    vector<value_type *> nz_ptrs(nCols());
+    std::vector<value_type *> nz_ptrs(nCols());
 
     for (InputIterator i = begin; i != end; ++i) {
       size_type row = *i;
@@ -9846,8 +9609,6 @@ public:
                                     InputIterator x_ones_end,
                                     OutputIterator out_begin) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, difference_type);
       assert_valid_col_it_range_(x_ones_begin, x_ones_end,
                                  "rightVecSumAtNZSparse");
     } // End pre-conditions
@@ -9913,8 +9674,6 @@ public:
                                                OutputIterator out_begin,
                                                value_type threshold) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, difference_type);
       assert_valid_col_it_range_(x_ones_begin, x_ones_end,
                                  "rightVecSumAtNZGtThresholdSparse");
     } // End pre-conditions
@@ -9976,8 +9735,6 @@ public:
                                                 OutputIterator out_begin,
                                                 value_type threshold) const {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-      ASSERT_OUTPUT_ITERATOR(OutputIterator, difference_type);
       assert_valid_col_it_range_(x_ones_begin, x_ones_end,
                                  "rightVecSumAtNZGteThresholdSparse");
     } // End pre-conditions
@@ -10385,7 +10142,6 @@ public:
   incrementWithOuterProduct(InputIterator x_begin, InputIterator x_end,
                             InputIterator y_begin, InputIterator y_end) {
     { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
       NTA_ASSERT((size_type)(x_end - x_begin) == nRows())
           << "incrementWithOuterProduct: Wrong size for x vector: "
           << (size_type)(x_end - x_begin)
@@ -10442,10 +10198,6 @@ public:
   incrementOnOuterProductVal(InputIterator row_begin, InputIterator row_end,
                              InputIterator col_begin, InputIterator col_end,
                              const value_type &val) {
-    { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     this->applyOuter(
         row_begin, row_end, col_begin, col_end,
         std::bind(nust::Plus<value_type>(), std::placeholders::_1, val));
@@ -10476,10 +10228,6 @@ public:
   incrementOnOuterProductMat(InputIterator row_begin, InputIterator row_end,
                              InputIterator col_begin, InputIterator col_end,
                              const Other &other) {
-    { // Pre-conditions
-      ASSERT_INPUT_ITERATOR(InputIterator);
-    } // End pre-conditions
-
     this->applyOuter(row_begin, row_end, col_begin, col_end,
                      nust::Plus<value_type>(), other);
   }

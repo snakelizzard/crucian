@@ -29,13 +29,7 @@
 #include <nust/types/Types.hpp>
 #include <nust/math/Math.hpp>
 
-using namespace nust;
-
-//--------------------------------------------------------------------------------
-
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
@@ -83,9 +77,6 @@ public:
 std::ostream &operator<<(std::ostream &outStream, const InSynapse &s);
 #endif
 
-// end namespace
-} // namespace Cells4
-} // namespace algorithms
 } // namespace nust
 
 #endif // NTA_INSYNAPSE_HPP

@@ -28,8 +28,6 @@
 #include <vector>
 
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 class Cells4;
 
@@ -246,8 +244,6 @@ public:
   void load(std::istream &inStream);
 };
 
-// end namespace
-} // namespace Cells4
-} // namespace algorithms
 } // namespace nust
+
 #endif // NTA_CELL_HPP

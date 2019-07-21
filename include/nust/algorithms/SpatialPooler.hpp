@@ -35,11 +35,7 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 namespace nust {
-namespace algorithms {
-namespace spatial_pooler {
 
 /**
  * CLA spatial pooler implementation in C++.
@@ -67,7 +63,7 @@ namespace spatial_pooler {
 class SpatialPooler {
 public:
   SpatialPooler();
-  SpatialPooler(vector<UInt> inputDimensions, vector<UInt> columnDimensions,
+  SpatialPooler(std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
                 UInt potentialRadius = 16, Real potentialPct = 0.5,
                 bool globalInhibition = true, Real localAreaDensity = -1.0,
                 UInt numActiveColumnsPerInhArea = 10,
@@ -201,7 +197,7 @@ public:
 
    */
   virtual void
-  initialize(vector<UInt> inputDimensions, vector<UInt> columnDimensions,
+  initialize(std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
              UInt potentialRadius = 16, Real potentialPct = 0.5,
              bool globalInhibition = true, Real localAreaDensity = -1.0,
              UInt numActiveColumnsPerInhArea = 10, UInt stimulusThreshold = 0,
@@ -268,7 +264,7 @@ public:
 
   @param fd A valid file descriptor.
    */
-  virtual void save(ostream &outStream) const;
+  virtual void save(std::ostream &outStream) const;
 
   /**
   Load (deserialize) and initialize the spatial pooler from the
@@ -276,7 +272,7 @@ public:
 
   @param inStream A valid istream.
    */
-  virtual void load(istream &inStream);
+  virtual void load(std::istream &inStream);
 
   /**
   Returns the number of bytes that a save operation would result in.
@@ -292,14 +288,14 @@ public:
 
   @returns Integer number of column dimension.
   */
-  vector<UInt> getColumnDimensions() const;
+  std::vector<UInt> getColumnDimensions() const;
 
   /**
   Returns the dimensions of the input vector.
 
   @returns Integer vector of input dimension.
   */
-  vector<UInt> getInputDimensions() const;
+  std::vector<UInt> getInputDimensions() const;
 
   /**
   Returns the total number of columns.
@@ -756,21 +752,21 @@ public:
   /**
   Returns the overlap score for each column.
    */
-  const vector<UInt> &getOverlaps() const;
+  const std::vector<UInt> &getOverlaps() const;
 
   /**
   Returns the boosted overlap score for each column.
    */
-  const vector<Real> &getBoostedOverlaps() const;
+  const std::vector<Real> &getBoostedOverlaps() const;
 
   ///////////////////////////////////////////////////////////
   //
   // Implementation methods. all methods below this line are
   // NOT part of the public API
 
-  void toDense_(vector<UInt> &sparse, UInt dense[], UInt n);
+  void toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n);
 
-  void boostOverlaps_(vector<UInt> &overlaps, vector<Real> &boostedOverlaps);
+  void boostOverlaps_(std::vector<UInt> &overlaps, std::vector<Real> &boostedOverlaps);
 
   /**
     Maps a column to its respective input index, keeping to the topology of
@@ -823,7 +819,7 @@ public:
     @param wrapAround  A boolean value indicating that boundaries should be
                        ignored.
   */
-  vector<UInt> mapPotential_(UInt column, bool wrapAround);
+  std::vector<UInt> mapPotential_(UInt column, bool wrapAround);
 
   /**
   Returns a randomly generated permanence value for a synapses that is
@@ -863,8 +859,8 @@ public:
     @param connectedPct   A real value between 0 or 1 specifying the percent of
     the input bits that will start off in a connected state.
   */
-  vector<Real> initPermanence_(vector<UInt> &potential, Real connectedPct);
-  void clip_(vector<Real> &perm, bool trim);
+  std::vector<Real> initPermanence_(std::vector<UInt> &potential, Real connectedPct);
+  void clip_(std::vector<Real> &perm, bool trim);
 
   /**
       This method updates the permanence matrix with a column's new permanence
@@ -895,11 +891,11 @@ public:
      connected state. Should be set to 'false' when a direct assignment is
      required.
   */
-  void updatePermanencesForColumn_(vector<Real> &perm, UInt column,
+  void updatePermanencesForColumn_(std::vector<Real> &perm, UInt column,
                                    bool raisePerm = true);
-  UInt countConnected_(vector<Real> &perm);
-  UInt raisePermanencesToThreshold_(vector<Real> &perm,
-                                    vector<UInt> &potential);
+  UInt countConnected_(std::vector<Real> &perm);
+  UInt raisePermanencesToThreshold_(std::vector<Real> &perm,
+                                    std::vector<UInt> &potential);
 
   /**
      This function determines each column's overlap with the current
@@ -921,13 +917,13 @@ public:
      a "connected state" (connected synapses) that are connected to
      input bits which are turned on.
   */
-  void calculateOverlap_(UInt inputVector[], vector<UInt> &overlap);
-  void calculateOverlapPct_(vector<UInt> &overlaps, vector<Real> &overlapPct);
+  void calculateOverlap_(UInt inputVector[], std::vector<UInt> &overlap);
+  void calculateOverlapPct_(std::vector<UInt> &overlaps, std::vector<Real> &overlapPct);
 
-  bool isWinner_(Real score, vector<pair<UInt, Real>> &winners,
+  bool isWinner_(Real score, std::vector<std::pair<UInt, Real>> &winners,
                  UInt numWinners);
 
-  void addToWinners_(UInt index, Real score, vector<pair<UInt, Real>> &winners);
+  void addToWinners_(UInt index, Real score, std::vector<std::pair<UInt, Real>> &winners);
 
   /**
       Performs inhibition. This method calculates the necessary values needed to
@@ -943,8 +939,8 @@ public:
       @param activeColumns an int array containing the indices of the active
      columns.
   */
-  void inhibitColumns_(const vector<Real> &overlaps,
-                       vector<UInt> &activeColumns);
+  void inhibitColumns_(const std::vector<Real> &overlaps,
+                       std::vector<UInt> &activeColumns);
 
   /**
      Perform global inhibition.
@@ -967,8 +963,8 @@ public:
      @param activeColumns
      an int array containing the indices of the active columns.
   */
-  void inhibitColumnsGlobal_(const vector<Real> &overlaps, Real density,
-                             vector<UInt> &activeColumns);
+  void inhibitColumnsGlobal_(const std::vector<Real> &overlaps, Real density,
+                             std::vector<UInt> &activeColumns);
 
   /**
      Performs local inhibition.
@@ -996,8 +992,8 @@ public:
      @param activeColumns
      an int array containing the indices of the active columns.
   */
-  void inhibitColumnsLocal_(const vector<Real> &overlaps, Real density,
-                            vector<UInt> &activeColumns);
+  void inhibitColumnsLocal_(const std::vector<Real> &overlaps, Real density,
+                            std::vector<UInt> &activeColumns);
 
   /**
       The primary method in charge of learning.
@@ -1016,7 +1012,7 @@ public:
       @param  activeColumns  an int vector containing the indices of the columns
      that survived inhibition.
             */
-  void adaptSynapses_(UInt inputVector[], vector<UInt> &activeColumns);
+  void adaptSynapses_(UInt inputVector[], std::vector<UInt> &activeColumns);
 
   /**
       This method increases the permanence values of synapses of columns whose
@@ -1127,8 +1123,8 @@ public:
 
       @param period         A int number indicating the period of the duty cycle
   */
-  static void updateDutyCyclesHelper_(vector<Real> &dutyCycles,
-                                      vector<UInt> &newValues, UInt period);
+  static void updateDutyCyclesHelper_(std::vector<Real> &dutyCycles,
+                                      std::vector<UInt> &newValues, UInt period);
 
   /**
   Updates the duty cycles for each column. The OVERLAP duty cycle is a moving
@@ -1144,7 +1140,7 @@ public:
   @param activeArray  An int array containing the indices of the active columns,
                   the sprase set of columns which survived inhibition
   */
-  void updateDutyCycles_(vector<UInt> &overlaps, UInt activeArray[]);
+  void updateDutyCycles_(std::vector<UInt> &overlaps, UInt activeArray[]);
 
   /**
     Update the boost factors for all columns. The boost factors are used to
@@ -1222,17 +1218,17 @@ public:
   /**
    Print the given UInt array in a nice format
   */
-  void printState(vector<UInt> &state);
+  void printState(std::vector<UInt> &state);
   /**
   Print the given Real array in a nice format
   */
-  void printState(vector<Real> &state);
+  void printState(std::vector<Real> &state);
 
 protected:
   UInt numInputs_;
   UInt numColumns_;
-  vector<UInt> columnDimensions_;
-  vector<UInt> inputDimensions_;
+  std::vector<UInt> columnDimensions_;
+  std::vector<UInt> inputDimensions_;
   UInt potentialRadius_;
   Real potentialPct_;
   Real initConnectedPct_;
@@ -1257,30 +1253,29 @@ protected:
   Real synPermBelowStimulusInc_;
   Real synPermConnected_;
 
-  vector<Real> boostFactors_;
-  vector<Real> overlapDutyCycles_;
-  vector<Real> activeDutyCycles_;
-  vector<Real> minOverlapDutyCycles_;
-  vector<Real> minActiveDutyCycles_;
+  std::vector<Real> boostFactors_;
+  std::vector<Real> overlapDutyCycles_;
+  std::vector<Real> activeDutyCycles_;
+  std::vector<Real> minOverlapDutyCycles_;
+  std::vector<Real> minActiveDutyCycles_;
 
   Real minPctOverlapDutyCycles_;
 
   SparseMatrix<UInt, Real, Int, Real64> permanences_;
   SparseBinaryMatrix<UInt, UInt> potentialPools_;
   SparseBinaryMatrix<UInt, UInt> connectedSynapses_;
-  vector<UInt> connectedCounts_;
+  std::vector<UInt> connectedCounts_;
 
-  vector<UInt> overlaps_;
-  vector<Real> overlapsPct_;
-  vector<Real> boostedOverlaps_;
-  vector<UInt> activeColumns_;
-  vector<Real> tieBreaker_;
+  std::vector<UInt> overlaps_;
+  std::vector<Real> overlapsPct_;
+  std::vector<Real> boostedOverlaps_;
+  std::vector<UInt> activeColumns_;
+  std::vector<Real> tieBreaker_;
 
   UInt version_;
   Random rng_;
 };
 
-} // end namespace spatial_pooler
-} // end namespace algorithms
 } // end namespace nust
+
 #endif // NTA_spatial_pooler_HPP

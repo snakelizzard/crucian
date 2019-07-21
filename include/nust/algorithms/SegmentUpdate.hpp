@@ -27,11 +27,8 @@
 #include <nust/utils/Log.hpp>
 
 #include <vector>
-using namespace nust;
 
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 class Cells4;
 
@@ -171,9 +168,6 @@ inline std::ostream &operator<<(std::ostream &outStream,
 }
 #endif
 
-// End namespace
-} // namespace Cells4
-} // namespace algorithms
 } // namespace nust
 
 #endif // NTA_SEGMENTUPDATE_HPP

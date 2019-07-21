@@ -27,7 +27,9 @@
 #include "nust/utils/LoggingException.hpp"
 #include "nust/utils/LogItem.hpp"
 #include <iostream>
-using namespace nust;
+
+namespace nust
+{
 
 LoggingException::~LoggingException() {
   try {
@@ -43,4 +45,6 @@ LoggingException::~LoggingException() {
   } catch(...) {
     // nothing
   }
+}
+
 }

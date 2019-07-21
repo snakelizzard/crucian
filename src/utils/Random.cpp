@@ -34,7 +34,9 @@
 #include <nust/utils/Log.hpp>
 #include <nust/utils/Random.hpp>
 
-using namespace nust;
+namespace nust
+{
+
 Random *Random::theInstanceP_ = nullptr;
 RandomSeedFuncPtr Random::seeder_ = nullptr;
 
@@ -43,7 +45,7 @@ const UInt64 Random::MAX64 = std::numeric_limits<UInt64>::max();
 
 static NTA_UInt64 badSeeder() {
   NTA_THROW << "Logic error in initialization of Random subsystem.";
-  return 0;
+  //return 0;
 }
 
 /**
@@ -56,7 +58,6 @@ static NTA_UInt64 badSeeder() {
 // When we have different algorithms RandomImpl will become an interface
 // class and subclasses will implement specific algorithms
 
-namespace nust {
 class RandomImpl {
 public:
   RandomImpl(UInt64 seed);
@@ -78,7 +79,6 @@ private:
   int rptr_;
   int fptr_;
 };
-}; // namespace nust
 
 Random::Random(const Random &r) {
   NTA_CHECK(r.impl_ != nullptr);
@@ -263,7 +263,6 @@ RandomImpl::RandomImpl(UInt64 seed) {
 #endif
 }
 
-namespace nust {
 std::ostream &operator<<(std::ostream &outStream, const Random &r) {
   outStream << "random-v1 ";
   outStream << r.seed_ << " ";

@@ -27,16 +27,11 @@
 #include <nust/math/Topology.hpp>
 #include <nust/utils/Log.hpp>
 
-using std::vector;
-using namespace nust;
-using namespace nust::math::topology;
+namespace nust
+{
 
-namespace nust {
-namespace math {
-namespace topology {
-
-vector<UInt> coordinatesFromIndex(UInt index, const vector<UInt> &dimensions) {
-  vector<UInt> coordinates(dimensions.size(), 0);
+std::vector<UInt> coordinatesFromIndex(UInt index, const std::vector<UInt> &dimensions) {
+  std::vector<UInt> coordinates(dimensions.size(), 0);
 
   UInt shifted = index;
   for (size_t i = dimensions.size() - 1; i > 0; i--) {
@@ -50,8 +45,8 @@ vector<UInt> coordinatesFromIndex(UInt index, const vector<UInt> &dimensions) {
   return coordinates;
 }
 
-UInt indexFromCoordinates(const vector<UInt> &coordinates,
-                          const vector<UInt> &dimensions) {
+UInt indexFromCoordinates(const std::vector<UInt> &coordinates,
+                          const std::vector<UInt> &dimensions) {
   NTA_ASSERT(coordinates.size() == dimensions.size());
 
   UInt index = 0;
@@ -64,16 +59,12 @@ UInt indexFromCoordinates(const vector<UInt> &coordinates,
   return index;
 }
 
-} // end namespace topology
-} // namespace math
-} // end namespace nust
-
 // ============================================================================
 // NEIGHBORHOOD
 // ============================================================================
 
 Neighborhood::Neighborhood(UInt centerIndex, UInt radius,
-                           const vector<UInt> &dimensions)
+                           const std::vector<UInt> &dimensions)
     : centerPosition_(coordinatesFromIndex(centerIndex, dimensions)),
       dimensions_(dimensions), radius_(radius) {}
 
@@ -147,7 +138,7 @@ Neighborhood::Iterator Neighborhood::end() const { return {*this, true}; }
 // ============================================================================
 
 WrappingNeighborhood::WrappingNeighborhood(UInt centerIndex, UInt radius,
-                                           const vector<UInt> &dimensions)
+                                           const std::vector<UInt> &dimensions)
     : centerPosition_(coordinatesFromIndex(centerIndex, dimensions)),
       dimensions_(dimensions), radius_(radius) {}
 
@@ -226,3 +217,5 @@ WrappingNeighborhood::Iterator WrappingNeighborhood::begin() const {
 WrappingNeighborhood::Iterator WrappingNeighborhood::end() const {
   return {*this, /*end*/ true};
 }
+
+} // namespace nust

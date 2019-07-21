@@ -80,8 +80,6 @@
 //-----------------------------------------------------------------------
 
 namespace nust {
-namespace algorithms {
-namespace Cells4 {
 
 //-----------------------------------------------------------------------
 /**
@@ -815,8 +813,7 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate);
 #endif
 
 //-----------------------------------------------------------------------
-} // end namespace Cells4
-} // end namespace algorithms
+
 } // end namespace nust
 
 //-----------------------------------------------------------------------

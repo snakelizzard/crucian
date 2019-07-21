@@ -501,9 +501,6 @@ public:
     { // Pre-conditions
       const char *where = "SparseBinaryMatrix::setAllNonZeros: ";
 
-      ASSERT_INPUT_ITERATOR(InputIterator1);
-      ASSERT_INPUT_ITERATOR(InputIterator2);
-
       NTA_ASSERT(nz_j_end - nz_j == nz_i_end - nz_i)
           << where << "Invalid range";
 

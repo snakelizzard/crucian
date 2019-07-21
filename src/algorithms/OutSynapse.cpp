@@ -22,8 +22,9 @@
 
 #include <nust/algorithms/Cells4.hpp>
 #include <nust/algorithms/OutSynapse.hpp>
-using namespace nust::algorithms::Cells4;
-using namespace nust;
+
+namespace nust
+{
 
 bool OutSynapse::invariants(Cells4 *cells) const {
   bool ok = true;
@@ -34,12 +35,8 @@ bool OutSynapse::invariants(Cells4 *cells) const {
   return ok;
 }
 
-namespace nust {
-namespace algorithms {
-namespace Cells4 {
 bool operator==(const OutSynapse &a, const OutSynapse &b) {
   return a.equals(b);
 }
-} // namespace Cells4
-} // namespace algorithms
+
 } // namespace nust

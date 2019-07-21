@@ -32,8 +32,6 @@
 #include <nust/types/Types.hpp>
 
 namespace nust {
-namespace math {
-namespace topology {
 
 /**
  * Translate an index into coordinates, using the given coordinate system.
@@ -203,8 +201,6 @@ private:
   const UInt radius_;
 };
 
-} // end namespace topology
-} // namespace math
 } // end namespace nust
 
 #endif // NTA_TOPOLOGY_HPP

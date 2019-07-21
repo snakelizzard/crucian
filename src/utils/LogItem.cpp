@@ -29,7 +29,8 @@
 #include <nust/utils/LogItem.hpp>
 #include <stdexcept> // runtime_error
 
-using namespace nust;
+namespace nust
+{
 
 std::ostream *LogItem::ostream_ = nullptr;
 
@@ -70,3 +71,5 @@ LogItem::~LogItem() {
 }
 
 std::ostringstream &LogItem::stream() { return msg_; }
+
+} // namespace nust

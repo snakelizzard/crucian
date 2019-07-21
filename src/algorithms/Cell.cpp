@@ -22,8 +22,7 @@
 
 #include <nust/algorithms/Cell.hpp>
 
-using namespace nust::algorithms::Cells4;
-using namespace nust;
+namespace nust {
 
 Cell::Cell() : _segments(0), _freeSegments(0) {}
 
@@ -138,3 +137,5 @@ bool Cell::operator==(const Cell &other) const {
   }
   return _segments == other._segments;
 }
+
+} // namespace nust

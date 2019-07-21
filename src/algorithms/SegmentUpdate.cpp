@@ -24,7 +24,8 @@
 #include <nust/algorithms/SegmentUpdate.hpp>
 #include <nust/utils/Log.hpp>
 
-using namespace nust::algorithms::Cells4;
+namespace nust
+{
 
 SegmentUpdate::SegmentUpdate()
     : _sequenceSegment(false), _cellIdx(static_cast<UInt> (-1)), _segIdx(static_cast<UInt> (-1)),
@@ -82,3 +83,5 @@ bool SegmentUpdate::operator==(const SegmentUpdate &o) const {
   }
   return _synapses == o._synapses;
 }
+
+} // namespace nust
