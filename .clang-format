@@ -1,0 +1,16 @@
+---
+  Language: Cpp
+  BasedOnStyle: LLVM
+  DisableFormat: false
+  IndentWidth: 4
+  AccessModifierOffset: -4
+  FixNamespaceComments: true
+  NamespaceIndentation: None
+  BreakBeforeBraces: Allman
+  IncludeBlocks: Regroup
+  IncludeCategories:
+    - Regex:    '<nust/.*>'
+      Priority: 2
+    - Regex:    '<.*>'
+      Priority: 1
+...

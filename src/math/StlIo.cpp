@@ -27,7 +27,8 @@
 
 #include <nust/math/StlIo.hpp>
 
-namespace nust {
+namespace nust
+{
 
 IOControl io_control;
 

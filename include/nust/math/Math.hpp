@@ -39,7 +39,8 @@
 #include <nust/types/Types.hpp>
 
 //--------------------------------------------------------------------------------
-namespace nust {
+namespace nust
+{
 
 //--------------------------------------------------------------------------------
 // ASSERTIONS
@@ -49,14 +50,16 @@ namespace nust {
  * on NTA_INFO if it doesn't. It's compiled in only when NTA_ASSERTIONS_ON is
  * true.
  */
-inline bool INVARIANT(bool cond, const char *msg) {
+inline bool INVARIANT(bool cond, const char *msg)
+{
 #ifdef NTA_ASSERTIONS_ON
-  if (!(cond)) {
-    NTA_INFO << msg;
-    return false;
-  }
+    if (!(cond))
+    {
+        NTA_INFO << msg;
+        return false;
+    }
 #endif
-  return true;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
@@ -67,8 +70,9 @@ inline bool INVARIANT(bool cond, const char *msg) {
  * are crossed.
  */
 template <typename It>
-void ASSERT_VALID_RANGE(It begin, It end, const char *message) {
-  NTA_ASSERT(begin <= end) << "Invalid iterators: " << message;
+void ASSERT_VALID_RANGE(It begin, It end, const char *message)
+{
+    NTA_ASSERT(begin <= end) << "Invalid iterators: " << message;
 }
 
 //--------------------------------------------------------------------------------
@@ -84,23 +88,27 @@ constexpr nust::Real Epsilon = nust::Real(1e-6);
 /**
  * Functions that test for positivity or negativity based on nust::Epsilon.
  */
-template <typename T> inline bool strictlyNegative(const T &a) {
-  return a < -nust::Epsilon;
+template <typename T> inline bool strictlyNegative(const T &a)
+{
+    return a < -nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool strictlyPositive(const T &a) {
-  return a > nust::Epsilon;
+template <typename T> inline bool strictlyPositive(const T &a)
+{
+    return a > nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool negative(const T &a) {
-  return a <= nust::Epsilon;
+template <typename T> inline bool negative(const T &a)
+{
+    return a <= nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool positive(const T &a) {
-  return a >= -nust::Epsilon;
+template <typename T> inline bool positive(const T &a)
+{
+    return a >= -nust::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
@@ -110,19 +118,21 @@ template <typename T> inline bool positive(const T &a) {
  * from std::unary_function so that we have an easier time in SWIG Python
  * wrapping.
  */
-template <typename T> struct DistanceToZero {
-  typedef T argument_type;
-  typedef T result_type;
+template <typename T> struct DistanceToZero
+{
+    typedef T argument_type;
+    typedef T result_type;
 
-  inline T operator()(const T &x) const { return x >= 0 ? x : -x; }
+    inline T operator()(const T &x) const { return x >= 0 ? x : -x; }
 };
 
 //--------------------------------------------------------------------------------
 /**
  * A specialization for UInts, where we only need one test (more efficient).
  */
-template <> inline UInt DistanceToZero<UInt>::operator()(const UInt &x) const {
-  return x;
+template <> inline UInt DistanceToZero<UInt>::operator()(const UInt &x) const
+{
+    return x;
 }
 
 //--------------------------------------------------------------------------------
@@ -130,21 +140,25 @@ template <> inline UInt DistanceToZero<UInt>::operator()(const UInt &x) const {
  * Use this functor if T is guaranteed to be positive only.
  */
 template <typename T>
-struct DistanceToZeroPositive : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return x; }
+struct DistanceToZeroPositive : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return x; }
 };
 
 //--------------------------------------------------------------------------------
 /**
  * This computes the distance to 1 rather than to 0.
  */
-template <typename T> struct DistanceToOne {
-  typedef T argument_type;
-  typedef T result_type;
+template <typename T> struct DistanceToOne
+{
+    typedef T argument_type;
+    typedef T result_type;
 
-  inline T operator()(const T &x) const {
-    return x > static_cast<T> (1) ? x - static_cast<T> (1) : static_cast<T> (1) - x;
-  }
+    inline T operator()(const T &x) const
+    {
+        return x > static_cast<T>(1) ? x - static_cast<T>(1)
+                                     : static_cast<T>(1) - x;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -152,27 +166,30 @@ template <typename T> struct DistanceToOne {
  * This functor decides whether a number is almost zero or not, using the
  * platform-wide nust::Epsilon.
  */
-template <typename D> struct IsNearlyZero {
-  typedef typename D::result_type value_type;
+template <typename D> struct IsNearlyZero
+{
+    typedef typename D::result_type value_type;
 
-  D dist_;
+    D dist_;
 
-  // In the case where D::result_type is integral
-  // we convert nust::Epsilon to zero!
-  inline IsNearlyZero() : dist_() {}
+    // In the case where D::result_type is integral
+    // we convert nust::Epsilon to zero!
+    inline IsNearlyZero() : dist_() {}
 
-  inline IsNearlyZero(const IsNearlyZero &other) : dist_(other.dist_) {}
+    inline IsNearlyZero(const IsNearlyZero &other) : dist_(other.dist_) {}
 
-  inline IsNearlyZero &operator=(const IsNearlyZero &other) {
-    if (this != &other)
-      dist_ = other.dist_;
+    inline IsNearlyZero &operator=(const IsNearlyZero &other)
+    {
+        if (this != &other)
+            dist_ = other.dist_;
 
-    return *this;
-  }
+        return *this;
+    }
 
-  inline bool operator()(const typename D::argument_type &x) const {
-    return dist_(x) <= nust::Epsilon;
-  }
+    inline bool operator()(const typename D::argument_type &x) const
+    {
+        return dist_(x) <= nust::Epsilon;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -211,15 +228,17 @@ template <typename D> struct IsNearlyZero {
  *  a "good, ugly" reason to do it this way that he can't remember. - WCS 0206
  */
 template <typename T>
-inline bool nearlyZero(const T &a, const T &epsilon = T(nust::Epsilon)) {
-  return a >= -epsilon && a <= epsilon;
+inline bool nearlyZero(const T &a, const T &epsilon = T(nust::Epsilon))
+{
+    return a >= -epsilon && a <= epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline bool nearlyEqual(const T &a, const T &b,
-                        const T &epsilon = nust::Epsilon) {
-  return nearlyZero((b - a), epsilon);
+                        const T &epsilon = nust::Epsilon)
+{
+    return nearlyZero((b - a), epsilon);
 }
 
 //--------------------------------------------------------------------------------
@@ -229,12 +248,13 @@ inline bool nearlyEqual(const T &a, const T &b,
  * Returns x % m, but keeps the value positive
  * (similar to Python's modulo function).
  */
-inline int emod(int x, int m) {
-  int r = x % m;
-  if (r < 0)
-    return r + m;
-  else
-    return r;
+inline int emod(int x, int m)
+{
+    int r = x % m;
+    if (r < 0)
+        return r + m;
+    else
+        return r;
 }
 
 //--------------------------------------------------------------------------------
@@ -253,18 +273,20 @@ inline int emod(int x, int m) {
  * Will remove from row (a list of pairs) the pairs whose first element is
  * already contained in alreadyGrouped.
  */
-template <typename C1, typename Selector, bool f = false> struct IsIncluded {
-  IsIncluded(const C1 &container) : sel_(), container_(container) {}
+template <typename C1, typename Selector, bool f = false> struct IsIncluded
+{
+    IsIncluded(const C1 &container) : sel_(), container_(container) {}
 
-  template <typename T> inline bool operator()(const T &p) const {
-    if (f)
-      return container_.find(sel_(p)) == container_.end();
-    else
-      return container_.find(sel_(p)) != container_.end();
-  }
+    template <typename T> inline bool operator()(const T &p) const
+    {
+        if (f)
+            return container_.find(sel_(p)) == container_.end();
+        else
+            return container_.find(sel_(p)) != container_.end();
+    }
 
-  Selector sel_;
-  const C1 &container_;
+    Selector sel_;
+    const C1 &container_;
 };
 
 //--------------------------------------------------------------------------------
@@ -277,16 +299,18 @@ template <typename C1, typename Selector, bool f = false> struct IsIncluded {
  */
 template <typename T1, typename T2>
 struct lexicographic_2
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    if (a.first < b.first)
-      return true;
-    else if (a.first == b.first)
-      if (a.second < b.second)
-        return true;
-    return false;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        if (a.first < b.first)
+            return true;
+        else if (a.first == b.first)
+            if (a.second < b.second)
+                return true;
+        return false;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -296,11 +320,13 @@ struct lexicographic_2
  */
 template <typename T1, typename T2>
 struct less_1st
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    return a.first < b.first;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        return a.first < b.first;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -310,11 +336,13 @@ struct less_1st
  */
 template <typename T1, typename T2>
 struct less_2nd
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    return a.second < b.second;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        return a.second < b.second;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -324,11 +352,13 @@ struct less_2nd
  */
 template <typename T1, typename T2>
 struct greater_1st
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    return a.first > b.first;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        return a.first > b.first;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -338,21 +368,25 @@ struct greater_1st
  */
 template <typename T1, typename T2>
 struct greater_2nd
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    return a.second > b.second;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        return a.second > b.second;
+    }
 };
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
 struct greater_2nd_p : public std::binary_function<bool, std::pair<T1, T2 *>,
-                                                   std::pair<T1, T2 *>> {
-  inline bool operator()(const std::pair<T1, T2 *> &a,
-                         const std::pair<T1, T2 *> &b) const {
-    return *(a.second) > *(b.second);
-  }
+                                                   std::pair<T1, T2 *>>
+{
+    inline bool operator()(const std::pair<T1, T2 *> &a,
+                           const std::pair<T1, T2 *> &b) const
+    {
+        return *(a.second) > *(b.second);
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -361,35 +395,39 @@ struct greater_2nd_p : public std::binary_function<bool, std::pair<T1, T2 *>,
  */
 template <typename T1, typename T2>
 struct greater_2nd_no_ties
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    if (a.second > b.second)
-      return true;
-    else if (a.second == b.second)
-      if (a.first < b.first)
-        return true;
-    return false;
-  }
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        if (a.second > b.second)
+            return true;
+        else if (a.second == b.second)
+            if (a.first < b.first)
+                return true;
+        return false;
+    }
 };
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2, typename RND>
 struct greater_2nd_rnd_ties
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>> {
-  RND &rng;
+    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
+{
+    RND &rng;
 
-  inline greater_2nd_rnd_ties(RND &_rng) : rng(_rng) {}
+    inline greater_2nd_rnd_ties(RND &_rng) : rng(_rng) {}
 
-  inline bool operator()(const std::pair<T1, T2> &a,
-                         const std::pair<T1, T2> &b) const {
-    T2 val_a = a.second, val_b = b.second;
-    if (val_a > val_b)
-      return true;
-    else if (val_a == val_b)
-      return rng.getReal64() >= .5;
-    return false;
-  }
+    inline bool operator()(const std::pair<T1, T2> &a,
+                           const std::pair<T1, T2> &b) const
+    {
+        T2 val_a = a.second, val_b = b.second;
+        if (val_a > val_b)
+            return true;
+        else if (val_a == val_b)
+            return rng.getReal64() >= .5;
+        return false;
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -398,69 +436,82 @@ struct greater_2nd_rnd_ties
 /**
  * This class doesn't implement any algorithm, it just stores i,j and v.
  */
-template <typename T1, typename T2> class ijv {
-  typedef T1 size_type;
-  typedef T2 value_type;
+template <typename T1, typename T2> class ijv
+{
+    typedef T1 size_type;
+    typedef T2 value_type;
 
 private:
-  size_type i_, j_;
-  value_type v_;
+    size_type i_, j_;
+    value_type v_;
 
 public:
-  inline ijv() : i_(0), j_(0), v_(0) {}
+    inline ijv() : i_(0), j_(0), v_(0) {}
 
-  inline ijv(size_type i, size_type j, value_type v) : i_(i), j_(j), v_(v) {}
+    inline ijv(size_type i, size_type j, value_type v) : i_(i), j_(j), v_(v) {}
 
-  inline ijv(const ijv &o) : i_(o.i_), j_(o.j_), v_(o.v_) {}
+    inline ijv(const ijv &o) : i_(o.i_), j_(o.j_), v_(o.v_) {}
 
-  inline ijv &operator=(const ijv &o) {
-    i_ = o.i_;
-    j_ = o.j_;
-    v_ = o.v_;
-    return *this;
-  }
-
-  inline size_type i() const { return i_; }
-  inline size_type j() const { return j_; }
-  inline value_type v() const { return v_; }
-  inline void i(size_type ii) { i_ = ii; }
-  inline void j(size_type jj) { j_ = jj; }
-  inline void v(value_type vv) { v_ = vv; }
-
-  //--------------------------------------------------------------------------------
-  /**
-   * See just above for definition.
-   */
-  struct lexicographic : public std::binary_function<bool, ijv, ijv> {
-    inline bool operator()(const ijv &a, const ijv &b) const {
-      if (a.i() < b.i())
-        return true;
-      else if (a.i() == b.i())
-        if (a.j() < b.j())
-          return true;
-      return false;
+    inline ijv &operator=(const ijv &o)
+    {
+        i_ = o.i_;
+        j_ = o.j_;
+        v_ = o.v_;
+        return *this;
     }
-  };
 
-  //--------------------------------------------------------------------------------
-  /**
-   * See just above for definition.
-   */
-  struct less_value : public std::binary_function<bool, ijv, ijv> {
-    inline bool operator()(const ijv &a, const ijv &b) const {
-      return a.v() < b.v();
-    }
-  };
+    inline size_type i() const { return i_; }
 
-  //--------------------------------------------------------------------------------
-  /**
-   * See just above for definition.
-   */
-  struct greater_value : public std::binary_function<bool, ijv, ijv> {
-    inline bool operator()(const ijv &a, const ijv &b) const {
-      return a.v() > b.v();
-    }
-  };
+    inline size_type j() const { return j_; }
+
+    inline value_type v() const { return v_; }
+
+    inline void i(size_type ii) { i_ = ii; }
+
+    inline void j(size_type jj) { j_ = jj; }
+
+    inline void v(value_type vv) { v_ = vv; }
+
+    //--------------------------------------------------------------------------------
+    /**
+     * See just above for definition.
+     */
+    struct lexicographic : public std::binary_function<bool, ijv, ijv>
+    {
+        inline bool operator()(const ijv &a, const ijv &b) const
+        {
+            if (a.i() < b.i())
+                return true;
+            else if (a.i() == b.i())
+                if (a.j() < b.j())
+                    return true;
+            return false;
+        }
+    };
+
+    //--------------------------------------------------------------------------------
+    /**
+     * See just above for definition.
+     */
+    struct less_value : public std::binary_function<bool, ijv, ijv>
+    {
+        inline bool operator()(const ijv &a, const ijv &b) const
+        {
+            return a.v() < b.v();
+        }
+    };
+
+    //--------------------------------------------------------------------------------
+    /**
+     * See just above for definition.
+     */
+    struct greater_value : public std::binary_function<bool, ijv, ijv>
+    {
+        inline bool operator()(const ijv &a, const ijv &b) const
+        {
+            return a.v() > b.v();
+        }
+    };
 };
 
 //--------------------------------------------------------------------------------
@@ -473,131 +524,168 @@ public:
 // Unary functions
 //--------------------------------------------------------------------------------
 
-template <typename T> struct Identity : public std::unary_function<T, T> {
-  inline T &operator()(T &x) const { return x; }
-  inline const T &operator()(const T &x) const { return x; }
+template <typename T> struct Identity : public std::unary_function<T, T>
+{
+    inline T &operator()(T &x) const { return x; }
+
+    inline const T &operator()(const T &x) const { return x; }
 };
 
-template <typename T> struct Negate : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return -x; }
+template <typename T> struct Negate : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return -x; }
 };
 
-template <typename T> struct Abs : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return x > 0.0 ? x : -x; }
+template <typename T> struct Abs : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return x > 0.0 ? x : -x; }
 };
 
-template <typename T> struct Square : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return x * x; }
+template <typename T> struct Square : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return x * x; }
 };
 
-template <typename T> struct Cube : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return x * x * x; }
+template <typename T> struct Cube : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return x * x * x; }
 };
 
-template <typename T> struct Inverse : public std::unary_function<T, T> {
-  inline T operator()(const T &x) const { return 1.0 / x; }
+template <typename T> struct Inverse : public std::unary_function<T, T>
+{
+    inline T operator()(const T &x) const { return 1.0 / x; }
 };
 
-template <typename T> struct Sqrt : public std::unary_function<T, T> {};
-
-template <> struct Sqrt<float> : public std::unary_function<float, float> {
-  inline float operator()(const float &x) const { return sqrtf(x); }
+template <typename T> struct Sqrt : public std::unary_function<T, T>
+{
 };
 
-template <> struct Sqrt<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const { return sqrt(x); }
+template <> struct Sqrt<float> : public std::unary_function<float, float>
+{
+    inline float operator()(const float &x) const { return sqrtf(x); }
 };
 
-template <typename T> struct Exp : public std::unary_function<T, T> {};
-
-template <> struct Exp<float> : public std::unary_function<float, float> {
-  // On x86_64, there is a bug in glibc that makes expf very slow
-  // (more than it should be), so we continue using exp on that
-  // platform as a workaround.
-  // https://bugzilla.redhat.com/show_bug.cgi?id=521190
-  // To force the compiler to use exp instead of expf, the return
-  // type (and not the argument type!) needs to be double.
-  inline float operator()(const float &x) const { return expf(x); }
+template <> struct Sqrt<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const { return sqrt(x); }
 };
 
-template <> struct Exp<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const { return exp(x); }
+template <typename T> struct Exp : public std::unary_function<T, T>
+{
 };
 
-template <typename T> struct Log : public std::unary_function<T, T> {};
-
-template <> struct Log<float> : public std::unary_function<float, float> {
-  inline float operator()(const float &x) const { return logf(x); }
+template <> struct Exp<float> : public std::unary_function<float, float>
+{
+    // On x86_64, there is a bug in glibc that makes expf very slow
+    // (more than it should be), so we continue using exp on that
+    // platform as a workaround.
+    // https://bugzilla.redhat.com/show_bug.cgi?id=521190
+    // To force the compiler to use exp instead of expf, the return
+    // type (and not the argument type!) needs to be double.
+    inline float operator()(const float &x) const { return expf(x); }
 };
 
-template <> struct Log<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const { return log(x); }
+template <> struct Exp<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const { return exp(x); }
 };
 
-template <typename T> struct Log2 : public std::unary_function<T, T> {};
+template <typename T> struct Log : public std::unary_function<T, T>
+{
+};
 
-template <> struct Log2<float> : public std::unary_function<float, float> {
-  inline float operator()(const float &x) const {
+template <> struct Log<float> : public std::unary_function<float, float>
+{
+    inline float operator()(const float &x) const { return logf(x); }
+};
+
+template <> struct Log<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const { return log(x); }
+};
+
+template <typename T> struct Log2 : public std::unary_function<T, T>
+{
+};
+
+template <> struct Log2<float> : public std::unary_function<float, float>
+{
+    inline float operator()(const float &x) const
+    {
 #if defined(NTA_OS_WINDOWS)
-    return (float)(log(x) / log(2.0));
+        return (float)(log(x) / log(2.0));
 #else
-    return log2f(x);
+        return log2f(x);
 #endif
-  }
+    }
 };
 
-template <> struct Log2<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const {
+template <> struct Log2<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const
+    {
 #if defined(NTA_OS_WINDOWS)
-    return log(x) / log(2.0);
+        return log(x) / log(2.0);
 #else
-    return log2(x);
+        return log2(x);
 #endif
-  }
+    }
 };
 
-template <typename T> struct Log10 : public std::unary_function<T, T> {};
-
-template <> struct Log10<float> : public std::unary_function<float, float> {
-  inline float operator()(const float &x) const {
-#if defined(NTA_OS_WINDOWS)
-    return (float)(log(x) / log(10.0));
-#else
-    return log10f(x);
-#endif
-  }
+template <typename T> struct Log10 : public std::unary_function<T, T>
+{
 };
 
-template <> struct Log10<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const {
+template <> struct Log10<float> : public std::unary_function<float, float>
+{
+    inline float operator()(const float &x) const
+    {
 #if defined(NTA_OS_WINDOWS)
-    return log(x) / log(10.0);
+        return (float)(log(x) / log(10.0));
 #else
-    return log10(x);
+        return log10f(x);
 #endif
-  }
+    }
 };
 
-template <typename T> struct Log1p : public std::unary_function<T, T> {};
-
-template <> struct Log1p<float> : public std::unary_function<float, float> {
-  inline float operator()(const float &x) const {
+template <> struct Log10<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const
+    {
 #if defined(NTA_OS_WINDOWS)
-    return (float)log(1.0 + x);
+        return log(x) / log(10.0);
 #else
-    return log1pf(x);
+        return log10(x);
 #endif
-  }
+    }
 };
 
-template <> struct Log1p<double> : public std::unary_function<double, double> {
-  inline double operator()(const double &x) const {
+template <typename T> struct Log1p : public std::unary_function<T, T>
+{
+};
+
+template <> struct Log1p<float> : public std::unary_function<float, float>
+{
+    inline float operator()(const float &x) const
+    {
 #if defined(NTA_OS_WINDOWS)
-    return log(1.0 + x);
+        return (float)log(1.0 + x);
 #else
-    return log1p(x);
+        return log1pf(x);
 #endif
-  }
+    }
+};
+
+template <> struct Log1p<double> : public std::unary_function<double, double>
+{
+    inline double operator()(const double &x) const
+    {
+#if defined(NTA_OS_WINDOWS)
+        return log(1.0 + x);
+#else
+        return log1p(x);
+#endif
+    }
 };
 
 /**
@@ -605,85 +693,107 @@ template <> struct Log1p<double> : public std::unary_function<double, double> {
  * Error is h^4 y^5/30.
  */
 template <typename Float, typename F>
-struct Derivative : public std::unary_function<Float, Float> {
-  Derivative(const F &f) : f_(f) {}
+struct Derivative : public std::unary_function<Float, Float>
+{
+    Derivative(const F &f) : f_(f) {}
 
-  F f_;
+    F f_;
 
-  /**
-   * Approximates the derivative of F at x.
-   */
-  inline const Float operator()(const Float &x) const {
-    const Float h = nust::Epsilon;
-    return (-f_(x + 2 * h) + 8 * f_(x + h) - 8 * f_(x - h) + f_(x - 2 * h)) /
-           (12 * h);
-  }
+    /**
+     * Approximates the derivative of F at x.
+     */
+    inline const Float operator()(const Float &x) const
+    {
+        const Float h = nust::Epsilon;
+        return (-f_(x + 2 * h) + 8 * f_(x + h) - 8 * f_(x - h) +
+                f_(x - 2 * h)) /
+               (12 * h);
+    }
 };
 
 //--------------------------------------------------------------------------------
 // Binary functions
 //--------------------------------------------------------------------------------
-template <typename T> struct Assign : public std::binary_function<T, T, T> {
-  inline T operator()(T &x, const T &y) const {
-    x = y;
-    return x;
-  }
+template <typename T> struct Assign : public std::binary_function<T, T, T>
+{
+    inline T operator()(T &x, const T &y) const
+    {
+        x = y;
+        return x;
+    }
 };
 
-template <typename T> struct Plus : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x + y; }
+template <typename T> struct Plus : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x + y; }
 };
 
-template <typename T> struct Minus : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x - y; }
+template <typename T> struct Minus : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x - y; }
 };
 
-template <typename T> struct Multiplies : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x * y; }
+template <typename T> struct Multiplies : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x * y; }
 };
 
-template <typename T> struct Divides : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x / y; }
+template <typename T> struct Divides : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x / y; }
 };
 
-template <typename T> struct Pow : public std::binary_function<T, T, T> {};
-
-template <>
-struct Pow<float> : public std::binary_function<float, float, float> {
-  inline float operator()(const float &x, const float &y) const {
-    return powf(x, y);
-  }
+template <typename T> struct Pow : public std::binary_function<T, T, T>
+{
 };
 
-template <>
-struct Pow<double> : public std::binary_function<double, double, double> {
-  inline double operator()(const double &x, const double &y) const {
-    return pow(x, y);
-  }
-};
-
-template <typename T> struct Logk : public std::binary_function<T, T, T> {};
-
-template <>
-struct Logk<float> : public std::binary_function<float, float, float> {
-  inline float operator()(const float &x, const float &y) const {
-    return logf(x) / logf(y);
-  }
+template <> struct Pow<float> : public std::binary_function<float, float, float>
+{
+    inline float operator()(const float &x, const float &y) const
+    {
+        return powf(x, y);
+    }
 };
 
 template <>
-struct Logk<double> : public std::binary_function<double, double, double> {
-  inline double operator()(const double &x, const double &y) const {
-    return log(x) / log(y);
-  }
+struct Pow<double> : public std::binary_function<double, double, double>
+{
+    inline double operator()(const double &x, const double &y) const
+    {
+        return pow(x, y);
+    }
 };
 
-template <typename T> struct Max : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x > y ? x : y; }
+template <typename T> struct Logk : public std::binary_function<T, T, T>
+{
 };
 
-template <typename T> struct Min : public std::binary_function<T, T, T> {
-  inline T operator()(const T &x, const T &y) const { return x < y ? x : y; }
+template <>
+struct Logk<float> : public std::binary_function<float, float, float>
+{
+    inline float operator()(const float &x, const float &y) const
+    {
+        return logf(x) / logf(y);
+    }
+};
+
+template <>
+struct Logk<double> : public std::binary_function<double, double, double>
+{
+    inline double operator()(const double &x, const double &y) const
+    {
+        return log(x) / log(y);
+    }
+};
+
+template <typename T> struct Max : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x > y ? x : y; }
+};
+
+template <typename T> struct Min : public std::binary_function<T, T, T>
+{
+    inline T operator()(const T &x, const T &y) const { return x < y ? x : y; }
 };
 
 //--------------------------------------------------------------------------------
@@ -691,33 +801,38 @@ template <typename T> struct Min : public std::binary_function<T, T, T> {
  * Gaussian:
  * y = 1/(sigma * sqrt(2*pi)) * exp(-(x-mu)^2/(2*sigma^2)) as a functor.
  */
-template <typename T> struct Gaussian : public std::unary_function<T, T> {
-  T k1, k2, mu;
+template <typename T> struct Gaussian : public std::unary_function<T, T>
+{
+    T k1, k2, mu;
 
-  inline Gaussian(T m, T s) : k1(0.0), k2(0.0), mu(m) {
-    // For some reason, SWIG cannot parse 1 / (x), the parentheses in the
-    // denominator don't agree with it, so we have to initialize those
-    // constants here.
-    k1 = 1.0 / sqrt(2.0 * 3.1415926535);
-    k2 = -1.0 / (2.0 * s * s);
-  }
-
-  inline Gaussian(const Gaussian &o) : k1(o.k1), k2(o.k2), mu(o.mu) {}
-
-  inline Gaussian &operator=(const Gaussian &o) {
-    if (&o != this) {
-      k1 = o.k1;
-      k2 = o.k2;
-      mu = o.mu;
+    inline Gaussian(T m, T s) : k1(0.0), k2(0.0), mu(m)
+    {
+        // For some reason, SWIG cannot parse 1 / (x), the parentheses in the
+        // denominator don't agree with it, so we have to initialize those
+        // constants here.
+        k1 = 1.0 / sqrt(2.0 * 3.1415926535);
+        k2 = -1.0 / (2.0 * s * s);
     }
 
-    return *this;
-  }
+    inline Gaussian(const Gaussian &o) : k1(o.k1), k2(o.k2), mu(o.mu) {}
 
-  inline T operator()(T x) const {
-    T v = x - mu;
-    return k1 * exp(k2 * v * v);
-  }
+    inline Gaussian &operator=(const Gaussian &o)
+    {
+        if (&o != this)
+        {
+            k1 = o.k1;
+            k2 = o.k2;
+            mu = o.mu;
+        }
+
+        return *this;
+    }
+
+    inline T operator()(T x) const
+    {
+        T v = x - mu;
+        return k1 * exp(k2 * v * v);
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -727,46 +842,52 @@ template <typename T> struct Gaussian : public std::unary_function<T, T> {
 template <typename T>
 struct Gaussian2D // : public std::binary_function<T, T, T> (SWIG pb)
 {
-  T c_x, c_y, s00, s01, s10, s11, s2, k1;
+    T c_x, c_y, s00, s01, s10, s11, s2, k1;
 
-  inline Gaussian2D(T c_x_, T c_y_, T s00_, T s01_, T s10_, T s11_)
-      : c_x(c_x_), c_y(c_y_), s00(s00_), s01(s01_), s10(s10_), s11(s11_),
-        s2(s10 + s01), k1(0.0) {
-    // For some reason, SWIG cannot parse 1 / (x), the parentheses in the
-    // denominator don't agree with it, so we have to initialize those
-    // constants here.
-    k1 = 1.0 / (2.0 * 3.1415926535 * sqrt(s00 * s11 - s10 * s01));
-    T d = -2.0 * (s00 * s11 - s10 * s01);
-    s00 /= d;
-    s01 /= d;
-    s10 /= d;
-    s11 /= d;
-    s2 /= d;
-  }
-
-  inline Gaussian2D(const Gaussian2D &o)
-      : c_x(o.c_x), c_y(o.c_y), s00(o.s00), s01(o.s01), s10(o.s10), s11(o.s11),
-        s2(o.s2), k1(o.k1) {}
-
-  inline Gaussian2D &operator=(const Gaussian2D &o) {
-    if (&o != this) {
-      c_x = o.c_x;
-      c_y = o.c_y;
-      s00 = o.s00;
-      s01 = o.s01;
-      s10 = o.s10;
-      s11 = o.s11;
-      s2 = o.s2;
-      k1 = o.k1;
+    inline Gaussian2D(T c_x_, T c_y_, T s00_, T s01_, T s10_, T s11_)
+        : c_x(c_x_), c_y(c_y_), s00(s00_), s01(s01_), s10(s10_), s11(s11_),
+          s2(s10 + s01), k1(0.0)
+    {
+        // For some reason, SWIG cannot parse 1 / (x), the parentheses in the
+        // denominator don't agree with it, so we have to initialize those
+        // constants here.
+        k1 = 1.0 / (2.0 * 3.1415926535 * sqrt(s00 * s11 - s10 * s01));
+        T d = -2.0 * (s00 * s11 - s10 * s01);
+        s00 /= d;
+        s01 /= d;
+        s10 /= d;
+        s11 /= d;
+        s2 /= d;
     }
 
-    return *this;
-  }
+    inline Gaussian2D(const Gaussian2D &o)
+        : c_x(o.c_x), c_y(o.c_y), s00(o.s00), s01(o.s01), s10(o.s10),
+          s11(o.s11), s2(o.s2), k1(o.k1)
+    {
+    }
 
-  inline T operator()(T x, T y) const {
-    T v0 = x - c_x, v1 = y - c_y;
-    return k1 * exp(s11 * v0 * v0 + s2 * v0 * v1 + s00 * v1 * v1);
-  }
+    inline Gaussian2D &operator=(const Gaussian2D &o)
+    {
+        if (&o != this)
+        {
+            c_x = o.c_x;
+            c_y = o.c_y;
+            s00 = o.s00;
+            s01 = o.s01;
+            s10 = o.s10;
+            s11 = o.s11;
+            s2 = o.s2;
+            k1 = o.k1;
+        }
+
+        return *this;
+    }
+
+    inline T operator()(T x, T y) const
+    {
+        T v0 = x - c_x, v1 = y - c_y;
+        return k1 * exp(s11 * v0 * v0 + s2 * v0 * v1 + s00 * v1 * v1);
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -775,16 +896,18 @@ struct Gaussian2D // : public std::binary_function<T, T, T> (SWIG pb)
  */
 template <typename F1, typename F2>
 struct unary_compose : public std::unary_function<typename F1::argument_type,
-                                                  typename F2::result_type> {
-  typedef typename F1::argument_type argument_type;
-  typedef typename F2::result_type result_type;
+                                                  typename F2::result_type>
+{
+    typedef typename F1::argument_type argument_type;
+    typedef typename F2::result_type result_type;
 
-  F1 f1;
-  F2 f2;
+    F1 f1;
+    F2 f2;
 
-  inline result_type operator()(const argument_type &x) const {
-    return f2(f1(x));
-  }
+    inline result_type operator()(const argument_type &x) const
+    {
+        return f2(f1(x));
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -796,17 +919,19 @@ struct unary_compose : public std::unary_function<typename F1::argument_type,
 template <typename O, typename S>
 struct predicate_compose
     : public std::binary_function<typename S::argument_type,
-                                  typename S::argument_type, bool> {
-  typedef bool result_type;
-  typedef typename S::argument_type argument_type;
+                                  typename S::argument_type, bool>
+{
+    typedef bool result_type;
+    typedef typename S::argument_type argument_type;
 
-  O o;
-  S s;
+    O o;
+    S s;
 
-  inline result_type operator()(const argument_type &x,
-                                const argument_type &y) const {
-    return o(s(x), s(y));
-  }
+    inline result_type operator()(const argument_type &x,
+                                  const argument_type &y) const
+    {
+        return o(s(x), s(y));
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -815,51 +940,56 @@ struct predicate_compose
  *   numeric_limits<float>::min_exponent10 = -37
  *   numeric_limits<double>::min_exponent10 = -307
  */
-template <typename T> inline bool isSafeForDivision(const T &x) {
-  Log<T> log_f;
-  return log_f(x) >= std::numeric_limits<T>::min_exponent10;
+template <typename T> inline bool isSafeForDivision(const T &x)
+{
+    Log<T> log_f;
+    return log_f(x) >= std::numeric_limits<T>::min_exponent10;
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Returns the value passed in or a threshold if the value is >= threshold.
  */
-template <typename T> struct ClipAbove : public std::unary_function<T, T> {
-  inline ClipAbove(const T &val) : val_(val) {}
+template <typename T> struct ClipAbove : public std::unary_function<T, T>
+{
+    inline ClipAbove(const T &val) : val_(val) {}
 
-  inline ClipAbove(const ClipAbove &c) : val_(c.val_) {}
+    inline ClipAbove(const ClipAbove &c) : val_(c.val_) {}
 
-  inline ClipAbove &operator=(const ClipAbove &c) {
-    if (this != &c)
-      val_ = c.val_;
+    inline ClipAbove &operator=(const ClipAbove &c)
+    {
+        if (this != &c)
+            val_ = c.val_;
 
-    return *this;
-  }
+        return *this;
+    }
 
-  inline T operator()(const T &x) const { return x >= val_ ? val_ : x; }
+    inline T operator()(const T &x) const { return x >= val_ ? val_ : x; }
 
-  T val_;
+    T val_;
 };
 
 //--------------------------------------------------------------------------------
 /**
  * Returns the value passed in or a threshold if the value is < threshold.
  */
-template <typename T> struct ClipBelow : public std::unary_function<T, T> {
-  inline ClipBelow(const T &val) : val_(val) {}
+template <typename T> struct ClipBelow : public std::unary_function<T, T>
+{
+    inline ClipBelow(const T &val) : val_(val) {}
 
-  inline ClipBelow(const ClipBelow &c) : val_(c.val_) {}
+    inline ClipBelow(const ClipBelow &c) : val_(c.val_) {}
 
-  inline ClipBelow &operator=(const ClipBelow &c) {
-    if (this != &c)
-      val_ = c.val_;
+    inline ClipBelow &operator=(const ClipBelow &c)
+    {
+        if (this != &c)
+            val_ = c.val_;
 
-    return *this;
-  }
+        return *this;
+    }
 
-  inline T operator()(const T &x) const { return x < val_ ? val_ : x; }
+    inline T operator()(const T &x) const { return x < val_ ? val_ : x; }
 
-  T val_;
+    T val_;
 };
 
 //--------------------------------------------------------------------------------

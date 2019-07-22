@@ -21,20 +21,23 @@
  */
 
 #include <iomanip>
+
 #include <nust/algorithms/InSynapse.hpp>
 
 namespace nust
 {
 
-inline void InSynapse::print(std::ostream &outStream) const {
-  outStream << _srcCellIdx << ',' << std::setprecision(4) << _permanence;
+inline void InSynapse::print(std::ostream &outStream) const
+{
+    outStream << _srcCellIdx << ',' << std::setprecision(4) << _permanence;
 }
 
 //--------------------------------------------------------------------------------
 
-std::ostream &operator<<(std::ostream &outStream, const InSynapse &s) {
-  s.print(outStream);
-  return outStream;
+std::ostream &operator<<(std::ostream &outStream, const InSynapse &s)
+{
+    s.print(outStream);
+    return outStream;
 }
 
 } // namespace nust

@@ -26,7 +26,8 @@
 #include <nust/types/Types.hpp>
 #include <nust/utils/Log.hpp> // NTA_ASSERT
 
-namespace nust {
+namespace nust
+{
 
 class Cells4;
 
@@ -37,53 +38,62 @@ class Cells4;
  * indices for the *destination* cell, and the *destination* segment on that
  * cell. The cell index is between 0 and nCols * nCellsPerCol.
  */
-class OutSynapse {
+class OutSynapse
+{
 public:
 private:
-  UInt _dstCellIdx;
-  UInt _dstSegIdx; // index in _segActivity
+    UInt _dstCellIdx;
+    UInt _dstSegIdx; // index in _segActivity
 
 public:
-  OutSynapse(UInt dstCellIdx = static_cast<UInt> (-1), UInt dstSegIdx = static_cast<UInt> (-1)
-             // Cells4* cells =NULL
-             )
-      : _dstCellIdx(dstCellIdx), _dstSegIdx(dstSegIdx) {
-    // TODO: FIX this
-    // NTA_ASSERT(invariants(cells));
-  }
+    OutSynapse(UInt dstCellIdx = static_cast<UInt>(-1),
+               UInt dstSegIdx = static_cast<UInt>(-1)
+               // Cells4* cells =NULL
+               )
+        : _dstCellIdx(dstCellIdx), _dstSegIdx(dstSegIdx)
+    {
+        // TODO: FIX this
+        // NTA_ASSERT(invariants(cells));
+    }
 
-  OutSynapse(const OutSynapse &o)
-      : _dstCellIdx(o._dstCellIdx), _dstSegIdx(o._dstSegIdx) {}
+    OutSynapse(const OutSynapse &o)
+        : _dstCellIdx(o._dstCellIdx), _dstSegIdx(o._dstSegIdx)
+    {
+    }
 
-  OutSynapse &operator=(const OutSynapse &o) {
-    _dstCellIdx = o._dstCellIdx;
-    _dstSegIdx = o._dstSegIdx;
-    return *this;
-  }
+    OutSynapse &operator=(const OutSynapse &o)
+    {
+        _dstCellIdx = o._dstCellIdx;
+        _dstSegIdx = o._dstSegIdx;
+        return *this;
+    }
 
-  UInt dstCellIdx() const { return _dstCellIdx; }
-  UInt dstSegIdx() const { return _dstSegIdx; }
+    UInt dstCellIdx() const { return _dstCellIdx; }
 
-  /**
-   * Checks whether this outgoing synapses is going to given destination
-   * or not.
-   */
-  bool goesTo(UInt dstCellIdx, UInt dstSegIdx) const {
-    return _dstCellIdx == dstCellIdx && _dstSegIdx == dstSegIdx;
-  }
+    UInt dstSegIdx() const { return _dstSegIdx; }
 
-  /**
-   * Need for is_in/not_in tests.
-   */
-  bool equals(const OutSynapse &o) const {
-    return _dstCellIdx == o._dstCellIdx && _dstSegIdx == o._dstSegIdx;
-  }
+    /**
+     * Checks whether this outgoing synapses is going to given destination
+     * or not.
+     */
+    bool goesTo(UInt dstCellIdx, UInt dstSegIdx) const
+    {
+        return _dstCellIdx == dstCellIdx && _dstSegIdx == dstSegIdx;
+    }
 
-  /**
-   * Checks that the destination cell index and destination segment index
-   * are in range.
-   */
-  bool invariants(Cells4 *cells = nullptr) const;
+    /**
+     * Need for is_in/not_in tests.
+     */
+    bool equals(const OutSynapse &o) const
+    {
+        return _dstCellIdx == o._dstCellIdx && _dstSegIdx == o._dstSegIdx;
+    }
+
+    /**
+     * Checks that the destination cell index and destination segment index
+     * are in range.
+     */
+    bool invariants(Cells4 *cells = nullptr) const;
 };
 
 //--------------------------------------------------------------------------------

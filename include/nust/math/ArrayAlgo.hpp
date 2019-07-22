@@ -42,7 +42,8 @@
 #include <nust/math/Types.hpp>
 #include <nust/utils/Random.hpp> // For the official Numenta RNG
 
-namespace nust {
+namespace nust
+{
 
 //--------------------------------------------------------------------------------
 // Checks whether the SSE supports the operations we need, i.e. SSE3 and SSE4.
@@ -57,76 +58,77 @@ namespace nust {
 // If 19th bit of ecx is 1, we have sse4.1.
 // If 20th bit of ecx is 1, we have sse4.2.
 //--------------------------------------------------------------------------------
-static int checkSSE() {
-  unsigned int c = 0, d = 0;
-  const unsigned int SSE = 1 << 25, SSE2 = 1 << 26, SSE3 = 1 << 0,
-                     SSE41 = 1 << 19, SSE42 = 1 << 20;
+static int checkSSE()
+{
+    unsigned int c = 0, d = 0;
+    const unsigned int SSE = 1 << 25, SSE2 = 1 << 26, SSE3 = 1 << 0,
+                       SSE41 = 1 << 19, SSE42 = 1 << 20;
 #ifdef NTA_ASM
 #if defined(NTA_ARCH_32)
 #if defined(NTA_OS_WINDOWS) && defined(NTA_COMPILER_MSVC)
 
-  // VC asm
+    // VC asm
 
-  unsigned int f = 1;
-  __asm {
-        mov eax, f
-        cpuid
-        mov c, ecx
-        mov d, edx
-  }
+    unsigned int f = 1;
+    __asm {
+          mov eax, f
+          cpuid
+          mov c, ecx
+          mov d, edx
+    }
 
-  // TODO: add asm code for gcc/clang/... on Windows
+    // TODO: add asm code for gcc/clang/... on Windows
 
 #elif defined(NTA_OS_LINUX) || defined(NTA_OS_DARWIN)
 
-  unsigned int a = 0, b = 0, f = 1;
+    unsigned int a = 0, b = 0, f = 1;
 
-  // PIC-compliant asm
-  __asm__ __volatile__("pushl %%ebx\n\t"
-                       "cpuid\n\t"
-                       "movl %%ebx, %1\n\t"
-                       "popl %%ebx\n\t"
-                       : "=a"(a), "=r"(b), "=c"(c), "=d"(d)
-                       : "a"(f)
-                       : "cc");
+    // PIC-compliant asm
+    __asm__ __volatile__("pushl %%ebx\n\t"
+                         "cpuid\n\t"
+                         "movl %%ebx, %1\n\t"
+                         "popl %%ebx\n\t"
+                         : "=a"(a), "=r"(b), "=c"(c), "=d"(d)
+                         : "a"(f)
+                         : "cc");
 #endif
 #elif defined(NTA_ARCH_64)
 #if defined(NTA_OS_LINUX) || defined(NTA_OS_DARWIN)
 
-  __asm__ __volatile__("pushq  %%rbx\n\t"
+    __asm__ __volatile__("pushq  %%rbx\n\t"
 
-                       "movl   $1, %%eax\n\t"
-                       "cpuid\n\t"
-                       "movl   %%ecx, %0\n\t"
-                       "movl   %%edx, %1\n\t"
+                         "movl   $1, %%eax\n\t"
+                         "cpuid\n\t"
+                         "movl   %%ecx, %0\n\t"
+                         "movl   %%edx, %1\n\t"
 
-                       "popq  %%rbx\n\t"
-                       : "=c"(c), "=d"(d)
-                       :
-                       :);
+                         "popq  %%rbx\n\t"
+                         : "=c"(c), "=d"(d)
+                         :
+                         :);
 #elif defined(NTA_OS_WINDOWS) && defined(NTA_COMPILER_MSVC)
 
-  std::array<int, 4> cpui;
-  __cpuid(cpui.data(), 1);
-  c = cpui[2];
-  d = cpui[3];
+    std::array<int, 4> cpui;
+    __cpuid(cpui.data(), 1);
+    c = cpui[2];
+    d = cpui[3];
 #endif
 #endif
 #endif // NTA_ASM
 
-  int ret = -1;
-  if (d & SSE)
-    ret = 1;
-  if (d & SSE2)
-    ret = 2;
-  if (c & SSE3)
-    ret = 3;
-  if (c & SSE41)
-    ret = 41;
-  if (c & SSE42)
-    ret = 42;
+    int ret = -1;
+    if (d & SSE)
+        ret = 1;
+    if (d & SSE2)
+        ret = 2;
+    if (c & SSE3)
+        ret = 3;
+    if (c & SSE41)
+        ret = 41;
+    if (c & SSE42)
+        ret = 42;
 
-  return ret;
+    return ret;
 }
 
 //--------------------------------------------------------------------------------
@@ -144,16 +146,18 @@ static const int SSE_LEVEL = checkSSE();
 // TODO: is C++ trying to use that for all types??
 //--------------------------------------------------------------------------------
 template <typename It>
-inline bool
-nearlyZeroRange(It begin, It end,
-                const typename std::iterator_traits<It>::value_type epsilon =
-                    nust::Epsilon) {
-  { NTA_ASSERT(begin <= end) << "nearlyZeroRange: Invalid input range"; }
+inline bool nearlyZeroRange(
+    It begin, It end,
+    const typename std::iterator_traits<It>::value_type epsilon = nust::Epsilon)
+{
+    {
+        NTA_ASSERT(begin <= end) << "nearlyZeroRange: Invalid input range";
+    }
 
-  while (begin != end)
-    if (!nearlyZero(*begin++, epsilon))
-      return false;
-  return true;
+    while (begin != end)
+        if (!nearlyZero(*begin++, epsilon))
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
@@ -161,29 +165,34 @@ template <typename It1, typename It2>
 inline bool
 nearlyEqualRange(It1 begin1, It1 end1, It2 begin2, It2 end2,
                  const typename std::iterator_traits<It1>::value_type epsilon =
-                     nust::Epsilon) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "nearlyZeroRange: Invalid first input range";
-    NTA_ASSERT(begin2 <= end2) << "nearlyZeroRange: Invalid second input range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2)
-        << "nearlyZeroRange: Incompatible ranges";
-  }
+                     nust::Epsilon)
+{
+    {
+        NTA_ASSERT(begin1 <= end1)
+            << "nearlyZeroRange: Invalid first input range";
+        NTA_ASSERT(begin2 <= end2)
+            << "nearlyZeroRange: Invalid second input range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "nearlyZeroRange: Incompatible ranges";
+    }
 
-  while (begin1 != end1)
-    if (!nearlyEqual(*begin1++, *begin2++, epsilon))
-      return false;
-  return true;
+    while (begin1 != end1)
+        if (!nearlyEqual(*begin1++, *begin2++, epsilon))
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
 template <typename Container1, typename Container2>
 inline bool nearlyEqualVector(
     const Container1 &c1, const Container2 &c2,
-    const typename Container1::value_type &epsilon = nust::Epsilon) {
-  if (c1.size() != c2.size())
-    return false;
+    const typename Container1::value_type &epsilon = nust::Epsilon)
+{
+    if (c1.size() != c2.size())
+        return false;
 
-  return nearlyEqualRange(c1.begin(), c1.end(), c2.begin(), c2.end(), epsilon);
+    return nearlyEqualRange(c1.begin(), c1.end(), c2.begin(), c2.end(),
+                            epsilon);
 }
 
 //--------------------------------------------------------------------------------
@@ -193,16 +202,18 @@ template <typename T> inline bool is_zero(const T &x) { return x == 0; }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline bool is_zero(const std::pair<T1, T2> &x) {
-  return x.first == 0 && x.second == 0;
+inline bool is_zero(const std::pair<T1, T2> &x)
+{
+    return x.first == 0 && x.second == 0;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool is_zero(const std::vector<T> &x) {
-  for (size_t i = 0; i != x.size(); ++i)
-    if (!is_zero(x[i]))
-      return false;
-  return true;
+template <typename T> inline bool is_zero(const std::vector<T> &x)
+{
+    for (size_t i = 0; i != x.size(); ++i)
+        if (!is_zero(x[i]))
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
@@ -221,341 +232,363 @@ template <typename T> inline bool is_zero(const std::vector<T> &x) {
  * TODO: can we go faster if working on ints rather than floats?
  */
 template <typename InputIterator>
-inline bool isZero_01(InputIterator x, InputIterator x_end) {
-  { NTA_ASSERT(x <= x_end); }
+inline bool isZero_01(InputIterator x, InputIterator x_end)
+{
+    {
+        NTA_ASSERT(x <= x_end);
+    }
 
-  // This test can be moved to compile time using a template with an int
-  // parameter, and partial specializations that will match the static
-  // const int SSE_LEVEL.
-  if (SSE_LEVEL >= 41) { // ptest is a SSE 4.1 instruction
+    // This test can be moved to compile time using a template with an int
+    // parameter, and partial specializations that will match the static
+    // const int SSE_LEVEL.
+    if (SSE_LEVEL >= 41)
+    { // ptest is a SSE 4.1 instruction
 
-    // On win32, the asm syntax is not correct.
+        // On win32, the asm syntax is not correct.
 #if defined(NTA_ASM) && defined(NTA_ARCH_32) && !defined(NTA_OS_WINDOWS)
 
-    // n is the total number of floats to process.
-    // n1 is the number of floats we can process in parallel using SSE.
-    // If x is not aligned on a 4 bytes boundary, we eschew all asm.
-    int result = 0;
-    int n = (int)(x_end - x);
-    int n1 = 0;
-    if (((long)x) % 16 == 0)
-      n1 = 8 * (n / 8); // we are going to process 2x4 floats at a time
+        // n is the total number of floats to process.
+        // n1 is the number of floats we can process in parallel using SSE.
+        // If x is not aligned on a 4 bytes boundary, we eschew all asm.
+        int result = 0;
+        int n = (int)(x_end - x);
+        int n1 = 0;
+        if (((long)x) % 16 == 0)
+            n1 = 8 * (n / 8); // we are going to process 2x4 floats at a time
 
-    if (n1 > 0) {
+        if (n1 > 0)
+        {
 
-      __asm__ __volatile__(
-          "pusha\n\t" // save all registers
+            __asm__ __volatile__(
+                "pusha\n\t" // save all registers
 
-          // fill xmm4 with all 1's,
-          // our mask to detect if there are on bits
-          // in the vector or not
-          "subl $16, %%esp\n\t"            // allocate 4 floats on the stack
-          "movl $0xffffffff, (%%esp)\n\t"  // copy mask 4 times,
-          "movl $0xffffffff, 4(%%esp)\n\t" // then move 16 bytes at once
-          "movl $0xffffffff, 8(%%esp)\n\t" // using movaps
-          "movl $0xffffffff, 12(%%esp)\n\t"
-          "movaps (%%esp), %%xmm4\n\t"
-          "addl $16, %%esp\n\t" // deallocate 4 floats on the stack
+                // fill xmm4 with all 1's,
+                // our mask to detect if there are on bits
+                // in the vector or not
+                "subl $16, %%esp\n\t" // allocate 4 floats on the stack
+                "movl $0xffffffff, (%%esp)\n\t"  // copy mask 4 times,
+                "movl $0xffffffff, 4(%%esp)\n\t" // then move 16 bytes at once
+                "movl $0xffffffff, 8(%%esp)\n\t" // using movaps
+                "movl $0xffffffff, 12(%%esp)\n\t"
+                "movaps (%%esp), %%xmm4\n\t"
+                "addl $16, %%esp\n\t" // deallocate 4 floats on the stack
 
-          "0:\n\t"
-          // esi and edi point to the same x, but staggered, so
-          // that we can load 2x4 bytes into xmm0 and xmm1
-          "movaps (%%edi), %%xmm0\n\t" // move 4 floats from x
-          "movaps (%%esi), %%xmm1\n\t" // move another 4 floats from same x
-          "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
-          "ptest %%xmm4, %%xmm1\n\t"   // ptest second 4 floats, in xmm1
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
+                "0:\n\t"
+                // esi and edi point to the same x, but staggered, so
+                // that we can load 2x4 bytes into xmm0 and xmm1
+                "movaps (%%edi), %%xmm0\n\t" // move 4 floats from x
+                "movaps (%%esi), %%xmm1\n\t" // move another 4 floats from same
+                                             // x
+                "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
+                "ptest %%xmm4, %%xmm1\n\t" // ptest second 4 floats, in xmm1
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
 
-          "addl $32, %%edi\n\t" // jump over 4 floats
-          "addl $32, %%esi\n\t" // and another 4 floats here
-          "subl $8, %%ecx\n\t"  // processed 8 floats
-          "ja 0b\n\t"
+                "addl $32, %%edi\n\t" // jump over 4 floats
+                "addl $32, %%esi\n\t" // and another 4 floats here
+                "subl $8, %%ecx\n\t"  // processed 8 floats
+                "ja 0b\n\t"
 
-          "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
-          "jmp 2f\n\t"      // exit
+                "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
+                "jmp 2f\n\t"      // exit
 
-          "1:\n\t"            // found something
-          "movl $0x1, %0\n\t" // result = 1 (int)
+                "1:\n\t"            // found something
+                "movl $0x1, %0\n\t" // result = 1 (int)
 
-          "2:\n\t"   // exit
-          "popa\n\t" // restore all registers
+                "2:\n\t"   // exit
+                "popa\n\t" // restore all registers
 
-          : "=m"(result), "=D"(x)
-          : "D"(x), "S"(x + 4), "c"(n1)
-          :);
+                : "=m"(result), "=D"(x)
+                : "D"(x), "S"(x + 4), "c"(n1)
+                :);
 
-      if (result == 1)
-        return false;
-    } // n1>0 end
+            if (result == 1)
+                return false;
+        } // n1>0 end
 
-    // Complete computation by iterating over "stragglers" one by one.
-    for (int i = n1; i != n; ++i)
-      if (*(x + i) > 0)
-        return false;
-    return true;
+        // Complete computation by iterating over "stragglers" one by one.
+        for (int i = n1; i != n; ++i)
+            if (*(x + i) > 0)
+                return false;
+        return true;
 
 #elif defined(NTA_ASM) && defined(NTA_ARCH_64) && !defined(NTA_OS_WINDOWS)
 
-    // n is the total number of floats to process.
-    // n1 is the number of floats we can process in parallel using SSE.
-    // If x is not aligned on a 4 bytes boundary, we eschew all asm.
-    int result = 0;
-    int n = static_cast<int> (x_end - x);
-    int n1 = 0;
+        // n is the total number of floats to process.
+        // n1 is the number of floats we can process in parallel using SSE.
+        // If x is not aligned on a 4 bytes boundary, we eschew all asm.
+        int result = 0;
+        int n = static_cast<int>(x_end - x);
+        int n1 = 0;
 
-    if (static_cast<long> (x) % 16 == 0)
-      n1 = 8 * (n / 8); // we are going to process 2x4 floats at a time
+        if (static_cast<long>(x) % 16 == 0)
+            n1 = 8 * (n / 8); // we are going to process 2x4 floats at a time
 
-    if (n1 > 0) {
+        if (n1 > 0)
+        {
 
-      __asm__ __volatile__(
-          // fill xmm4 with all 1's,
-          // our mask to detect if there are on bits
-          // in the vector or not
-          "subq $16, %%rsp\n\t"            // allocate 4 floats on the stack
-          "movl $0xffffffff, (%%rsp)\n\t"  // copy mask 4 times,
-          "movl $0xffffffff, 4(%%rsp)\n\t" // then move 16 bytes at once
-          "movl $0xffffffff, 8(%%rsp)\n\t" // using movaps
-          "movl $0xffffffff, 12(%%rsp)\n\t"
-          "movaps (%%rsp), %%xmm4\n\t"
-          "addq $16, %%rsp\n\t" // deallocate 4 floats on the stack
+            __asm__ __volatile__(
+                // fill xmm4 with all 1's,
+                // our mask to detect if there are on bits
+                // in the vector or not
+                "subq $16, %%rsp\n\t" // allocate 4 floats on the stack
+                "movl $0xffffffff, (%%rsp)\n\t"  // copy mask 4 times,
+                "movl $0xffffffff, 4(%%rsp)\n\t" // then move 16 bytes at once
+                "movl $0xffffffff, 8(%%rsp)\n\t" // using movaps
+                "movl $0xffffffff, 12(%%rsp)\n\t"
+                "movaps (%%rsp), %%xmm4\n\t"
+                "addq $16, %%rsp\n\t" // deallocate 4 floats on the stack
 
-          "0:\n\t"
-          // rsi and rdi point to the same x, but staggered, so
-          // that we can load 2x4 bytes into xmm0 and xmm1
-          "movaps (%%rdi), %%xmm0\n\t" // move 4 floats from x
-          "movaps (%%rsi), %%xmm1\n\t" // move another 4 floats from same x
-          "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
-          "ptest %%xmm4, %%xmm1\n\t"   // ptest second 4 floats, in xmm1
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
+                "0:\n\t"
+                // rsi and rdi point to the same x, but staggered, so
+                // that we can load 2x4 bytes into xmm0 and xmm1
+                "movaps (%%rdi), %%xmm0\n\t" // move 4 floats from x
+                "movaps (%%rsi), %%xmm1\n\t" // move another 4 floats from same
+                                             // x
+                "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
+                "ptest %%xmm4, %%xmm1\n\t" // ptest second 4 floats, in xmm1
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
 
-          "addq $32, %%rdi\n\t" // jump over 4 floats
-          "addq $32, %%rsi\n\t" // and another 4 floats here
-          "subq $8, %%rcx\n\t"  // processed 8 floats
-          "ja 0b\n\t"
+                "addq $32, %%rdi\n\t" // jump over 4 floats
+                "addq $32, %%rsi\n\t" // and another 4 floats here
+                "subq $8, %%rcx\n\t"  // processed 8 floats
+                "ja 0b\n\t"
 
-          "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
-          "jmp 2f\n\t"      // exit
+                "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
+                "jmp 2f\n\t"      // exit
 
-          "1:\n\t"            // found something
-          "movl $0x1, %0\n\t" // result = 1 (int)
+                "1:\n\t"            // found something
+                "movl $0x1, %0\n\t" // result = 1 (int)
 
-          "2:\n\t" // exit
+                "2:\n\t" // exit
 
-          : "=m"(result), "=D"(x)
-          : "D"(x), "S"(x + 4), "c"(n1)
-          :);
+                : "=m"(result), "=D"(x)
+                : "D"(x), "S"(x + 4), "c"(n1)
+                :);
 
-      if (result == 1)
-        return false;
-      else
+            if (result == 1)
+                return false;
+            else
+                return true;
+        } // n1>0 end
+
+        // Revert to slow c++ version if array is not on 16 byte boundary
+        for (; x != x_end; ++x)
+            if (*x > 0)
+                return false;
         return true;
-    } // n1>0 end
-
-    // Revert to slow c++ version if array is not on 16 byte boundary
-    for (; x != x_end; ++x)
-      if (*x > 0)
-        return false;
-    return true;
 
 #else
-    for (; x != x_end; ++x)
-      if (*x > 0)
-        return false;
-    return true;
+        for (; x != x_end; ++x)
+            if (*x > 0)
+                return false;
+        return true;
 #endif
+    }
+    else
+    { // not SSE4.2
 
-  } else { // not SSE4.2
-
-    for (; x != x_end; ++x)
-      if (*x > 0)
-        return false;
-    return true;
-  }
+        for (; x != x_end; ++x)
+            if (*x > 0)
+                return false;
+        return true;
+    }
 } // end method
 
 //--------------------------------------------------------------------------------
 /**
  * 10X faster than function just above.
  */
-inline bool is_zero_01(const ByteVector &x, size_t begin, size_t end) {
-  const Byte *x_beg = &x[begin];
-  const Byte *x_end = &x[end];
+inline bool is_zero_01(const ByteVector &x, size_t begin, size_t end)
+{
+    const Byte *x_beg = &x[begin];
+    const Byte *x_end = &x[end];
 
-  // On win32, the asm syntax is not correct.
+    // On win32, the asm syntax is not correct.
 
-  // This test can be moved to compile time using a template with an int
-  // parameter, and partial specializations that will match the static
-  // const int SSE_LEVEL.
-  if (SSE_LEVEL >= 41) { // ptest is a SSE 4.1 instruction
+    // This test can be moved to compile time using a template with an int
+    // parameter, and partial specializations that will match the static
+    // const int SSE_LEVEL.
+    if (SSE_LEVEL >= 41)
+    { // ptest is a SSE 4.1 instruction
 
 #if defined(NTA_ASM) && defined(NTA_ARCH_32) && !defined(NTA_OS_WINDOWS)
 
-    // n is the total number of floats to process.
-    // n1 is the number of floats we can process in parallel using SSE.
-    // If x is not aligned on a 4 bytes boundary, we eschew all asm.
-    int result = 0;
-    int n = (int)(x_end - x_beg);
-    int n1 = 0;
-    if (((long)x_beg) % 16 == 0)
-      n1 = 32 * (n / 32); // we are going to process 32 bytes at a time
+        // n is the total number of floats to process.
+        // n1 is the number of floats we can process in parallel using SSE.
+        // If x is not aligned on a 4 bytes boundary, we eschew all asm.
+        int result = 0;
+        int n = (int)(x_end - x_beg);
+        int n1 = 0;
+        if (((long)x_beg) % 16 == 0)
+            n1 = 32 * (n / 32); // we are going to process 32 bytes at a time
 
-    if (n1 > 0) {
+        if (n1 > 0)
+        {
 
-      __asm__ __volatile__(
-          "pusha\n\t" // save all registers
+            __asm__ __volatile__(
+                "pusha\n\t" // save all registers
 
-          // fill xmm4 with all 1's,
-          // our mask to detect if there are on bits
-          // in the vector or not
-          "subl $16, %%esp\n\t"            // allocate 4 floats on the stack
-          "movl $0xffffffff, (%%esp)\n\t"  // copy mask 4 times,
-          "movl $0xffffffff, 4(%%esp)\n\t" // then move 16 bytes at once
-          "movl $0xffffffff, 8(%%esp)\n\t" // using movaps
-          "movl $0xffffffff, 12(%%esp)\n\t"
-          "movaps (%%esp), %%xmm4\n\t"
-          "addl $16, %%esp\n\t" // deallocate 4 floats on the stack
+                // fill xmm4 with all 1's,
+                // our mask to detect if there are on bits
+                // in the vector or not
+                "subl $16, %%esp\n\t" // allocate 4 floats on the stack
+                "movl $0xffffffff, (%%esp)\n\t"  // copy mask 4 times,
+                "movl $0xffffffff, 4(%%esp)\n\t" // then move 16 bytes at once
+                "movl $0xffffffff, 8(%%esp)\n\t" // using movaps
+                "movl $0xffffffff, 12(%%esp)\n\t"
+                "movaps (%%esp), %%xmm4\n\t"
+                "addl $16, %%esp\n\t" // deallocate 4 floats on the stack
 
-          "0:\n\t"
-          // esi and edi point to the same x, but staggered, so
-          // that we can load 2x4 bytes into xmm0 and xmm1
-          "movaps (%%edi), %%xmm0\n\t" // move 4 floats from x
-          "movaps (%%esi), %%xmm1\n\t" // move another 4 floats from same x
-          "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
-          "ptest %%xmm4, %%xmm1\n\t"   // ptest second 4 floats, in xmm1
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
+                "0:\n\t"
+                // esi and edi point to the same x, but staggered, so
+                // that we can load 2x4 bytes into xmm0 and xmm1
+                "movaps (%%edi), %%xmm0\n\t" // move 4 floats from x
+                "movaps (%%esi), %%xmm1\n\t" // move another 4 floats from same
+                                             // x
+                "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
+                "ptest %%xmm4, %%xmm1\n\t" // ptest second 4 floats, in xmm1
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
 
-          "addl $32, %%edi\n\t" // jump 32 bytes (16 in xmm0 + 16 in xmm1)
-          "addl $32, %%esi\n\t" // and another 32 bytes
-          "subl $32, %%ecx\n\t" // processed 32 bytes
-          "ja 0b\n\t"
+                "addl $32, %%edi\n\t" // jump 32 bytes (16 in xmm0 + 16 in xmm1)
+                "addl $32, %%esi\n\t" // and another 32 bytes
+                "subl $32, %%ecx\n\t" // processed 32 bytes
+                "ja 0b\n\t"
 
-          "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
-          "jmp 2f\n\t"      // exit
+                "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
+                "jmp 2f\n\t"      // exit
 
-          "1:\n\t"            // found something
-          "movl $0x1, %0\n\t" // result = 1 (int)
+                "1:\n\t"            // found something
+                "movl $0x1, %0\n\t" // result = 1 (int)
 
-          "2:\n\t"   // exit
-          "popa\n\t" // restore all registers
+                "2:\n\t"   // exit
+                "popa\n\t" // restore all registers
 
-          : "=m"(result), "=D"(x_beg)
-          : "D"(x_beg), "S"(x_beg + 16), "c"(n1)
-          :);
+                : "=m"(result), "=D"(x_beg)
+                : "D"(x_beg), "S"(x_beg + 16), "c"(n1)
+                :);
 
-      if (result == 1)
-        return false;
-    }
+            if (result == 1)
+                return false;
+        }
 
-    // Complete computation by iterating over "stragglers" one by one.
-    for (int i = n1; i != n; ++i)
-      if (*(x_beg + i) > 0)
-        return false;
-    return true;
+        // Complete computation by iterating over "stragglers" one by one.
+        for (int i = n1; i != n; ++i)
+            if (*(x_beg + i) > 0)
+                return false;
+        return true;
 
 #elif defined(NTA_ASM) && !defined(NTA_OS_WINDOWS)
 
-    // n is the total number of floats to process.
-    // n1 is the number of floats we can process in parallel using SSE.
-    // If x is not aligned on a 4 bytes boundary, we eschew all asm.
-    int result = 0;
-    int n = static_cast<int> (x_end - x_beg);
-    int n1 = 0;
-    if (reinterpret_cast<long> (x_beg) % 16 == 0)
-      n1 = 32 * (n / 32); // we are going to process 32 bytes at a time
+        // n is the total number of floats to process.
+        // n1 is the number of floats we can process in parallel using SSE.
+        // If x is not aligned on a 4 bytes boundary, we eschew all asm.
+        int result = 0;
+        int n = static_cast<int>(x_end - x_beg);
+        int n1 = 0;
+        if (reinterpret_cast<long>(x_beg) % 16 == 0)
+            n1 = 32 * (n / 32); // we are going to process 32 bytes at a time
 
-    if (n1 > 0) {
+        if (n1 > 0)
+        {
 
-      __asm__ __volatile__(
-          // fill xmm4 with all 1's,
-          // our mask to detect if there are on bits
-          // in the vector or not
-          "subq $16, %%rsp\n\t"            // allocate 4 floats on the stack
-          "movq $0xffffffff, (%%rsp)\n\t"  // copy mask 4 times,
-          "movq $0xffffffff, 4(%%rsp)\n\t" // then move 16 bytes at once
-          "movq $0xffffffff, 8(%%rsp)\n\t" // using movaps
-          "movq $0xffffffff, 12(%%rsp)\n\t"
-          "movaps (%%rsp), %%xmm4\n\t"
-          "addq $16, %%rsp\n\t" // deallocate 4 floats on the stack
+            __asm__ __volatile__(
+                // fill xmm4 with all 1's,
+                // our mask to detect if there are on bits
+                // in the vector or not
+                "subq $16, %%rsp\n\t" // allocate 4 floats on the stack
+                "movq $0xffffffff, (%%rsp)\n\t"  // copy mask 4 times,
+                "movq $0xffffffff, 4(%%rsp)\n\t" // then move 16 bytes at once
+                "movq $0xffffffff, 8(%%rsp)\n\t" // using movaps
+                "movq $0xffffffff, 12(%%rsp)\n\t"
+                "movaps (%%rsp), %%xmm4\n\t"
+                "addq $16, %%rsp\n\t" // deallocate 4 floats on the stack
 
-          "0:\n\t"
-          // rsi and rdi point to the same x, but staggered, so
-          // that we can load 2x4 bytes into xmm0 and xmm1
-          "movaps (%%rdi), %%xmm0\n\t" // move 4 floats from x
-          "movaps (%%rsi), %%xmm1\n\t" // move another 4 floats from same x
-          "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
-          "ptest %%xmm4, %%xmm1\n\t"   // ptest second 4 floats, in xmm1
-          "jne 1f\n\t"                 // jump if ZF = 0, some bit is not zero
+                "0:\n\t"
+                // rsi and rdi point to the same x, but staggered, so
+                // that we can load 2x4 bytes into xmm0 and xmm1
+                "movaps (%%rdi), %%xmm0\n\t" // move 4 floats from x
+                "movaps (%%rsi), %%xmm1\n\t" // move another 4 floats from same
+                                             // x
+                "ptest %%xmm4, %%xmm0\n\t"   // ptest first 4 floats, in xmm0
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
+                "ptest %%xmm4, %%xmm1\n\t" // ptest second 4 floats, in xmm1
+                "jne 1f\n\t" // jump if ZF = 0, some bit is not zero
 
-          "addq $32, %%rdi\n\t" // jump 32 bytes (16 in xmm0 + 16 in xmm1)
-          "addq $32, %%rsi\n\t" // and another 32 bytes
-          "subq $32, %%rcx\n\t" // processed 32 bytes
-          "ja 0b\n\t"
+                "addq $32, %%rdi\n\t" // jump 32 bytes (16 in xmm0 + 16 in xmm1)
+                "addq $32, %%rsi\n\t" // and another 32 bytes
+                "subq $32, %%rcx\n\t" // processed 32 bytes
+                "ja 0b\n\t"
 
-          "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
-          "jmp 2f\n\t"      // exit
+                "movl $0, %0\n\t" // didn't find anything, result = 0 (int)
+                "jmp 2f\n\t"      // exit
 
-          "1:\n\t"            // found something
-          "movl $0x1, %0\n\t" // result = 1 (int)
+                "1:\n\t"            // found something
+                "movl $0x1, %0\n\t" // result = 1 (int)
 
-          "2:\n\t"   // exit
-          "popa\n\t" // restore all registers
+                "2:\n\t"   // exit
+                "popa\n\t" // restore all registers
 
-          : "=m"(result), "=D"(x_beg)
-          : "D"(x_beg), "S"(x_beg + 16), "c"(n1)
-          :);
+                : "=m"(result), "=D"(x_beg)
+                : "D"(x_beg), "S"(x_beg + 16), "c"(n1)
+                :);
 
-      if (result == 1)
-        return false;
-      else
+            if (result == 1)
+                return false;
+            else
+                return true;
+        }
+
+        // if n1 is not on a 32 byte boundary then use slower code
+        for (; x_beg != x_end; ++x_beg)
+            if (*x_beg > 0)
+                return false;
+        return true;
+#endif
+    }
+    else
+    { // SSE 4.1
+
+        for (; x_beg != x_end; ++x_beg)
+            if (*x_beg > 0)
+                return false;
         return true;
     }
 
-    // if n1 is not on a 32 byte boundary then use slower code
-    for (; x_beg != x_end; ++x_beg)
-      if (*x_beg > 0)
-        return false;
-    return true;
-#endif
-  } else { // SSE 4.1
-
-    for (; x_beg != x_end; ++x_beg)
-      if (*x_beg > 0)
-        return false;
-    return true;
-  }
-
-//  for (; x_beg != x_end; ++x_beg)
-//    if (*x_beg > 0)
-//      return false;
-//  return true;
+    //  for (; x_beg != x_end; ++x_beg)
+    //    if (*x_beg > 0)
+    //      return false;
+    //  return true;
 }
 
 //--------------------------------------------------------------------------------
 template <typename InIter>
 inline bool positive_less_than(
     InIter begin, InIter end,
-    const typename std::iterator_traits<InIter>::value_type threshold) {
-  { NTA_ASSERT(begin <= end) << "positive_less_than: Invalid input range"; }
+    const typename std::iterator_traits<InIter>::value_type threshold)
+{
+    {
+        NTA_ASSERT(begin <= end) << "positive_less_than: Invalid input range";
+    }
 
-  for (; begin != end; ++begin)
-    if (*begin > threshold)
-      return false;
-  return true;
+    for (; begin != end; ++begin)
+        if (*begin > threshold)
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline void print_bits(const T &x) {
-  for (int i = sizeof(T) - 1; 0 <= i; --i) {
-    unsigned char *b = static_cast<unsigned char *> (&x) + i;
-    for (int j = 7; 0 <= j; --j)
-      std::cout << ((*b & (1 << j)) / (1 << j));
-    std::cout << ' ';
-  }
+template <typename T> inline void print_bits(const T &x)
+{
+    for (int i = sizeof(T) - 1; 0 <= i; --i)
+    {
+        unsigned char *b = static_cast<unsigned char *>(&x) + i;
+        for (int j = 7; 0 <= j; --j)
+            std::cout << ((*b & (1 << j)) / (1 << j));
+        std::cout << ' ';
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -568,9 +601,10 @@ template <typename T> inline size_t n_bytes(const T &) { return sizeof(T); }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline size_t n_bytes(const std::pair<T1, T2> &p) {
-  size_t n = n_bytes(p.first) + n_bytes(p.second);
-  return n;
+inline size_t n_bytes(const std::pair<T1, T2> &p)
+{
+    size_t n = n_bytes(p.first) + n_bytes(p.second);
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -585,191 +619,216 @@ inline size_t n_bytes(const std::pair<T1, T2> &p) {
  * probably only approximate.
  */
 template <typename T>
-inline size_t n_bytes(const std::vector<T> &a, size_t alignment = 16) {
-  size_t n1 = a.capacity() * sizeof(T);
-  if (n1 % alignment != 0)
-    n1 = alignment * (n1 / alignment + 1);
+inline size_t n_bytes(const std::vector<T> &a, size_t alignment = 16)
+{
+    size_t n1 = a.capacity() * sizeof(T);
+    if (n1 % alignment != 0)
+        n1 = alignment * (n1 / alignment + 1);
 
-  size_t n2 = sizeof(std::vector<T>);
-  if (n2 % alignment != 0)
-    n2 = alignment * (n2 / alignment + 1);
+    size_t n2 = sizeof(std::vector<T>);
+    if (n2 % alignment != 0)
+        n2 = alignment * (n2 / alignment + 1);
 
-  return n1 + n2;
+    return n1 + n2;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline size_t n_bytes(const std::vector<std::vector<T>> &a,
-                      size_t alignment = 16) {
-  size_t n = sizeof(std::vector<std::vector<T>>);
-  if (n % alignment != 0)
-    n = alignment * (n / alignment + 1);
+                      size_t alignment = 16)
+{
+    size_t n = sizeof(std::vector<std::vector<T>>);
+    if (n % alignment != 0)
+        n = alignment * (n / alignment + 1);
 
-  for (size_t i = 0; i != a.size(); ++i)
-    n += n_bytes(a[i]);
+    for (size_t i = 0; i != a.size(); ++i)
+        n += n_bytes(a[i]);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline float load_factor(const std::vector<T> &x) {
-  return static_cast<float> (x.size()) / static_cast<float> (x.capacity());
+template <typename T> inline float load_factor(const std::vector<T> &x)
+{
+    return static_cast<float>(x.size()) / static_cast<float>(x.capacity());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void adjust_load_factor(std::vector<T> &x, float target) {
-  NTA_ASSERT(0.0f <= target && target <= 1.0f);
+inline void adjust_load_factor(std::vector<T> &x, float target)
+{
+    NTA_ASSERT(0.0f <= target && target <= 1.0f);
 
-  size_t new_capacity = static_cast<size_t> (static_cast<float> (x.size()) / target);
+    size_t new_capacity =
+        static_cast<size_t>(static_cast<float>(x.size()) / target);
 
-  std::vector<T> y;
-  y.reserve(new_capacity);
-  y.resize(x.size());
-  std::copy(x.begin(), x.end(), y.begin());
-  x.swap(y);
+    std::vector<T> y;
+    y.reserve(new_capacity);
+    y.resize(x.size());
+    std::copy(x.begin(), x.end(), y.begin());
+    x.swap(y);
 }
 
 //--------------------------------------------------------------------------------
 // VARIOUS
 //--------------------------------------------------------------------------------
-inline std::string operator+(const std::string &str, size_t idx) {
-  std::stringstream buff;
-  buff << str << idx;
-  return buff.str();
+inline std::string operator+(const std::string &str, size_t idx)
+{
+    std::stringstream buff;
+    buff << str << idx;
+    return buff.str();
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void append(const std::vector<T> &a, std::vector<T> &b) {
-  b.insert(b.end(), a.begin(), a.end());
+inline void append(const std::vector<T> &a, std::vector<T> &b)
+{
+    b.insert(b.end(), a.begin(), a.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline std::vector<T> &operator+=(std::vector<T> &b, const std::vector<T> &a) {
-  append(a, b);
-  return b;
+inline std::vector<T> &operator+=(std::vector<T> &b, const std::vector<T> &a)
+{
+    append(a, b);
+    return b;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline void append(const std::set<T> &a, std::set<T> &b) {
-  b.insert(a.begin(), a.end());
+template <typename T> inline void append(const std::set<T> &a, std::set<T> &b)
+{
+    b.insert(a.begin(), a.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline std::set<T> &operator+=(std::set<T> &b, const std::set<T> &a) {
-  append(a, b);
-  return b;
+inline std::set<T> &operator+=(std::set<T> &b, const std::set<T> &a)
+{
+    append(a, b);
+    return b;
 }
 
 //--------------------------------------------------------------------------------
 // map insert or increment
 template <typename T1, typename T2>
-inline void increment(std::map<T1, T2> &m, const T1 &key, const T2 &init = 1) {
-  typename std::map<T1, T2>::iterator it = m.find(key);
-  if (it != m.end())
-    ++it->second;
-  else
-    m[key] = init;
+inline void increment(std::map<T1, T2> &m, const T1 &key, const T2 &init = 1)
+{
+    typename std::map<T1, T2>::iterator it = m.find(key);
+    if (it != m.end())
+        ++it->second;
+    else
+        m[key] = init;
 }
 
 //--------------------------------------------------------------------------------
 template <typename K, typename V>
-inline bool is_in(const K &key, const std::map<K, V> &m) {
-  return m.find(key) != m.end();
+inline bool is_in(const K &key, const std::map<K, V> &m)
+{
+    return m.find(key) != m.end();
 }
 
 //--------------------------------------------------------------------------------
 // Deriving from std::map to add frequently used functionality
 template <typename K, typename V, typename C = std::less<K>,
           typename A = std::allocator<std::pair<const K, V>>>
-struct dict : public std::map<K, V, C, A> {
-  inline bool has_key(const K &key) const { return is_in(key, *this); }
+struct dict : public std::map<K, V, C, A>
+{
+    inline bool has_key(const K &key) const { return is_in(key, *this); }
 
-  // Often useful for histograms, where V is an integral type
-  inline void increment(const K &key, const V &init = 1) {
-    nust::increment(*this, key, init);
-  }
+    // Often useful for histograms, where V is an integral type
+    inline void increment(const K &key, const V &init = 1)
+    {
+        nust::increment(*this, key, init);
+    }
 
-  // Inserts once in the map, or return false if already inserted
-  // (saves having to write find(...) == this->end())
-  inline bool insert_once(const K &key, const V &v) {
-    if (has_key(key))
-      return false;
-    else
-      this->insert(std::make_pair(key, v));
-    return true;
-  }
+    // Inserts once in the map, or return false if already inserted
+    // (saves having to write find(...) == this->end())
+    inline bool insert_once(const K &key, const V &v)
+    {
+        if (has_key(key))
+            return false;
+        else
+            this->insert(std::make_pair(key, v));
+        return true;
+    }
 
-  /*
-  // Returns an existing value for the key, if it is in the dict already,
-  // or creates one and returns it. (operator[] on std::map does that?)
-  inline V& operator(const K& key)
-  {
-    iterator it = this->find(key);
-    if (key == end) {
-      (*this)[key] = V();
-      return (*this)[key];
-    } else
-      return *it;
-  }
-  */
+    /*
+    // Returns an existing value for the key, if it is in the dict already,
+    // or creates one and returns it. (operator[] on std::map does that?)
+    inline V& operator(const K& key)
+    {
+      iterator it = this->find(key);
+      if (key == end) {
+        (*this)[key] = V();
+        return (*this)[key];
+      } else
+        return *it;
+    }
+    */
 };
 
 //--------------------------------------------------------------------------------
 // INIT LIST
 //--------------------------------------------------------------------------------
-template <typename T> struct vector_init_list {
-  std::vector<T> &v;
+template <typename T> struct vector_init_list
+{
+    std::vector<T> &v;
 
-  inline vector_init_list(std::vector<T> &v_ref) : v(v_ref) {}
-  inline vector_init_list(const vector_init_list &o) : v(o.v) {}
+    inline vector_init_list(std::vector<T> &v_ref) : v(v_ref) {}
 
-  inline vector_init_list &operator=(const vector_init_list &o) {
-    v(o.v);
-    return *this;
-  }
+    inline vector_init_list(const vector_init_list &o) : v(o.v) {}
 
-  template <typename T2> inline vector_init_list<T> &operator,(const T2 &x) {
-    v.push_back(static_cast<T> (x));
-    return *this;
-  }
+    inline vector_init_list &operator=(const vector_init_list &o)
+    {
+        v(o.v);
+        return *this;
+    }
+
+    template <typename T2> inline vector_init_list<T> &operator,(const T2 &x)
+    {
+        v.push_back(static_cast<T>(x));
+        return *this;
+    }
 };
 
 //--------------------------------------------------------------------------------
 template <typename T, typename T2>
-inline vector_init_list<T> operator+=(std::vector<T> &v, const T2 &x) {
-  v.push_back(static_cast<T> (x));
-  return vector_init_list<T>(v);
+inline vector_init_list<T> operator+=(std::vector<T> &v, const T2 &x)
+{
+    v.push_back(static_cast<T>(x));
+    return vector_init_list<T>(v);
 }
 
 //--------------------------------------------------------------------------------
 // TODO: merge with preceding by changing parametrization?
 //--------------------------------------------------------------------------------
-template <typename T> struct set_init_list {
-  std::set<T> &v;
+template <typename T> struct set_init_list
+{
+    std::set<T> &v;
 
-  inline set_init_list(std::set<T> &v_ref) : v(v_ref) {}
-  inline set_init_list(const set_init_list &o) : v(o.v) {}
+    inline set_init_list(std::set<T> &v_ref) : v(v_ref) {}
 
-  inline set_init_list &operator=(const set_init_list &o) {
-    v(o.v);
-    return *this;
-  }
+    inline set_init_list(const set_init_list &o) : v(o.v) {}
 
-  template <typename T2> inline set_init_list<T> &operator,(const T2 &x) {
-    v.insert(static_cast<T> (x));
-    return *this;
-  }
+    inline set_init_list &operator=(const set_init_list &o)
+    {
+        v(o.v);
+        return *this;
+    }
+
+    template <typename T2> inline set_init_list<T> &operator,(const T2 &x)
+    {
+        v.insert(static_cast<T>(x));
+        return *this;
+    }
 };
 
 //--------------------------------------------------------------------------------
 template <typename T, typename T2>
-inline set_init_list<T> operator+=(std::set<T> &v, const T2 &x) {
-  v.insert(static_cast<T> (x));
-  return set_init_list<T>(v);
+inline set_init_list<T> operator+=(std::set<T> &v, const T2 &x)
+{
+    v.insert(static_cast<T>(x));
+    return set_init_list<T>(v);
 }
 
 //--------------------------------------------------------------------------------
@@ -777,126 +836,150 @@ inline set_init_list<T> operator+=(std::set<T> &v, const T2 &x) {
 //--------------------------------------------------------------------------------
 // T1 and T2 to get around constness with pointers
 template <typename T1, typename T2>
-inline int find_index(const T1 &x, const std::vector<T2> &v) {
-  for (size_t i = 0; i != v.size(); ++i)
-    if (v[i] == x)
-      return static_cast<int> (i);
-  return -1;
+inline int find_index(const T1 &x, const std::vector<T2> &v)
+{
+    for (size_t i = 0; i != v.size(); ++i)
+        if (v[i] == x)
+            return static_cast<int>(i);
+    return -1;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline int find_index(const T1 &x, const std::vector<std::pair<T1, T2>> &v) {
-  for (size_t i = 0; i != v.size(); ++i)
-    if (v[i].first == x)
-      return static_cast<int> (i);
-  return -1;
+inline int find_index(const T1 &x, const std::vector<std::pair<T1, T2>> &v)
+{
+    for (size_t i = 0; i != v.size(); ++i)
+        if (v[i].first == x)
+            return static_cast<int>(i);
+    return -1;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool not_in(const T &x, const std::vector<T> &v) {
-  return std::find(v.begin(), v.end(), x) == v.end();
-}
-
-//--------------------------------------------------------------------------------
-template <typename T1, typename T2>
-inline bool not_in(const T1 &x, const std::vector<std::pair<T1, T2>> &v) {
-  typename std::vector<std::pair<T1, T2>>::const_iterator it;
-  for (it = v.begin(); it != v.end(); ++it)
-    if (it->first == x)
-      return false;
-  return true;
-}
-
-//--------------------------------------------------------------------------------
-template <typename T> inline bool not_in(const T &x, const std::set<T> &s) {
-  return s.find(x) == s.end();
-}
-
-//--------------------------------------------------------------------------------
-template <typename T> inline bool is_in(const T &x, const std::vector<T> &v) {
-  return !not_in(x, v);
+template <typename T> inline bool not_in(const T &x, const std::vector<T> &v)
+{
+    return std::find(v.begin(), v.end(), x) == v.end();
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline bool is_in(const T1 &x, const std::vector<std::pair<T1, T2>> &v) {
-  return !not_in(x, v);
+inline bool not_in(const T1 &x, const std::vector<std::pair<T1, T2>> &v)
+{
+    typename std::vector<std::pair<T1, T2>>::const_iterator it;
+    for (it = v.begin(); it != v.end(); ++it)
+        if (it->first == x)
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline bool is_in(const T &x, const std::set<T> &s) {
-  return !not_in(x, s);
+template <typename T> inline bool not_in(const T &x, const std::set<T> &s)
+{
+    return s.find(x) == s.end();
+}
+
+//--------------------------------------------------------------------------------
+template <typename T> inline bool is_in(const T &x, const std::vector<T> &v)
+{
+    return !not_in(x, v);
+}
+
+//--------------------------------------------------------------------------------
+template <typename T1, typename T2>
+inline bool is_in(const T1 &x, const std::vector<std::pair<T1, T2>> &v)
+{
+    return !not_in(x, v);
+}
+
+//--------------------------------------------------------------------------------
+template <typename T> inline bool is_in(const T &x, const std::set<T> &s)
+{
+    return !not_in(x, s);
 }
 
 //--------------------------------------------------------------------------------
 template <typename It>
 inline bool is_sorted(It begin, It end, bool ascending = true,
-                      bool unique = true) {
-  if (begin < end) {
-    for (It prev = begin, it = ++begin; it < end; ++it, ++prev)
+                      bool unique = true)
+{
+    if (begin < end)
+    {
+        for (It prev = begin, it = ++begin; it < end; ++it, ++prev)
 
-      if (ascending) {
-        if (unique) {
-          if (*prev >= *it)
-            return false;
-        } else {
-          if (*prev > *it)
-            return false;
-        }
-      } else {
-        if (unique) {
-          if (*prev <= *it)
-            return false;
-        } else {
-          if (*prev < *it)
-            return false;
-        }
-      }
-  }
+            if (ascending)
+            {
+                if (unique)
+                {
+                    if (*prev >= *it)
+                        return false;
+                }
+                else
+                {
+                    if (*prev > *it)
+                        return false;
+                }
+            }
+            else
+            {
+                if (unique)
+                {
+                    if (*prev <= *it)
+                        return false;
+                }
+                else
+                {
+                    if (*prev < *it)
+                        return false;
+                }
+            }
+    }
 
-  return true;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline bool is_sorted(const std::vector<T> &x, bool ascending = true,
-                      bool unique = true) {
-  return is_sorted(x.begin(), x.end(), ascending, unique);
+                      bool unique = true)
+{
+    return is_sorted(x.begin(), x.end(), ascending, unique);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline bool operator==(const std::vector<T> &a, const std::vector<T> &b) {
-  NTA_ASSERT(a.size() == b.size());
-  if (a.size() != b.size())
-    return false;
-  for (size_t i = 0; i != a.size(); ++i)
-    if (a[i] != b[i])
-      return false;
-  return true;
+inline bool operator==(const std::vector<T> &a, const std::vector<T> &b)
+{
+    NTA_ASSERT(a.size() == b.size());
+    if (a.size() != b.size())
+        return false;
+    for (size_t i = 0; i != a.size(); ++i)
+        if (a[i] != b[i])
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline bool operator!=(const std::vector<T> &a, const std::vector<T> &b) {
-  return !(a == b);
+inline bool operator!=(const std::vector<T> &a, const std::vector<T> &b)
+{
+    return !(a == b);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline bool operator==(const std::map<T1, T2> &a, const std::map<T1, T2> &b) {
-  typename std::map<T1, T2>::const_iterator ita = a.begin(), itb = b.begin();
-  for (; ita != a.end(); ++ita, ++itb)
-    if (ita->first != itb->first || ita->second != itb->second)
-      return false;
-  return true;
+inline bool operator==(const std::map<T1, T2> &a, const std::map<T1, T2> &b)
+{
+    typename std::map<T1, T2>::const_iterator ita = a.begin(), itb = b.begin();
+    for (; ita != a.end(); ++ita, ++itb)
+        if (ita->first != itb->first || ita->second != itb->second)
+            return false;
+    return true;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline bool operator!=(const std::map<T1, T2> &a, const std::map<T1, T2> &b) {
-  return !(a == b);
+inline bool operator!=(const std::map<T1, T2> &a, const std::map<T1, T2> &b)
+{
+    return !(a == b);
 }
 
 //--------------------------------------------------------------------------------
@@ -904,20 +987,24 @@ inline bool operator!=(const std::map<T1, T2> &a, const std::map<T1, T2> &b) {
  * Proxy for an insert iterator that allows inserting at the second element
  * when iterating over a container of pairs.
  */
-template <typename Iterator> struct inserter_second {
-  typedef typename std::iterator_traits<Iterator>::value_type pair_type;
-  typedef typename pair_type::second_type second_type;
-  typedef second_type value_type;
+template <typename Iterator> struct inserter_second
+{
+    typedef typename std::iterator_traits<Iterator>::value_type pair_type;
+    typedef typename pair_type::second_type second_type;
+    typedef second_type value_type;
 
-  Iterator it;
+    Iterator it;
 
-  inline inserter_second(Iterator _it) : it(_it) {}
-  inline second_type &operator*() { return it->second; }
-  inline void operator++() { ++it; }
+    inline inserter_second(Iterator _it) : it(_it) {}
+
+    inline second_type &operator*() { return it->second; }
+
+    inline void operator++() { ++it; }
 };
 
-template <typename Iterator> inserter_second<Iterator> insert_2nd(Iterator it) {
-  return inserter_second<Iterator>(it);
+template <typename Iterator> inserter_second<Iterator> insert_2nd(Iterator it)
+{
+    return inserter_second<Iterator>(it);
 }
 
 //--------------------------------------------------------------------------------
@@ -927,61 +1014,74 @@ template <typename Iterator> inserter_second<Iterator> insert_2nd(Iterator it) {
  * current index value (watch out if iterator passed to constructor is not
  * pointing to the beginning of the container!)
  */
-template <typename Iterator> struct inserter_second_incrementer_first {
-  typedef typename std::iterator_traits<Iterator>::value_type pair_type;
-  typedef typename pair_type::second_type second_type;
-  typedef second_type value_type;
+template <typename Iterator> struct inserter_second_incrementer_first
+{
+    typedef typename std::iterator_traits<Iterator>::value_type pair_type;
+    typedef typename pair_type::second_type second_type;
+    typedef second_type value_type;
 
-  Iterator it;
-  size_t i;
+    Iterator it;
+    size_t i;
 
-  inline inserter_second_incrementer_first(Iterator _it) : it(_it), i(0) {}
-  inline second_type &operator*() { return it->second; }
-  inline void operator++() {
-    it->first = i++;
-    ++it;
-  }
+    inline inserter_second_incrementer_first(Iterator _it) : it(_it), i(0) {}
+
+    inline second_type &operator*() { return it->second; }
+
+    inline void operator++()
+    {
+        it->first = i++;
+        ++it;
+    }
 };
 
 template <typename Iterator>
-inserter_second_incrementer_first<Iterator> insert_2nd_inc(Iterator it) {
-  return inserter_second_incrementer_first<Iterator>(it);
+inserter_second_incrementer_first<Iterator> insert_2nd_inc(Iterator it)
+{
+    return inserter_second_incrementer_first<Iterator>(it);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline T2 dot(const std::vector<T1> &x, const Buffer<T2> &y) {
-  size_t n1 = x.size(), n2 = y.nnz, i1 = 0, i2 = 0;
-  T2 s = 0;
+inline T2 dot(const std::vector<T1> &x, const Buffer<T2> &y)
+{
+    size_t n1 = x.size(), n2 = y.nnz, i1 = 0, i2 = 0;
+    T2 s = 0;
 
-  while (i1 != n1 && i2 != n2)
-    if (x[i1] < y[i2]) {
-      ++i1;
-    } else if (y[i2] < x[i1]) {
-      ++i2;
-    } else {
-      ++s;
-      ++i1;
-      ++i2;
-    }
+    while (i1 != n1 && i2 != n2)
+        if (x[i1] < y[i2])
+        {
+            ++i1;
+        }
+        else if (y[i2] < x[i1])
+        {
+            ++i2;
+        }
+        else
+        {
+            ++s;
+            ++i1;
+            ++i2;
+        }
 
-  return s;
+    return s;
 }
 
 //--------------------------------------------------------------------------------
-inline float dot(const float *x, const float *x_end, const float *y) {
-  float result = 0;
-  for (; x != x_end; ++x, ++y)
-    result += *x * *y;
-  return result;
+inline float dot(const float *x, const float *x_end, const float *y)
+{
+    float result = 0;
+    for (; x != x_end; ++x, ++y)
+        result += *x * *y;
+    return result;
 }
 
 //--------------------------------------------------------------------------------
 // copy
 //--------------------------------------------------------------------------------
 template <typename It1, typename It2>
-inline void copy(It1 begin, It1 end, It2 out_begin, It2 /*out_end*/) {
-  std::copy(begin, end, out_begin);
+inline void copy(It1 begin, It1 end, It2 out_begin, It2 /*out_end*/)
+{
+    std::copy(begin, end, out_begin);
 }
 
 //--------------------------------------------------------------------------------
@@ -994,114 +1094,126 @@ inline void copy(It1 begin, It1 end, It2 out_begin, It2 /*out_end*/) {
  * @param a the source container
  * @param b the destination container
  */
-template <typename T1, typename T2> inline void copy(const T1 &a, T2 &b) {
-  b.resize(a.size());
-  copy(a.begin(), a.end(), b.begin(), b.end());
+template <typename T1, typename T2> inline void copy(const T1 &a, T2 &b)
+{
+    b.resize(a.size());
+    copy(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
 inline void copy(const std::vector<T1> &a, size_t n, std::vector<T2> &b,
-                 size_t o = 0) {
-  NTA_ASSERT(o + n <= b.size());
-  std::copy(a.begin(), a.begin() + n, b.begin() + o);
+                 size_t o = 0)
+{
+    NTA_ASSERT(o + n <= b.size());
+    std::copy(a.begin(), a.begin() + n, b.begin() + o);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
 inline void copy(const std::vector<T1> &a, size_t i, size_t j,
-                 std::vector<T2> &b) {
-  std::copy(a.begin() + i, a.begin() + j, b.begin() + i);
+                 std::vector<T2> &b)
+{
+    std::copy(a.begin() + i, a.begin() + j, b.begin() + i);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline void copy(const std::vector<T1> &a, std::vector<T2> &b, size_t offset) {
-  NTA_ASSERT(offset + a.size() <= b.size());
-  std::copy(a.begin(), a.end(), b.begin() + offset);
+inline void copy(const std::vector<T1> &a, std::vector<T2> &b, size_t offset)
+{
+    NTA_ASSERT(offset + a.size() <= b.size());
+    std::copy(a.begin(), a.end(), b.begin() + offset);
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename T>
-inline void copy_indices(const SparseVector<I, T> &x, Buffer<I> &y) {
-  NTA_ASSERT(x.nnz <= y.size());
+inline void copy_indices(const SparseVector<I, T> &x, Buffer<I> &y)
+{
+    NTA_ASSERT(x.nnz <= y.size());
 
-  for (size_t i = 0; i != x.nnz; ++i)
-    y[i] = x[i].first;
-  y.nnz = x.nnz;
+    for (size_t i = 0; i != x.nnz; ++i)
+        y[i] = x[i].first;
+    y.nnz = x.nnz;
 }
 
 //--------------------------------------------------------------------------------
 // TO DENSE
 //--------------------------------------------------------------------------------
 template <typename It1, typename It2>
-inline void to_dense_01(It1 ind, It1 ind_end, It2 dense, It2 dense_end) {
-  {
-    NTA_ASSERT(ind <= ind_end) << "to_dense: Mismatched iterators";
-    NTA_ASSERT(dense <= dense_end) << "to_dense: Mismatched iterators";
-    NTA_ASSERT(ind_end - ind <= dense_end - dense)
-        << "to_dense: Not enough memory";
-  }
+inline void to_dense_01(It1 ind, It1 ind_end, It2 dense, It2 dense_end)
+{
+    {
+        NTA_ASSERT(ind <= ind_end) << "to_dense: Mismatched iterators";
+        NTA_ASSERT(dense <= dense_end) << "to_dense: Mismatched iterators";
+        NTA_ASSERT(ind_end - ind <= dense_end - dense)
+            << "to_dense: Not enough memory";
+    }
 
-  typedef typename std::iterator_traits<It2>::value_type value_type;
+    typedef typename std::iterator_traits<It2>::value_type value_type;
 
-  // TODO: make faster with single pass?
-  // (but if's for all the elements might be slower)
-  std::fill(dense, dense_end, static_cast<value_type> (0));
+    // TODO: make faster with single pass?
+    // (but if's for all the elements might be slower)
+    std::fill(dense, dense_end, static_cast<value_type>(0));
 
-  for (; ind != ind_end; ++ind)
-    *(dense + *ind) = static_cast<value_type> (1);
+    for (; ind != ind_end; ++ind)
+        *(dense + *ind) = static_cast<value_type>(1);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline void to_dense_01(const std::vector<T1> &sparse, std::vector<T2> &dense) {
-  to_dense_01(sparse.begin(), sparse.end(), dense.begin(), dense.end());
+inline void to_dense_01(const std::vector<T1> &sparse, std::vector<T2> &dense)
+{
+    to_dense_01(sparse.begin(), sparse.end(), dense.begin(), dense.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T, typename OutIt>
-inline void to_dense_01(const Buffer<T> &buffer, OutIt y, OutIt y_end) {
-  typedef typename std::iterator_traits<OutIt>::value_type value_type;
+inline void to_dense_01(const Buffer<T> &buffer, OutIt y, OutIt y_end)
+{
+    typedef typename std::iterator_traits<OutIt>::value_type value_type;
 
-  std::fill(y, y_end, static_cast<value_type> (0));
+    std::fill(y, y_end, static_cast<value_type>(0));
 
-  for (size_t i = 0; i != buffer.nnz; ++i)
-    y[buffer[i]] = static_cast<value_type> (1);
+    for (size_t i = 0; i != buffer.nnz; ++i)
+        y[buffer[i]] = static_cast<value_type>(1);
 }
 
 //--------------------------------------------------------------------------------
 template <typename It, typename T>
-inline void to_dense_01(It begin, It end, std::vector<T> &dense) {
-  to_dense_01(begin, end, dense.begin(), dense.end());
+inline void to_dense_01(It begin, It end, std::vector<T> &dense)
+{
+    to_dense_01(begin, end, dense.begin(), dense.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename T, typename OutIt>
-inline void to_dense_1st_01(const SparseVector<I, T> &x, OutIt y, OutIt y_end) {
-  typedef typename std::iterator_traits<OutIt>::value_type value_type;
+inline void to_dense_1st_01(const SparseVector<I, T> &x, OutIt y, OutIt y_end)
+{
+    typedef typename std::iterator_traits<OutIt>::value_type value_type;
 
-  std::fill(y, y_end, static_cast<value_type> (0));
+    std::fill(y, y_end, static_cast<value_type>(0));
 
-  for (size_t i = 0; i != x.nnz; ++i)
-    y[x[i].first] = static_cast<value_type> (1);
+    for (size_t i = 0; i != x.nnz; ++i)
+        y[x[i].first] = static_cast<value_type>(1);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T, typename OutIt>
 inline void to_dense_01(size_t n, const std::vector<T> &buffer, OutIt y,
-                        OutIt y_end) {
-  NTA_ASSERT(n <= buffer.size());
+                        OutIt y_end)
+{
+    NTA_ASSERT(n <= buffer.size());
 
-  typedef typename std::iterator_traits<OutIt>::value_type value_type;
+    typedef typename std::iterator_traits<OutIt>::value_type value_type;
 
-  std::fill(y, y_end, static_cast<value_type> (0));
+    std::fill(y, y_end, static_cast<value_type>(0));
 
-  const T *b = &buffer[0], *b_end = b + n;
-  for (; b != b_end; ++b) {
-    NTA_ASSERT(*b < static_cast<size_t> (y_end - y));
-    y[*b] = static_cast<value_type> (1);
-  }
+    const T *b = &buffer[0], *b_end = b + n;
+    for (; b != b_end; ++b)
+    {
+        NTA_ASSERT(*b < static_cast<size_t>(y_end - y));
+        y[*b] = static_cast<value_type>(1);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -1111,22 +1223,24 @@ inline void to_dense_01(size_t n, const std::vector<T> &buffer, OutIt y,
  */
 template <typename It1, typename It2, typename It3>
 inline void to_dense(It1 ind, It1 ind_end, It2 nz, It2 nz_end, It3 dense,
-                     It3 dense_end) {
-  {
-    NTA_ASSERT(ind <= ind_end) << "to_dense: Mismatched ind iterators";
-    NTA_ASSERT(dense <= dense_end) << "to_dense: Mismatched dense iterators";
-    NTA_ASSERT(ind_end - ind <= dense_end - dense)
-        << "to_dense: Not enough memory";
-    NTA_ASSERT(nz_end - nz == ind_end - ind)
-        << "to_dense: Mismatched ind and nz ranges";
-  }
+                     It3 dense_end)
+{
+    {
+        NTA_ASSERT(ind <= ind_end) << "to_dense: Mismatched ind iterators";
+        NTA_ASSERT(dense <= dense_end)
+            << "to_dense: Mismatched dense iterators";
+        NTA_ASSERT(ind_end - ind <= dense_end - dense)
+            << "to_dense: Not enough memory";
+        NTA_ASSERT(nz_end - nz == ind_end - ind)
+            << "to_dense: Mismatched ind and nz ranges";
+    }
 
-  typedef typename std::iterator_traits<It3>::value_type value_type;
+    typedef typename std::iterator_traits<It3>::value_type value_type;
 
-  std::fill(dense, dense + (ind_end - ind), static_cast<value_type> (0));
+    std::fill(dense, dense + (ind_end - ind), static_cast<value_type>(0));
 
-  for (; ind != ind_end; ++ind, ++nz)
-    *(dense + *ind) = *nz;
+    for (; ind != ind_end; ++ind, ++nz)
+        *(dense + *ind) = *nz;
 }
 
 //--------------------------------------------------------------------------------
@@ -1134,15 +1248,17 @@ inline void to_dense(It1 ind, It1 ind_end, It2 nz, It2 nz_end, It3 dense,
  * Needs non-zero indices to be sorted!
  */
 template <typename It>
-inline void in_place_sparse_to_dense_01(int n, It begin, It end) {
-  for (int i = n - 1; i >= 0; --i) {
-    int p = static_cast<int> (*(begin + i));
-    std::fill(begin + p, end, 0);
-    *(begin + p) = 1;
-    end = begin + p;
-  }
+inline void in_place_sparse_to_dense_01(int n, It begin, It end)
+{
+    for (int i = n - 1; i >= 0; --i)
+    {
+        int p = static_cast<int>(*(begin + i));
+        std::fill(begin + p, end, 0);
+        *(begin + p) = 1;
+        end = begin + p;
+    }
 
-  std::fill(begin, end, 0);
+    std::fill(begin, end, 0);
 }
 
 //--------------------------------------------------------------------------------
@@ -1150,8 +1266,9 @@ inline void in_place_sparse_to_dense_01(int n, It begin, It end) {
  * Pb with size of the vectors?
  */
 template <typename T>
-inline void in_place_sparse_to_dense_01(int n, std::vector<T> &x) {
-  in_place_sparse_to_dense_01(n, x.begin(), x.end());
+inline void in_place_sparse_to_dense_01(int n, std::vector<T> &x)
+{
+    in_place_sparse_to_dense_01(n, x.begin(), x.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -1166,40 +1283,47 @@ inline void in_place_sparse_to_dense_01(int n, std::vector<T> &x) {
  * @param eps
  */
 template <typename It1, typename It2, typename It3>
-inline void from_dense(
-    It1 begin, It1 end, It2 ind, It3 nz,
-    typename std::iterator_traits<It1>::value_type eps = nust::Epsilon) {
-  { NTA_ASSERT(begin <= end) << "from_dense: Mismatched dense iterators"; }
-
-  typedef size_t size_type;
-  typedef typename std::iterator_traits<It1>::value_type value_type;
-
-  Abs<value_type> abs_f;
-
-  for (It1 it = begin; it != end; ++it) {
-    value_type val = *it;
-    if (abs_f(val) > eps) {
-      *ind = static_cast<size_type> (it - begin);
-      *nz = val;
-      ++ind;
-      ++nz;
+inline void
+from_dense(It1 begin, It1 end, It2 ind, It3 nz,
+           typename std::iterator_traits<It1>::value_type eps = nust::Epsilon)
+{
+    {
+        NTA_ASSERT(begin <= end) << "from_dense: Mismatched dense iterators";
     }
-  }
+
+    typedef size_t size_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
+
+    Abs<value_type> abs_f;
+
+    for (It1 it = begin; it != end; ++it)
+    {
+        value_type val = *it;
+        if (abs_f(val) > eps)
+        {
+            *ind = static_cast<size_type>(it - begin);
+            *nz = val;
+            ++ind;
+            ++nz;
+        }
+    }
 }
 
 //--------------------------------------------------------------------------------
 template <typename It, typename T>
-inline void from_dense(It begin, It end, Buffer<T> &buffer) {
-  NTA_ASSERT(static_cast<size_t> (end - begin) <= buffer.size());
+inline void from_dense(It begin, It end, Buffer<T> &buffer)
+{
+    NTA_ASSERT(static_cast<size_t>(end - begin) <= buffer.size());
 
-  typename Buffer<T>::iterator it2 = buffer.begin();
+    typename Buffer<T>::iterator it2 = buffer.begin();
 
-  for (It it = begin; it != end; ++it)
-    if (*it != 0) {
-      *it2++ = static_cast<T> (it - begin);
-    }
+    for (It it = begin; it != end; ++it)
+        if (*it != 0)
+        {
+            *it2++ = static_cast<T>(it - begin);
+        }
 
-  buffer.nnz = it2 - buffer.begin();
+    buffer.nnz = it2 - buffer.begin();
 }
 
 //--------------------------------------------------------------------------------
@@ -1213,38 +1337,44 @@ inline void from_dense(It begin, It end, Buffer<T> &buffer) {
  * @param v the vector
  * @param val the value to remove
  */
-template <typename T> inline void remove(const T &del, std::vector<T> &v) {
-  v.erase(std::remove(v.begin(), v.end(), del), v.end());
+template <typename T> inline void remove(const T &del, std::vector<T> &v)
+{
+    v.erase(std::remove(v.begin(), v.end(), del), v.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void remove(const std::vector<T> &del, std::vector<T> &b) {
-  for (size_t i = 0; i != del.size(); ++i)
-    remove(del[i], b);
+inline void remove(const std::vector<T> &del, std::vector<T> &b)
+{
+    for (size_t i = 0; i != del.size(); ++i)
+        remove(del[i], b);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline void remove_for_pairs(const T1 &key, std::vector<std::pair<T1, T2>> &v) {
-  typename std::vector<std::pair<T1, T2>>::const_iterator it;
-  for (it = v.begin(); it != v.end() && it->first != key; ++it)
-    ;
-  remove(*it, v);
+inline void remove_for_pairs(const T1 &key, std::vector<std::pair<T1, T2>> &v)
+{
+    typename std::vector<std::pair<T1, T2>>::const_iterator it;
+    for (it = v.begin(); it != v.end() && it->first != key; ++it)
+        ;
+    remove(*it, v);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void remove_from_end(const T &elt, std::vector<T> &a) {
-  int cnt = a.size() - 1;
-  for (int i = cnt; i >= 0; --i) {
-    if (a[i] == elt) {
-      for (int j = i; j < cnt; ++j)
-        a[j] = a[j + 1];
-      a.resize(cnt);
-      return;
+inline void remove_from_end(const T &elt, std::vector<T> &a)
+{
+    int cnt = a.size() - 1;
+    for (int i = cnt; i >= 0; --i)
+    {
+        if (a[i] == elt)
+        {
+            for (int j = i; j < cnt; ++j)
+                a[j] = a[j + 1];
+            a.resize(cnt);
+            return;
+        }
     }
-  }
 }
 
 //--------------------------------------------------------------------------------
@@ -1257,29 +1387,36 @@ inline void remove_from_end(const T &elt, std::vector<T> &a) {
 // TODO: remove this? Should be covered just below??
 template <typename I, typename T1, typename T2>
 inline void remove_for_pairs(const std::vector<I> &del,
-                             std::vector<std::pair<T1, T2>> &a) {
-  NTA_ASSERT(std::set<I>(del.begin(), del.end()).size() == del.size());
+                             std::vector<std::pair<T1, T2>> &a)
+{
+    NTA_ASSERT(std::set<I>(del.begin(), del.end()).size() == del.size());
 
-  if (del.empty())
-    return;
+    if (del.empty())
+        return;
 
-  size_t old = del[0] + 1, cur = del[0], d = 1;
+    size_t old = del[0] + 1, cur = del[0], d = 1;
 
-  while (old < a.size() && d < del.size()) {
-    if (old == static_cast<size_t> (del[d])) {
-      ++d;
-      ++old;
-    } else if (static_cast<size_t> (del[d]) < old) {
-      ++d;
-    } else {
-      a[cur++] = a[old++];
+    while (old < a.size() && d < del.size())
+    {
+        if (old == static_cast<size_t>(del[d]))
+        {
+            ++d;
+            ++old;
+        }
+        else if (static_cast<size_t>(del[d]) < old)
+        {
+            ++d;
+        }
+        else
+        {
+            a[cur++] = a[old++];
+        }
     }
-  }
 
-  while (old < a.size())
-    a[cur++] = a[old++];
+    while (old < a.size())
+        a[cur++] = a[old++];
 
-  a.resize(a.size() - del.size());
+    a.resize(a.size() - del.size());
 }
 
 //--------------------------------------------------------------------------------
@@ -1289,29 +1426,36 @@ inline void remove_for_pairs(const std::vector<I> &del,
  * default constructor on T to be defined (for resize). O(n).
  */
 template <typename I, typename T>
-inline void remove_at(const std::vector<I> &del, std::vector<T> &a) {
-  NTA_ASSERT(std::set<I>(del.begin(), del.end()).size() == del.size());
+inline void remove_at(const std::vector<I> &del, std::vector<T> &a)
+{
+    NTA_ASSERT(std::set<I>(del.begin(), del.end()).size() == del.size());
 
-  if (del.empty())
-    return;
+    if (del.empty())
+        return;
 
-  size_t old = del[0] + 1, cur = del[0], d = 1;
+    size_t old = del[0] + 1, cur = del[0], d = 1;
 
-  while (old < a.size() && d < del.size()) {
-    if (old == static_cast<size_t> (del[d])) {
-      ++d;
-      ++old;
-    } else if (static_cast<size_t> (del[d]) < old) {
-      ++d;
-    } else {
-      a[cur++] = a[old++];
+    while (old < a.size() && d < del.size())
+    {
+        if (old == static_cast<size_t>(del[d]))
+        {
+            ++d;
+            ++old;
+        }
+        else if (static_cast<size_t>(del[d]) < old)
+        {
+            ++d;
+        }
+        else
+        {
+            a[cur++] = a[old++];
+        }
     }
-  }
 
-  while (old < a.size())
-    a[cur++] = a[old++];
+    while (old < a.size())
+        a[cur++] = a[old++];
 
-  a.resize(a.size() - del.size());
+    a.resize(a.size() - del.size());
 }
 
 //--------------------------------------------------------------------------------
@@ -1320,43 +1464,49 @@ inline void remove_at(const std::vector<I> &del, std::vector<T> &a) {
  */
 template <typename T1, typename T2>
 inline void remove(const T2 &elt, std::vector<T1> &a,
-                   const std::vector<T2> &ref) {
-  a.erase(a.begin() + find_index(elt, ref));
+                   const std::vector<T2> &ref)
+{
+    a.erase(a.begin() + find_index(elt, ref));
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void remove(const std::vector<T> &del, std::set<T> &a) {
-  for (size_t i = 0; i != del.size(); ++i)
-    a.erase(del[i]);
+inline void remove(const std::vector<T> &del, std::set<T> &a)
+{
+    for (size_t i = 0; i != del.size(); ++i)
+        a.erase(del[i]);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void remove(const std::set<T> &y, std::vector<T> &x) {
-  std::vector<T> del;
+inline void remove(const std::set<T> &y, std::vector<T> &x)
+{
+    std::vector<T> del;
 
-  for (size_t i = 0; i != x.size(); ++i)
-    if (y.find(x[i]) != y.end()) {
-      NTA_ASSERT(not_in(x[i], del));
-      del.push_back(x[i]);
-    }
+    for (size_t i = 0; i != x.size(); ++i)
+        if (y.find(x[i]) != y.end())
+        {
+            NTA_ASSERT(not_in(x[i], del));
+            del.push_back(x[i]);
+        }
 
-  nust::remove(del, x);
+    nust::remove(del, x);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline std::set<T> &operator-=(std::set<T> &a, const std::vector<T> &b) {
-  remove(b, a);
-  return a;
+inline std::set<T> &operator-=(std::set<T> &a, const std::vector<T> &b)
+{
+    remove(b, a);
+    return a;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline std::vector<T> &operator-=(std::vector<T> &a, const std::vector<T> &b) {
-  remove(b, a);
-  return a;
+inline std::vector<T> &operator-=(std::vector<T> &a, const std::vector<T> &b)
+{
+    remove(b, a);
+    return a;
 }
 
 //--------------------------------------------------------------------------------
@@ -1369,12 +1519,13 @@ inline std::vector<T> &operator-=(std::vector<T> &a, const std::vector<T> &b) {
 template <typename T>
 inline void find_all_differences(const std::vector<T> &x,
                                  const std::vector<T> &y,
-                                 std::vector<size_t> &diffs) {
-  NTA_ASSERT(x.size() == y.size());
-  diffs.clear();
-  for (size_t i = 0; i != x.size(); ++i)
-    if (x[i] != y[i])
-      diffs.push_back(i);
+                                 std::vector<size_t> &diffs)
+{
+    NTA_ASSERT(x.size() == y.size());
+    diffs.clear();
+    for (size_t i = 0; i != x.size(); ++i)
+        if (x[i] != y[i])
+            diffs.push_back(i);
 }
 
 //--------------------------------------------------------------------------------
@@ -1386,12 +1537,12 @@ inline void find_all_differences(const std::vector<T> &x,
  * @param a
  * @param val
  */
-template <typename T>
-inline void fill(T &a, const typename T::value_type &val) {
-  typename T::iterator i = a.begin(), e = a.end();
+template <typename T> inline void fill(T &a, const typename T::value_type &val)
+{
+    typename T::iterator i = a.begin(), e = a.end();
 
-  for (; i != e; ++i)
-    *i = val;
+    for (; i != e; ++i)
+        *i = val;
 }
 
 //--------------------------------------------------------------------------------
@@ -1401,13 +1552,16 @@ inline void fill(T &a, const typename T::value_type &val) {
  * @param begin
  * @param end
  */
-template <typename It> inline void zero(It begin, It end) {
-  { NTA_ASSERT(begin <= end) << "zero: Invalid input range"; }
+template <typename It> inline void zero(It begin, It end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "zero: Invalid input range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type T;
+    typedef typename std::iterator_traits<It>::value_type T;
 
-  for (; begin != end; ++begin)
-    *begin = T(0);
+    for (; begin != end; ++begin)
+        *begin = T(0);
 }
 
 //--------------------------------------------------------------------------------
@@ -1423,8 +1577,9 @@ template <typename T> inline void set_to_zero(T &a) { zero(a); }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void set_to_zero(std::vector<T> &a, size_t begin, size_t end) {
-  zero(a.begin() + begin, a.begin() + end);
+inline void set_to_zero(std::vector<T> &a, size_t begin, size_t end)
+{
+    zero(a.begin() + begin, a.begin() + end);
 }
 
 //--------------------------------------------------------------------------------
@@ -1434,13 +1589,16 @@ inline void set_to_zero(std::vector<T> &a, size_t begin, size_t end) {
  * @param begin
  * @param end
  */
-template <typename It> inline void ones(It begin, It end) {
-  { NTA_ASSERT(begin <= end) << "ones: Invalid input range"; }
+template <typename It> inline void ones(It begin, It end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "ones: Invalid input range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type T;
+    typedef typename std::iterator_traits<It>::value_type T;
 
-  for (; begin != end; ++begin)
-    *begin = T(1);
+    for (; begin != end; ++begin)
+        *begin = T(1);
 }
 
 //--------------------------------------------------------------------------------
@@ -1456,8 +1614,9 @@ template <typename T> inline void set_to_one(std::vector<T> &a) { ones(a); }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void set_to_one(std::vector<T> &a, size_t begin, size_t end) {
-  ones(a.begin() + begin, a.begin() + end);
+inline void set_to_one(std::vector<T> &a, size_t begin, size_t end)
+{
+    ones(a.begin() + begin, a.begin() + end);
 }
 
 //--------------------------------------------------------------------------------
@@ -1472,19 +1631,21 @@ inline void set_to_one(std::vector<T> &a, size_t begin, size_t end) {
  */
 template <typename It>
 inline void dirac(size_t pos, It begin, It end,
-                  typename std::iterator_traits<It>::value_type val = 1) {
-  {
-    NTA_ASSERT(begin <= end) << "dirac: Invalid input range";
+                  typename std::iterator_traits<It>::value_type val = 1)
+{
+    {
+        NTA_ASSERT(begin <= end) << "dirac: Invalid input range";
 
-    NTA_ASSERT(0 <= pos && pos < static_cast<size_t> (end - begin))
-        << "dirac: Invalid position: " << pos
-        << " - Should be between 0 and: " << static_cast<size_t> (end - begin);
-  }
+        NTA_ASSERT(0 <= pos && pos < static_cast<size_t>(end - begin))
+            << "dirac: Invalid position: " << pos
+            << " - Should be between 0 and: "
+            << static_cast<size_t>(end - begin);
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  std::fill(begin, end, static_cast<value_type> (0));
-  *(begin + pos) = val;
+    std::fill(begin, end, static_cast<value_type>(0));
+    *(begin + pos) = val;
 }
 
 //--------------------------------------------------------------------------------
@@ -1497,14 +1658,15 @@ inline void dirac(size_t pos, It begin, It end,
  * @param val the value of the Dirac
  */
 template <typename C>
-inline void dirac(size_t pos, C &c, typename C::value_type val = 1) {
-  {
-    NTA_ASSERT(pos >= 0 && pos < c.size())
-        << "dirac: Can't set Dirac at pos: " << pos
-        << " when container has size: " << c.size();
-  }
+inline void dirac(size_t pos, C &c, typename C::value_type val = 1)
+{
+    {
+        NTA_ASSERT(pos >= 0 && pos < c.size())
+            << "dirac: Can't set Dirac at pos: " << pos
+            << " when container has size: " << c.size();
+    }
 
-  dirac(pos, c.begin(), c.end(), val);
+    dirac(pos, c.begin(), c.end(), val);
 }
 
 //--------------------------------------------------------------------------------
@@ -1516,20 +1678,21 @@ inline void dirac(size_t pos, C &c, typename C::value_type val = 1) {
  * @param begin2 the beginning of the CDF range
  */
 template <typename It1, typename It2>
-inline void cumulative(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "cumulative: Invalid input range";
-    NTA_ASSERT(begin2 <= end2) << "cumulative: Invalid output range";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "cumulative: Incompatible sizes";
-  }
+inline void cumulative(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "cumulative: Invalid input range";
+        NTA_ASSERT(begin2 <= end2) << "cumulative: Invalid output range";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "cumulative: Incompatible sizes";
+    }
 
-  typedef typename std::iterator_traits<It2>::value_type value_type;
+    typedef typename std::iterator_traits<It2>::value_type value_type;
 
-  It2 prev = begin2;
-  *begin2++ = static_cast<value_type> (*begin1++);
-  for (; begin1 < end1; ++begin1, ++begin2, ++prev)
-    *begin2 = *prev + static_cast<value_type> (*begin1);
+    It2 prev = begin2;
+    *begin2++ = static_cast<value_type>(*begin1++);
+    for (; begin1 < end1; ++begin1, ++begin2, ++prev)
+        *begin2 = *prev + static_cast<value_type>(*begin1);
 }
 
 //--------------------------------------------------------------------------------
@@ -1540,8 +1703,9 @@ inline void cumulative(It1 begin1, It1 end1, It2 begin2, It2 end2) {
  * @param cdf the CDF
  */
 template <typename C1, typename C2>
-inline void cumulative(const C1 &pmf, C2 &cdf) {
-  cumulative(pmf.begin(), pmf.end(), cdf.begin(), cdf.end());
+inline void cumulative(const C1 &pmf, C2 &cdf)
+{
+    cumulative(pmf.begin(), pmf.end(), cdf.begin(), cdf.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -1550,56 +1714,61 @@ inline void cumulative(const C1 &pmf, C2 &cdf) {
  */
 template <typename It1, typename It2>
 inline void percentiles(size_t n_percentiles, It1 begin1, It1 end1, It2 begin2,
-                        It2 end2, bool alreadyNormalized = false) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "percentiles: Invalid input range";
-    NTA_ASSERT(begin2 <= end2) << "percentiles: Invalid output range";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "percentiles: Mismatched ranges";
-  }
+                        It2 end2, bool alreadyNormalized = false)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "percentiles: Invalid input range";
+        NTA_ASSERT(begin2 <= end2) << "percentiles: Invalid output range";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "percentiles: Mismatched ranges";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
-  typedef typename std::iterator_traits<It2>::value_type size_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It2>::value_type size_type;
 
-  value_type n = static_cast<value_type> (alreadyNormalized ? 1.0f : 0.0f);
+    value_type n = static_cast<value_type>(alreadyNormalized ? 1.0f : 0.0f);
 
-  if (!alreadyNormalized)
-    for (It1 it = begin1; it != end1; ++it)
-      n += *it;
+    if (!alreadyNormalized)
+        for (It1 it = begin1; it != end1; ++it)
+            n += *it;
 
-  value_type increment = n / value_type(n_percentiles);
-  value_type sum = static_cast<value_type> (0.0f);
-  size_type p = 0;
+    value_type increment = n / value_type(n_percentiles);
+    value_type sum = static_cast<value_type>(0.0f);
+    size_type p = 0;
 
-  for (value_type v = increment; v < n; v += increment) {
-    for (; sum < v; ++p)
-      sum += *begin1++;
-    *begin2++ = p;
-  }
+    for (value_type v = increment; v < n; v += increment)
+    {
+        for (; sum < v; ++p)
+            sum += *begin1++;
+        *begin2++ = p;
+    }
 }
 
 //--------------------------------------------------------------------------------
 template <typename C1, typename C2>
-inline void percentiles(size_t n_percentiles, const C1 &pmf, C2 &pcts) {
-  percentiles(n_percentiles, pmf.begin(), pmf.end(), pcts.begin());
+inline void percentiles(size_t n_percentiles, const C1 &pmf, C2 &pcts)
+{
+    percentiles(n_percentiles, pmf.begin(), pmf.end(), pcts.begin());
 }
 
 //--------------------------------------------------------------------------------
 template <typename It, typename RNG>
-inline void rand_range(
-    It begin, It end, const typename std::iterator_traits<It>::value_type &min_,
-    const typename std::iterator_traits<It>::value_type &max_, RNG &rng) {
-  {
-    NTA_ASSERT(begin <= end) << "rand_range: Invalid input range";
-    NTA_ASSERT(min_ < max_)
-        << "rand_range: Invalid min/max: " << min_ << " " << max_;
-  }
+inline void
+rand_range(It begin, It end,
+           const typename std::iterator_traits<It>::value_type &min_,
+           const typename std::iterator_traits<It>::value_type &max_, RNG &rng)
+{
+    {
+        NTA_ASSERT(begin <= end) << "rand_range: Invalid input range";
+        NTA_ASSERT(min_ < max_)
+            << "rand_range: Invalid min/max: " << min_ << " " << max_;
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  double range = double(max_ - min_) / double(rng.max() - rng.min());
-  for (; begin != end; ++begin)
-    *begin = value_type(double(rng()) * range + min_);
+    double range = double(max_ - min_) / double(rng.max() - rng.min());
+    for (; begin != end; ++begin)
+        *begin = value_type(double(rng()) * range + min_);
 }
 
 //--------------------------------------------------------------------------------
@@ -1615,16 +1784,18 @@ template <typename It>
 inline void
 rand_range(It begin, It end,
            const typename std::iterator_traits<It>::value_type &min_,
-           const typename std::iterator_traits<It>::value_type &max_) {
-  nust::Random rng;
-  rand_range(begin, end, min_, max_, rng);
+           const typename std::iterator_traits<It>::value_type &max_)
+{
+    nust::Random rng;
+    rand_range(begin, end, min_, max_, rng);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T, typename RNG>
 inline void rand_range(T &a, const typename T::value_type &min,
-                       const typename T::value_type &max, RNG &rng) {
-  rand_range(a.begin(), a.end(), min, max, rng);
+                       const typename T::value_type &max, RNG &rng)
+{
+    rand_range(a.begin(), a.end(), min, max, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1637,16 +1808,18 @@ inline void rand_range(T &a, const typename T::value_type &min,
  */
 template <typename T>
 inline void rand_range(T &a, const typename T::value_type &min,
-                       const typename T::value_type &max) {
-  rand_range(a.begin(), a.end(), min, max);
+                       const typename T::value_type &max)
+{
+    rand_range(a.begin(), a.end(), min, max);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T, typename RNG>
 inline void rand_float_range(std::vector<T> &x, size_t start, size_t end,
-                             RNG &rng) {
-  for (size_t i = start; i != end; ++i)
-    x[i] = static_cast<float> (rng.getReal64());
+                             RNG &rng)
+{
+    for (size_t i = start; i != end; ++i)
+        x[i] = static_cast<float>(rng.getReal64());
 }
 
 //--------------------------------------------------------------------------------
@@ -1661,27 +1834,34 @@ inline void rand_float_range(std::vector<T> &x, size_t start, size_t end,
 template <typename It>
 inline void
 normal_range(It begin, It end,
-             const typename std::iterator_traits<It>::value_type &/*mean*/,
-             const typename std::iterator_traits<It>::value_type &/*stddev*/) {
-  { NTA_ASSERT(begin <= end) << "normal_range: Invalid input range"; }
+             const typename std::iterator_traits<It>::value_type & /*mean*/,
+             const typename std::iterator_traits<It>::value_type & /*stddev*/)
+{
+    {
+        NTA_ASSERT(begin <= end) << "normal_range: Invalid input range";
+    }
 
-  // TODO implement numerical recipes' method
+    // TODO implement numerical recipes' method
 }
 
 //--------------------------------------------------------------------------------
 template <typename It, typename RNG>
-inline void rand_range_01(It begin, It end, double pct, RNG &rng) {
-  {
-    NTA_ASSERT(begin <= end) << "rand_range_01: Invalid input range";
-    NTA_ASSERT(0 <= pct && pct < 1)
-        << "rand_range_01: Invalid threshold: " << pct
-        << " - Should be between 0 and 1";
-  }
+inline void rand_range_01(It begin, It end, double pct, RNG &rng)
+{
+    {
+        NTA_ASSERT(begin <= end) << "rand_range_01: Invalid input range";
+        NTA_ASSERT(0 <= pct && pct < 1)
+            << "rand_range_01: Invalid threshold: " << pct
+            << " - Should be between 0 and 1";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  for (; begin != end; ++begin)
-    *begin = static_cast<value_type> (static_cast<double> (rng()) / static_cast<double> (rng.max() - rng.min()) > pct);
+    for (; begin != end; ++begin)
+        *begin = static_cast<value_type>(
+            static_cast<double>(rng()) /
+                static_cast<double>(rng.max() - rng.min()) >
+            pct);
 }
 
 //--------------------------------------------------------------------------------
@@ -1693,15 +1873,17 @@ inline void rand_range_01(It begin, It end, double pct, RNG &rng) {
  * @param pct the percentage of ones
  */
 template <typename It>
-inline void rand_range_01(It begin, It end, double pct = .5) {
-  nust::Random rng;
-  rand_range_01(begin, end, pct, rng);
+inline void rand_range_01(It begin, It end, double pct = .5)
+{
+    nust::Random rng;
+    rand_range_01(begin, end, pct, rng);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T, typename RNG>
-inline void rand_range_01(T &a, double pct, RNG &rng) {
-  rand_range_01(a.begin(), a.end(), pct, rng);
+inline void rand_range_01(T &a, double pct, RNG &rng)
+{
+    rand_range_01(a.begin(), a.end(), pct, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1711,9 +1893,10 @@ inline void rand_range_01(T &a, double pct, RNG &rng) {
  * @param a the container
  * @param pct the percentage of ones
  */
-template <typename T> inline void rand_range_01(T &a, double pct = .5) {
-  nust::Random rng;
-  rand_range_01(a.begin(), a.end(), pct, rng);
+template <typename T> inline void rand_range_01(T &a, double pct = .5)
+{
+    nust::Random rng;
+    rand_range_01(a.begin(), a.end(), pct, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1726,11 +1909,14 @@ template <typename T> inline void rand_range_01(T &a, double pct = .5) {
  * @param step the step of the ramp
  */
 template <typename It, typename T>
-inline void ramp_range(It begin, It end, T start = 0, T step = 1) {
-  { NTA_ASSERT(begin <= end) << "ramp_range: Invalid input range"; }
+inline void ramp_range(It begin, It end, T start = 0, T step = 1)
+{
+    {
+        NTA_ASSERT(begin <= end) << "ramp_range: Invalid input range";
+    }
 
-  for (; begin != end; ++begin, start += step)
-    *begin = start;
+    for (; begin != end; ++begin, start += step)
+        *begin = start;
 }
 
 //--------------------------------------------------------------------------------
@@ -1743,8 +1929,9 @@ inline void ramp_range(It begin, It end, T start = 0, T step = 1) {
  */
 template <typename T>
 inline void ramp_range(T &a, typename T::value_type start = 0,
-                       typename T::value_type step = 1) {
-  ramp_range(a.begin(), a.end(), start, step);
+                       typename T::value_type step = 1)
+{
+    ramp_range(a.begin(), a.end(), start, step);
 }
 
 //--------------------------------------------------------------------------------
@@ -1759,34 +1946,38 @@ inline void ramp_range(T &a, typename T::value_type start = 0,
  */
 template <typename It1, typename It2, typename RNG>
 inline void rand_enum_range(It1 begin, It1 end, It2 enum_begin, It2 enum_end,
-                            bool replace, RNG &rng) {
-  {
-    NTA_ASSERT(begin <= end) << "rand_enum_range: Invalid input range";
+                            bool replace, RNG &rng)
+{
+    {
+        NTA_ASSERT(begin <= end) << "rand_enum_range: Invalid input range";
 
-    NTA_ASSERT(enum_begin <= enum_end)
-        << "rand_enum_range: Invalid values range";
-  }
-
-  typedef typename std::iterator_traits<It1>::value_type value_type;
-
-  size_t n = static_cast<size_t> (enum_end - enum_begin);
-
-  if (replace) {
-
-    for (; begin != end; ++begin)
-      *begin = static_cast<value_type> (*(enum_begin + rng() % n));
-
-  } else {
-
-    std::vector<size_t> ind(n);
-    ramp_range(ind);
-
-    for (; begin != end; ++begin) {
-      size_t p = rng() % ind.size();
-      *begin = static_cast<value_type> (*(enum_begin + p));
-      remove(p, ind);
+        NTA_ASSERT(enum_begin <= enum_end)
+            << "rand_enum_range: Invalid values range";
     }
-  }
+
+    typedef typename std::iterator_traits<It1>::value_type value_type;
+
+    size_t n = static_cast<size_t>(enum_end - enum_begin);
+
+    if (replace)
+    {
+
+        for (; begin != end; ++begin)
+            *begin = static_cast<value_type>(*(enum_begin + rng() % n));
+    }
+    else
+    {
+
+        std::vector<size_t> ind(n);
+        ramp_range(ind);
+
+        for (; begin != end; ++begin)
+        {
+            size_t p = rng() % ind.size();
+            *begin = static_cast<value_type>(*(enum_begin + p));
+            remove(p, ind);
+        }
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -1801,14 +1992,16 @@ inline void rand_enum_range(It1 begin, It1 end, It2 enum_begin, It2 enum_end,
  */
 template <typename It1, typename It2>
 inline void rand_enum_range(It1 begin, It1 end, It2 enum_begin, It2 enum_end,
-                            bool replace = false) {
-  {
-    NTA_ASSERT(begin <= end) << "rand_enum_range: Invalid input range";
-    NTA_ASSERT(enum_begin <= enum_end) << "rand_enum_range: Invalid enum range";
-  }
+                            bool replace = false)
+{
+    {
+        NTA_ASSERT(begin <= end) << "rand_enum_range: Invalid input range";
+        NTA_ASSERT(enum_begin <= enum_end)
+            << "rand_enum_range: Invalid enum range";
+    }
 
-  nust::Random rng;
-  rand_enum_range(begin, end, enum_begin, enum_end, replace, rng);
+    nust::Random rng;
+    rand_enum_range(begin, end, enum_begin, enum_end, replace, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1820,14 +2013,16 @@ inline void rand_enum_range(It1 begin, It1 end, It2 enum_begin, It2 enum_end,
  * @param replace whether the draw with replacements or not
  */
 template <typename C1, typename C2>
-inline void rand_enum_range(C1 &a, const C2 &b, bool replace = false) {
-  rand_enum_range(a.begin(), a.end(), b.begin(), b.end(), replace);
+inline void rand_enum_range(C1 &a, const C2 &b, bool replace = false)
+{
+    rand_enum_range(a.begin(), a.end(), b.begin(), b.end(), replace);
 }
 
 //--------------------------------------------------------------------------------
 template <typename C1, typename C2, typename RNG>
-inline void rand_enum_range(C1 &a, const C2 &b, bool replace, RNG &rng) {
-  rand_enum_range(a.begin(), a.end(), b.begin(), b.end(), replace, rng);
+inline void rand_enum_range(C1 &a, const C2 &b, bool replace, RNG &rng)
+{
+    rand_enum_range(a.begin(), a.end(), b.begin(), b.end(), replace, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1842,11 +2037,15 @@ inline void rand_enum_range(C1 &a, const C2 &b, bool replace, RNG &rng) {
 template <typename It, typename RNG>
 inline void random_perm_interval(
     It begin, It end, typename std::iterator_traits<It>::value_type start,
-    typename std::iterator_traits<It>::value_type step, RNG &rng) {
-  { NTA_ASSERT(begin <= end) << "random_perm_interval 1: Invalid input range"; }
+    typename std::iterator_traits<It>::value_type step, RNG &rng)
+{
+    {
+        NTA_ASSERT(begin <= end)
+            << "random_perm_interval 1: Invalid input range";
+    }
 
-  ramp_range(begin, end, start, step);
-  std::random_shuffle(begin, end, rng);
+    ramp_range(begin, end, start, step);
+    std::random_shuffle(begin, end, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1862,11 +2061,15 @@ template <typename It>
 inline void
 random_perm_interval(It begin, It end,
                      typename std::iterator_traits<It>::value_type start = 0,
-                     typename std::iterator_traits<It>::value_type step = 1) {
-  { NTA_ASSERT(begin <= end) << "random_perm_interval 2: Invalid input range"; }
+                     typename std::iterator_traits<It>::value_type step = 1)
+{
+    {
+        NTA_ASSERT(begin <= end)
+            << "random_perm_interval 2: Invalid input range";
+    }
 
-  nust::Random rng;
-  random_perm_interval(begin, end, start, step, rng);
+    nust::Random rng;
+    random_perm_interval(begin, end, start, step, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1879,15 +2082,17 @@ random_perm_interval(It begin, It end,
  */
 template <typename C>
 inline void random_perm_interval(C &c, typename C::value_type start = 0,
-                                 typename C::value_type step = 1) {
-  random_perm_interval(c.begin(), c.end(), start, step);
+                                 typename C::value_type step = 1)
+{
+    random_perm_interval(c.begin(), c.end(), start, step);
 }
 
 //--------------------------------------------------------------------------------
 template <typename C, typename RNG>
 inline void random_perm_interval(C &c, typename C::value_type start,
-                                 typename C::value_type step, RNG &rng) {
-  random_perm_interval(c.begin(), c.end(), start, step, rng);
+                                 typename C::value_type step, RNG &rng)
+{
+    random_perm_interval(c.begin(), c.end(), start, step, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1902,18 +2107,18 @@ inline void random_perm_interval(C &c, typename C::value_type start,
  * @param end2
  */
 template <typename It1, typename It2, typename RNG>
-inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2,
-                          RNG &rng) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "random_sample 1: Invalid value range";
-    NTA_ASSERT(begin2 <= end2) << "random_sample 1: Invalid output range";
-  }
+inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2, RNG &rng)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "random_sample 1: Invalid value range";
+        NTA_ASSERT(begin2 <= end2) << "random_sample 1: Invalid output range";
+    }
 
-  size_t n1 = static_cast<size_t> (end1 - begin1);
-  std::vector<size_t> perm(n1);
-  random_perm_interval(perm, 0, n1, rng);
-  for (size_t p = 0; begin2 != end2; ++begin2, ++p)
-    *begin2 = *(begin1 + p);
+    size_t n1 = static_cast<size_t>(end1 - begin1);
+    std::vector<size_t> perm(n1);
+    random_perm_interval(perm, 0, n1, rng);
+    for (size_t p = 0; begin2 != end2; ++begin2, ++p)
+        *begin2 = *(begin1 + p);
 }
 
 //--------------------------------------------------------------------------------
@@ -1928,14 +2133,15 @@ inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2,
  * @param end2
  */
 template <typename It1, typename It2>
-inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "random_sample 2: Invalid value range";
-    NTA_ASSERT(begin2 <= end2) << "random_sample 2: Invalid output range";
-  }
+inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "random_sample 2: Invalid value range";
+        NTA_ASSERT(begin2 <= end2) << "random_sample 2: Invalid output range";
+    }
 
-  nust::Random rng;
-  random_sample(begin1, end1, begin2, end2, rng);
+    nust::Random rng;
+    random_sample(begin1, end1, begin2, end2, rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1947,15 +2153,17 @@ inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2) {
  * @param c2 the container from which to take the values
  */
 template <typename T1, typename T2>
-inline void random_sample(const std::vector<T1> &c1, std::vector<T2> &c2) {
-  random_sample(c1.begin(), c1.end(), c2.begin(), c2.end());
+inline void random_sample(const std::vector<T1> &c1, std::vector<T2> &c2)
+{
+    random_sample(c1.begin(), c1.end(), c2.begin(), c2.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2, typename RNG>
 inline void random_sample(const std::vector<T1> &c1, std::vector<T2> &c2,
-                          RNG &rng) {
-  random_sample(c1.begin(), c1.end(), c2.begin(), c2.end(), rng);
+                          RNG &rng)
+{
+    random_sample(c1.begin(), c1.end(), c2.begin(), c2.end(), rng);
 }
 
 //--------------------------------------------------------------------------------
@@ -1970,52 +2178,57 @@ inline void random_sample(const std::vector<T1> &c1, std::vector<T2> &c2,
  */
 template <typename T, typename RNG>
 inline void random_sample(std::vector<T> &c, size_t /*size*/, size_t start,
-                          size_t step, RNG &rng) {
-  ramp_range(c, start, step);
-  std::random_shuffle(c.begin(), c.end(), rng);
+                          size_t step, RNG &rng)
+{
+    ramp_range(c, start, step);
+    std::random_shuffle(c.begin(), c.end(), rng);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline void random_sample(std::vector<T> &c, size_t size, size_t start = 0,
-                          size_t step = 1) {
-  nust::Random rng;
-  random_sample(c, size, start, step, rng);
+                          size_t step = 1)
+{
+    nust::Random rng;
+    random_sample(c, size, start, step, rng);
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline void random_sample(size_t n, std::vector<T> &a) {
-  NTA_ASSERT(0 < a.size());
+template <typename T> inline void random_sample(size_t n, std::vector<T> &a)
+{
+    NTA_ASSERT(0 < a.size());
 
-  std::vector<size_t> x(n);
-  for (size_t i = 0; i != n; ++i)
-    x[i] = i;
-  std::random_shuffle(x.begin(), x.end());
-  std::copy(x.begin(), x.begin() + a.size(), a.begin());
+    std::vector<size_t> x(n);
+    for (size_t i = 0; i != n; ++i)
+        x[i] = i;
+    std::random_shuffle(x.begin(), x.end());
+    std::copy(x.begin(), x.begin() + a.size(), a.begin());
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline void random_sample(std::vector<T> &a) {
-  random_sample(a, a.size());
-}
-
-//--------------------------------------------------------------------------------
-template <typename T>
-inline void random_sample(const std::set<T> &a, std::vector<T> &b) {
-  NTA_ASSERT(0 < b.size());
-
-  std::vector<T> aa(a.begin(), a.end());
-  std::random_shuffle(aa.begin(), aa.end());
-  std::copy(aa.begin(), aa.begin() + b.size(), b.begin());
+template <typename T> inline void random_sample(std::vector<T> &a)
+{
+    random_sample(a, a.size());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
-inline void random_binary(float proba, std::vector<T> &x) {
-  size_t threshold = static_cast<size_t> (proba * 65535);
-  std::fill(x.begin(), x.end(), 0);
-  for (size_t i = 0; i != x.size(); ++i)
-    x[i] = (static_cast<size_t> (rand()) % 65535 < threshold) ? 1 : 0;
+inline void random_sample(const std::set<T> &a, std::vector<T> &b)
+{
+    NTA_ASSERT(0 < b.size());
+
+    std::vector<T> aa(a.begin(), a.end());
+    std::random_shuffle(aa.begin(), aa.end());
+    std::copy(aa.begin(), aa.begin() + b.size(), b.begin());
+}
+
+//--------------------------------------------------------------------------------
+template <typename T> inline void random_binary(float proba, std::vector<T> &x)
+{
+    size_t threshold = static_cast<size_t>(proba * 65535);
+    std::fill(x.begin(), x.end(), 0);
+    for (size_t i = 0; i != x.size(); ++i)
+        x[i] = (static_cast<size_t>(rand()) % 65535 < threshold) ? 1 : 0;
 }
 
 //--------------------------------------------------------------------------------
@@ -2029,31 +2242,33 @@ template <typename T1, typename T2>
 inline void random_pair_sample(size_t nrows, size_t ncols, size_t nnzpr,
                                std::vector<std::pair<T1, T2>> &a,
                                const T2 &init_nz_val, int seed = -1,
-                               bool sorted = true) {
-  {
-    NTA_ASSERT(0 < a.size());
-    NTA_ASSERT(nnzpr <= ncols);
-  }
+                               bool sorted = true)
+{
+    {
+        NTA_ASSERT(0 < a.size());
+        NTA_ASSERT(nnzpr <= ncols);
+    }
 
-  a.resize(nrows * nnzpr);
+    a.resize(nrows * nnzpr);
 
 #if defined(NTA_ARCH_32) && defined(NTA_OS_DARWIN)
-  nust::Random rng(static_cast<UInt64> (seed == -1 ? arc4random() : seed));
+    nust::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
 #else
-  nust::Random rng(static_cast<UInt64> (seed == -1 ? rand() : seed));
+    nust::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
 #endif
 
-  std::vector<size_t> x(ncols);
-  for (size_t i = 0; i != ncols; ++i)
-    x[i] = i;
-  for (size_t i = 0; i != nrows; ++i) {
-    std::random_shuffle(x.begin(), x.end(), rng);
-    if (sorted)
-      std::sort(x.begin(), x.begin() + static_cast<ptrdiff_t> (nnzpr));
-    size_t offset = i * nnzpr;
-    for (size_t j = 0; j != nnzpr; ++j)
-      a[offset + j] = std::pair<T1, T2>(x[j], init_nz_val);
-  }
+    std::vector<size_t> x(ncols);
+    for (size_t i = 0; i != ncols; ++i)
+        x[i] = i;
+    for (size_t i = 0; i != nrows; ++i)
+    {
+        std::random_shuffle(x.begin(), x.end(), rng);
+        if (sorted)
+            std::sort(x.begin(), x.begin() + static_cast<ptrdiff_t>(nnzpr));
+        size_t offset = i * nnzpr;
+        for (size_t j = 0; j != nnzpr; ++j)
+            a[offset + j] = std::pair<T1, T2>(x[j], init_nz_val);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2077,69 +2292,74 @@ template <typename T1, typename T2>
 inline void gaussian_2d_pair_sample(size_t nrows, size_t ncols, size_t nnzpr,
                                     size_t rf_x, T2 sigma,
                                     std::vector<std::pair<T1, T2>> &a,
-                                    const T2 &init_nz_val, int seed = -1) {
-  {
-    NTA_ASSERT(ncols % rf_x == 0);
-    NTA_ASSERT(nnzpr <= ncols);
-    NTA_ASSERT(0 < sigma);
-  }
-
-  a.resize(nrows * nnzpr);
-
-#if defined(NTA_ARCH_32) && defined(NTA_OS_DARWIN)
-  nust::Random rng(static_cast<UInt64> (seed == -1 ? arc4random() : seed));
-#else
-  nust::Random rng(static_cast<UInt64> (seed == -1 ? rand() : seed));
-#endif
-
-  size_t rf_y = ncols / rf_x;
-  T2 c_x = static_cast<float> (rf_x - 1.0f) / 2.0f, c_y = static_cast<float> (rf_y - 1.0f) / 2.0f;
-  Gaussian2D<float> sg2d(c_x, c_y, sigma * sigma, 0, 0, sigma * sigma);
-  std::vector<float> z(ncols);
-
-  // Renormalize because we've lost some mass
-  // with a compact domain of definition.
-  float s = 0;
-  for (size_t j = 0; j != ncols; ++j)
-    s += z[j] = sg2d(j / rf_y, j % rf_y);
-
-  for (size_t j = 0; j != ncols; ++j)
-    z[j] /= s;
-  // z[j] = 1.0f / (float)(rf_x * rf_y);
-
-  // std::vector<int> counts(ncols, 0);
-
-  // TODO: argsort z so that the bigger bins come first, and it's faster
-  // to draw samples in the area where the pdf is higher
-  for (size_t i = 0; i != nrows; ++i) {
-
-    std::set<size_t> b;
-
-    while (b.size() < nnzpr) {
-      T2 s = z[0], p = T2(rng.getReal64());
-      size_t k = 0;
-      while (s < p && k < ncols - 1)
-        s += z[++k];
-      //++counts[k];
-      b.insert(k);
+                                    const T2 &init_nz_val, int seed = -1)
+{
+    {
+        NTA_ASSERT(ncols % rf_x == 0);
+        NTA_ASSERT(nnzpr <= ncols);
+        NTA_ASSERT(0 < sigma);
     }
 
-    size_t offset = i * nnzpr;
-    auto it = b.begin();
-    for (size_t j = 0; j != nnzpr; ++j, ++it)
-      a[offset + j] = std::pair<T1, T2>(*it, init_nz_val);
-  }
+    a.resize(nrows * nnzpr);
 
-  /*
-  for (size_t i = 0; i != counts.size(); ++i)
-    std::cout << counts[i] << " ";
-  std::cout << std::endl;
-  */
+#if defined(NTA_ARCH_32) && defined(NTA_OS_DARWIN)
+    nust::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
+#else
+    nust::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
+#endif
+
+    size_t rf_y = ncols / rf_x;
+    T2 c_x = static_cast<float>(rf_x - 1.0f) / 2.0f,
+       c_y = static_cast<float>(rf_y - 1.0f) / 2.0f;
+    Gaussian2D<float> sg2d(c_x, c_y, sigma * sigma, 0, 0, sigma * sigma);
+    std::vector<float> z(ncols);
+
+    // Renormalize because we've lost some mass
+    // with a compact domain of definition.
+    float s = 0;
+    for (size_t j = 0; j != ncols; ++j)
+        s += z[j] = sg2d(j / rf_y, j % rf_y);
+
+    for (size_t j = 0; j != ncols; ++j)
+        z[j] /= s;
+    // z[j] = 1.0f / (float)(rf_x * rf_y);
+
+    // std::vector<int> counts(ncols, 0);
+
+    // TODO: argsort z so that the bigger bins come first, and it's faster
+    // to draw samples in the area where the pdf is higher
+    for (size_t i = 0; i != nrows; ++i)
+    {
+
+        std::set<size_t> b;
+
+        while (b.size() < nnzpr)
+        {
+            T2 s = z[0], p = T2(rng.getReal64());
+            size_t k = 0;
+            while (s < p && k < ncols - 1)
+                s += z[++k];
+            //++counts[k];
+            b.insert(k);
+        }
+
+        size_t offset = i * nnzpr;
+        auto it = b.begin();
+        for (size_t j = 0; j != nnzpr; ++j, ++it)
+            a[offset + j] = std::pair<T1, T2>(*it, init_nz_val);
+    }
+
+    /*
+    for (size_t i = 0; i != counts.size(); ++i)
+      std::cout << counts[i] << " ";
+    std::cout << std::endl;
+    */
 }
 
 //--------------------------------------------------------------------------------
-template <typename T> inline void random_shuffle(std::vector<T> &x) {
-  std::random_shuffle(x.begin(), x.end());
+template <typename T> inline void random_shuffle(std::vector<T> &x)
+{
+    std::random_shuffle(x.begin(), x.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -2152,11 +2372,12 @@ template <typename T> inline void random_shuffle(std::vector<T> &x) {
  * @param gen the generator functor
  */
 template <typename Container, typename Generator>
-inline void generate(Container &c, Generator gen) {
-  typename Container::iterator i = c.begin(), e = c.end();
+inline void generate(Container &c, Generator gen)
+{
+    typename Container::iterator i = c.begin(), e = c.end();
 
-  for (; i != e; ++i)
-    *i = gen();
+    for (; i != e; ++i)
+        *i = gen();
 }
 
 //--------------------------------------------------------------------------------
@@ -2174,15 +2395,20 @@ inline void generate(Container &c, Generator gen) {
  */
 template <typename InIt1, typename InIt2, typename OutIt>
 inline void concatenate(InIt1 x_begin, InIt2 seg_begin, InIt2 seg_end,
-                        OutIt y_begin) {
-  { NTA_ASSERT(seg_begin <= seg_end) << "concatenate: Invalid segment range"; }
+                        OutIt y_begin)
+{
+    {
+        NTA_ASSERT(seg_begin <= seg_end)
+            << "concatenate: Invalid segment range";
+    }
 
-  for (; seg_begin != seg_end; ++seg_begin) {
-    InIt1 begin = x_begin + seg_begin->first;
-    InIt1 end = begin + seg_begin->second;
-    std::copy(begin, end, y_begin);
-    y_begin += seg_begin->second;
-  }
+    for (; seg_begin != seg_end; ++seg_begin)
+    {
+        InIt1 begin = x_begin + seg_begin->first;
+        InIt1 end = begin + seg_begin->second;
+        std::copy(begin, end, y_begin);
+        y_begin += seg_begin->second;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2201,17 +2427,21 @@ inline void concatenate(InIt1 x_begin, InIt2 seg_begin, InIt2 seg_end,
 template <typename It>
 inline void clip(It begin, It end,
                  const typename std::iterator_traits<It>::value_type &_min,
-                 const typename std::iterator_traits<It>::value_type &_max) {
-  { NTA_ASSERT(begin <= end) << "clip: Invalid range"; }
+                 const typename std::iterator_traits<It>::value_type &_max)
+{
+    {
+        NTA_ASSERT(begin <= end) << "clip: Invalid range";
+    }
 
-  while (begin != end) {
-    typename std::iterator_traits<It>::value_type val = *begin;
-    if (val > _max)
-      *begin = _max;
-    else if (val < _min)
-      *begin = _min;
-    ++begin;
-  }
+    while (begin != end)
+    {
+        typename std::iterator_traits<It>::value_type val = *begin;
+        if (val > _max)
+            *begin = _max;
+        else if (val < _min)
+            *begin = _min;
+        ++begin;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2226,8 +2456,9 @@ inline void clip(It begin, It end,
  */
 template <typename T>
 inline void clip(T &a, const typename T::value_type &_min,
-                 const typename T::value_type &_max) {
-  clip(a.begin(), a.end(), _min, _max);
+                 const typename T::value_type &_max)
+{
+    clip(a.begin(), a.end(), _min, _max);
 }
 
 //--------------------------------------------------------------------------------
@@ -2245,42 +2476,51 @@ template <typename InIter, typename OutIter1, typename OutIter2>
 inline size_t
 threshold(InIter begin, InIter end, OutIter1 ind, OutIter2 nz,
           const typename std::iterator_traits<InIter>::value_type &th,
-          bool above = true) {
-  { NTA_ASSERT(begin <= end) << "threshold: Invalid range"; }
-
-  typedef typename std::iterator_traits<InIter>::value_type value_type;
-  typedef size_t size_type;
-
-  size_type n = 0;
-
-  if (above) {
-
-    for (InIter it = begin; it != end; ++it) {
-      value_type val = static_cast<value_type> (*it);
-      if (val >= th) {
-        *ind = static_cast<size_type> (it - begin);
-        *nz = val;
-        ++ind;
-        ++nz;
-        ++n;
-      }
+          bool above = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "threshold: Invalid range";
     }
 
-  } else {
+    typedef typename std::iterator_traits<InIter>::value_type value_type;
+    typedef size_t size_type;
 
-    for (InIter it = begin; it != end; ++it) {
-      value_type val = static_cast<value_type> (*it);
-      if (val < th) {
-        *ind = static_cast<size_type> (it - begin);
-        *nz = val;
-        ++ind;
-        ++nz;
-        ++n;
-      }
+    size_type n = 0;
+
+    if (above)
+    {
+
+        for (InIter it = begin; it != end; ++it)
+        {
+            value_type val = static_cast<value_type>(*it);
+            if (val >= th)
+            {
+                *ind = static_cast<size_type>(it - begin);
+                *nz = val;
+                ++ind;
+                ++nz;
+                ++n;
+            }
+        }
     }
-  }
+    else
+    {
 
-  return n;
+        for (InIter it = begin; it != end; ++it)
+        {
+            value_type val = static_cast<value_type>(*it);
+            if (val < th)
+            {
+                *ind = static_cast<size_type>(it - begin);
+                *nz = val;
+                ++ind;
+                ++nz;
+                ++n;
+            }
+        }
+    }
+
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2293,19 +2533,24 @@ template <typename InputIterator, typename OutputIterator>
 inline nust::UInt32
 binarize_with_threshold(nust::Real32 threshold, InputIterator x,
                         InputIterator x_end, OutputIterator y,
-                        OutputIterator y_end) {
-  { NTA_ASSERT(x_end - x == y_end - y); }
+                        OutputIterator y_end)
+{
+    {
+        NTA_ASSERT(x_end - x == y_end - y);
+    }
 
-  nust::UInt32 count = 0;
+    nust::UInt32 count = 0;
 
-  for (; x != x_end; ++x, ++y)
-    if (*x > threshold) {
-      *y = 1;
-      ++count;
-    } else
-      *y = 0;
+    for (; x != x_end; ++x, ++y)
+        if (*x > threshold)
+        {
+            *y = 1;
+            ++count;
+        }
+        else
+            *y = 0;
 
-  return count;
+    return count;
 }
 
 //--------------------------------------------------------------------------------
@@ -2322,28 +2567,30 @@ binarize_with_threshold(nust::Real32 threshold, InputIterator x,
 template <typename InputIterator, typename OutputIterator>
 inline void nonZeroRowsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
                                     InputIterator x, InputIterator x_end,
-                                    OutputIterator y, OutputIterator y_end) {
-  {
-    NTA_ASSERT(0 < nrows);
-    NTA_ASSERT(0 < ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (x_end - x) == nrows * ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (y_end - y) == nrows);
+                                    OutputIterator y, OutputIterator y_end)
+{
+    {
+        NTA_ASSERT(0 < nrows);
+        NTA_ASSERT(0 < ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(y_end - y) == nrows);
 #ifdef NTA_ASSERTION_ON
-    for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
-      NTA_ASSERT(x[i] == 0 || x[i] == 1);
+        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+            NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
-  }
+    }
 
-  for (nust::UInt32 r = 0; r != nrows; ++r, ++y) {
+    for (nust::UInt32 r = 0; r != nrows; ++r, ++y)
+    {
 
-    InputIterator it = x + r * ncols, it_end = it + ncols;
-    nust::UInt32 found = 0;
+        InputIterator it = x + r * ncols, it_end = it + ncols;
+        nust::UInt32 found = 0;
 
-    while (it != it_end && found == 0)
-      found = nust::UInt32(*it++);
+        while (it != it_end && found == 0)
+            found = nust::UInt32(*it++);
 
-    *y = found;
-  }
+        *y = found;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2354,31 +2601,33 @@ inline void nonZeroRowsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
  */
 template <typename InputIterator>
 inline nust::UInt32 nNonZeroRows_01(nust::UInt32 nrows, nust::UInt32 ncols,
-                                     InputIterator x, InputIterator x_end) {
-  {
-    NTA_ASSERT(0 < nrows);
-    NTA_ASSERT(0 < ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (x_end - x) == nrows * ncols);
+                                    InputIterator x, InputIterator x_end)
+{
+    {
+        NTA_ASSERT(0 < nrows);
+        NTA_ASSERT(0 < ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
 #ifdef NTA_ASSERTION_ON
-    for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
-      NTA_ASSERT(x[i] == 0 || x[i] == 1);
+        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+            NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
-  }
+    }
 
-  nust::UInt32 count = 0;
+    nust::UInt32 count = 0;
 
-  for (nust::UInt32 r = 0; r != nrows; ++r) {
+    for (nust::UInt32 r = 0; r != nrows; ++r)
+    {
 
-    InputIterator it = x + r * ncols, it_end = it + ncols;
-    nust::UInt32 found = 0;
+        InputIterator it = x + r * ncols, it_end = it + ncols;
+        nust::UInt32 found = 0;
 
-    while (it != it_end && found == 0)
-      found = nust::UInt32(*it++);
+        while (it != it_end && found == 0)
+            found = nust::UInt32(*it++);
 
-    count += found;
-  }
+        count += found;
+    }
 
-  return count;
+    return count;
 }
 
 //--------------------------------------------------------------------------------
@@ -2391,32 +2640,35 @@ inline nust::UInt32 nNonZeroRows_01(nust::UInt32 nrows, nust::UInt32 ncols,
 template <typename InputIterator, typename OutputIterator>
 inline void nonZeroColsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
                                     InputIterator x, InputIterator x_end,
-                                    OutputIterator y, OutputIterator y_end) {
-  {
-    NTA_ASSERT(0 < nrows);
-    NTA_ASSERT(0 < ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (x_end - x) == nrows * ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (y_end - y) == ncols);
+                                    OutputIterator y, OutputIterator y_end)
+{
+    {
+        NTA_ASSERT(0 < nrows);
+        NTA_ASSERT(0 < ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(y_end - y) == ncols);
 #ifdef NTA_ASSERTION_ON
-    for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
-      NTA_ASSERT(x[i] == 0 || x[i] == 1);
+        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+            NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
-  }
-
-  nust::UInt32 N = nrows * ncols;
-
-  for (nust::UInt32 c = 0; c != ncols; ++c, ++y) {
-
-    InputIterator it = x + c, it_end = it + N;
-    nust::UInt32 found = 0;
-
-    while (it != it_end && found == 0) {
-      found = nust::UInt32(*it);
-      it += ncols;
     }
 
-    *y = found;
-  }
+    nust::UInt32 N = nrows * ncols;
+
+    for (nust::UInt32 c = 0; c != ncols; ++c, ++y)
+    {
+
+        InputIterator it = x + c, it_end = it + N;
+        nust::UInt32 found = 0;
+
+        while (it != it_end && found == 0)
+        {
+            found = nust::UInt32(*it);
+            it += ncols;
+        }
+
+        *y = found;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2428,34 +2680,37 @@ inline void nonZeroColsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
  */
 template <typename InputIterator>
 inline nust::UInt32 nNonZeroCols_01(nust::UInt32 nrows, nust::UInt32 ncols,
-                                     InputIterator x, InputIterator x_end) {
-  {
-    NTA_ASSERT(0 < nrows);
-    NTA_ASSERT(0 < ncols);
-    NTA_ASSERT(static_cast<nust::UInt32> (x_end - x) == nrows * ncols);
+                                    InputIterator x, InputIterator x_end)
+{
+    {
+        NTA_ASSERT(0 < nrows);
+        NTA_ASSERT(0 < ncols);
+        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
 #ifdef NTA_ASSERTION_ON
-    for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
-      NTA_ASSERT(x[i] == 0 || x[i] == 1);
+        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+            NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
-  }
-
-  nust::UInt32 count = 0;
-  nust::UInt32 N = nrows * ncols;
-
-  for (nust::UInt32 c = 0; c != ncols; ++c) {
-
-    InputIterator it = x + c, it_end = it + N;
-    nust::UInt32 found = 0;
-
-    while (it != it_end && found == 0) {
-      found = nust::UInt32(*it);
-      it += ncols;
     }
 
-    count += found;
-  }
+    nust::UInt32 count = 0;
+    nust::UInt32 N = nrows * ncols;
 
-  return count;
+    for (nust::UInt32 c = 0; c != ncols; ++c)
+    {
+
+        InputIterator it = x + c, it_end = it + N;
+        nust::UInt32 found = 0;
+
+        while (it != it_end && found == 0)
+        {
+            found = nust::UInt32(*it);
+            it += ncols;
+        }
+
+        count += found;
+    }
+
+    return count;
 }
 
 //--------------------------------------------------------------------------------
@@ -2467,20 +2722,24 @@ inline nust::UInt32 nNonZeroCols_01(nust::UInt32 nrows, nust::UInt32 ncols,
 template <typename InIter>
 inline void mask(InIter begin, InIter end, InIter zone_begin, InIter zone_end,
                  const typename std::iterator_traits<InIter>::value_type &v = 0,
-                 bool maskOutside = true) {
-  { // Pre-conditions
-    NTA_ASSERT(begin <= end) << "mask 1: Invalid range for vector";
-    NTA_ASSERT(zone_begin <= zone_end) << "mask 1: Invalid range for mask";
-    NTA_ASSERT(begin <= zone_begin && zone_end <= end)
-        << "mask 1: Mask incompatible with vector";
-  } // End pre-conditions
+                 bool maskOutside = true)
+{
+    { // Pre-conditions
+        NTA_ASSERT(begin <= end) << "mask 1: Invalid range for vector";
+        NTA_ASSERT(zone_begin <= zone_end) << "mask 1: Invalid range for mask";
+        NTA_ASSERT(begin <= zone_begin && zone_end <= end)
+            << "mask 1: Mask incompatible with vector";
+    } // End pre-conditions
 
-  if (maskOutside) {
-    std::fill(begin, zone_begin, v);
-    std::fill(zone_end, end, v);
-  } else {
-    std::fill(zone_begin, zone_end, v);
-  }
+    if (maskOutside)
+    {
+        std::fill(begin, zone_begin, v);
+        std::fill(zone_end, end, v);
+    }
+    else
+    {
+        std::fill(zone_begin, zone_end, v);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2488,15 +2747,16 @@ template <typename value_type>
 inline void mask(std::vector<value_type> &x,
                  typename std::vector<value_type>::size_type zone_begin,
                  typename std::vector<value_type>::size_type zone_end,
-                 const value_type &v = 0, bool maskOutside = true) {
-  { // Pre-conditions
-    NTA_ASSERT(0 <= zone_begin && zone_begin <= zone_end &&
-               zone_end <= x.size())
-        << "mask 2: Mask incompatible with vector";
-  } // End pre-conditions
+                 const value_type &v = 0, bool maskOutside = true)
+{
+    { // Pre-conditions
+        NTA_ASSERT(0 <= zone_begin && zone_begin <= zone_end &&
+                   zone_end <= x.size())
+            << "mask 2: Mask incompatible with vector";
+    } // End pre-conditions
 
-  mask(x.begin(), x.end(), x.begin() + zone_begin, x.begin() + zone_end, v,
-       maskOutside);
+    mask(x.begin(), x.end(), x.begin() + zone_begin, x.begin() + zone_end, v,
+         maskOutside);
 }
 
 //--------------------------------------------------------------------------------
@@ -2504,26 +2764,29 @@ template <typename value_type1, typename value_type2>
 inline void mask(std::vector<value_type1> &x,
                  const std::vector<value_type2> &mask,
                  bool multiplyYesNo = false,
-                 value_type2 eps = static_cast<value_type2> (nust::Epsilon)) {
-  { // Pre-conditions
-    NTA_ASSERT(x.size() == mask.size())
-        << "mask 3: Need mask and vector to have same size";
-  } // End pre-conditions
+                 value_type2 eps = static_cast<value_type2>(nust::Epsilon))
+{
+    { // Pre-conditions
+        NTA_ASSERT(x.size() == mask.size())
+            << "mask 3: Need mask and vector to have same size";
+    } // End pre-conditions
 
-  typedef typename std::vector<value_type1>::size_type size_type;
+    typedef typename std::vector<value_type1>::size_type size_type;
 
-  if (multiplyYesNo) {
-    for (size_type i = 0; i != x.size(); ++i)
-      if (!nearlyZero(mask[i], eps))
-        x[i] *= static_cast<value_type1> (mask[i]);
-      else
-        x[i] = static_cast<value_type1> (0);
-
-  } else {
-    for (size_type i = 0; i != x.size(); ++i)
-      if (nearlyZero(mask[i], eps))
-        x[i] = static_cast<value_type1> (0);
-  }
+    if (multiplyYesNo)
+    {
+        for (size_type i = 0; i != x.size(); ++i)
+            if (!nearlyZero(mask[i], eps))
+                x[i] *= static_cast<value_type1>(mask[i]);
+            else
+                x[i] = static_cast<value_type1>(0);
+    }
+    else
+    {
+        for (size_type i = 0; i != x.size(); ++i)
+            if (nearlyZero(mask[i], eps))
+                x[i] = static_cast<value_type1>(0);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -2533,16 +2796,18 @@ inline void mask(std::vector<value_type1> &x,
  * A class that provides init and operator(), to be used in distance
  * computations when using the Hamming (L0) norm.
  */
-template <typename T> struct Lp0 {
-  typedef T value_type;
+template <typename T> struct Lp0
+{
+    typedef T value_type;
 
-  inline value_type operator()(value_type &a, value_type b) const {
-    value_type inc = value_type(b < -nust::Epsilon || b > nust::Epsilon);
-    a += inc;
-    return inc;
-  }
+    inline value_type operator()(value_type &a, value_type b) const
+    {
+        value_type inc = value_type(b < -nust::Epsilon || b > nust::Epsilon);
+        a += inc;
+        return inc;
+    }
 
-  inline value_type root(value_type x) const { return x; }
+    inline value_type root(value_type x) const { return x; }
 };
 
 //--------------------------------------------------------------------------------
@@ -2550,16 +2815,18 @@ template <typename T> struct Lp0 {
  * A class that provides init and operator(), to be used in distance
  * computations when using the Manhattan (L1) norm.
  */
-template <typename T> struct Lp1 {
-  typedef T value_type;
+template <typename T> struct Lp1
+{
+    typedef T value_type;
 
-  inline value_type operator()(value_type &a, value_type b) const {
-    value_type inc = fabs(b); // b > 0.0 ? b : -b;
-    a += inc;
-    return inc;
-  }
+    inline value_type operator()(value_type &a, value_type b) const
+    {
+        value_type inc = fabs(b); // b > 0.0 ? b : -b;
+        a += inc;
+        return inc;
+    }
 
-  inline value_type root(value_type x) const { return x; }
+    inline value_type root(value_type x) const { return x; }
 };
 
 //--------------------------------------------------------------------------------
@@ -2567,18 +2834,20 @@ template <typename T> struct Lp1 {
  * A class that provides square and square root methods, to be
  * used in distance computations when using L2 norm.
  */
-template <typename T> struct Lp2 {
-  typedef T value_type;
+template <typename T> struct Lp2
+{
+    typedef T value_type;
 
-  nust::Sqrt<value_type> s;
+    nust::Sqrt<value_type> s;
 
-  inline value_type operator()(value_type &a, value_type b) const {
-    value_type inc = b * b;
-    a += inc;
-    return inc;
-  }
+    inline value_type operator()(value_type &a, value_type b) const
+    {
+        value_type inc = b * b;
+        a += inc;
+        return inc;
+    }
 
-  inline value_type root(value_type x) const { return s(x); }
+    inline value_type root(value_type x) const { return s(x); }
 };
 
 //--------------------------------------------------------------------------------
@@ -2586,35 +2855,39 @@ template <typename T> struct Lp2 {
  * A class that provides power p and root p methods, to be
  * used in distance computations using Lp norm.
  */
-template <typename T> struct Lp {
-  typedef T value_type;
+template <typename T> struct Lp
+{
+    typedef T value_type;
 
-  nust::Pow<value_type> pf;
+    nust::Pow<value_type> pf;
 
-  Lp(value_type p_) : p(p_), inv_p(static_cast<value_type> (1.0)) {
-    // We allow only positive values of p for now, as this
-    // keeps the root function monotonically increasing, which
-    // results in further speed-ups.
-    NTA_ASSERT(p_ > static_cast<value_type> (0.0))
-        << "NearestNeighbor::PP(): "
-        << "Invalid value for p: " << p_ << " - p needs to be > 0";
+    Lp(value_type p_) : p(p_), inv_p(static_cast<value_type>(1.0))
+    {
+        // We allow only positive values of p for now, as this
+        // keeps the root function monotonically increasing, which
+        // results in further speed-ups.
+        NTA_ASSERT(p_ > static_cast<value_type>(0.0))
+            << "NearestNeighbor::PP(): "
+            << "Invalid value for p: " << p_ << " - p needs to be > 0";
 
-    inv_p = static_cast<value_type> (1.0) / p;
-  }
+        inv_p = static_cast<value_type>(1.0) / p;
+    }
 
-  value_type p, inv_p;
+    value_type p, inv_p;
 
-  inline value_type operator()(value_type &a, value_type b) const {
-    value_type inc = pf(b > 0.0 ? b : -b, p);
-    a += inc;
-    return inc;
-  }
+    inline value_type operator()(value_type &a, value_type b) const
+    {
+        value_type inc = pf(b > 0.0 ? b : -b, p);
+        a += inc;
+        return inc;
+    }
 
-  inline value_type root(value_type x) const {
-    // skipping abs, because we know we've been adding positive
-    // numbers when root is called when computing a norm
-    return pf(x, inv_p);
-  }
+    inline value_type root(value_type x) const
+    {
+        // skipping abs, because we know we've been adding positive
+        // numbers when root is called when computing a norm
+        return pf(x, inv_p);
+    }
 };
 
 //--------------------------------------------------------------------------------
@@ -2622,18 +2895,20 @@ template <typename T> struct Lp {
  * A class that provides power p and root p methods, to be
  * used in distance computations using LpMax norm.
  */
-template <typename T> struct LpMax {
-  typedef T value_type;
+template <typename T> struct LpMax
+{
+    typedef T value_type;
 
-  nust::Max<value_type> m;
+    nust::Max<value_type> m;
 
-  inline value_type operator()(value_type &a, value_type b) const {
-    value_type inc = m(a, b > 0 ? b : -b);
-    a = inc;
-    return inc;
-  }
+    inline value_type operator()(value_type &a, value_type b) const
+    {
+        value_type inc = m(a, b > 0 ? b : -b);
+        a = inc;
+        return inc;
+    }
 
-  inline value_type root(value_type x) const { return x; }
+    inline value_type root(value_type x) const { return x; }
 };
 
 //--------------------------------------------------------------------------------
@@ -2642,18 +2917,21 @@ template <typename T> struct LpMax {
  */
 template <typename It>
 inline typename std::iterator_traits<It>::value_type l0_norm(It begin, It end,
-                                                             bool = true) {
-  { NTA_ASSERT(begin <= end) << "l0_norm: Invalid range"; }
+                                                             bool = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "l0_norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  value_type n = static_cast<value_type> (0);
-  Lp0<value_type> lp0;
+    value_type n = static_cast<value_type>(0);
+    Lp0<value_type> lp0;
 
-  for (; begin != end; ++begin)
-    lp0(n, *begin);
+    for (; begin != end; ++begin)
+        lp0(n, *begin);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2661,8 +2939,9 @@ inline typename std::iterator_traits<It>::value_type l0_norm(It begin, It end,
  * Hamming norm on a container
  */
 template <typename T>
-inline typename T::value_type l0_norm(const T &a, bool = true) {
-  return l0_norm(a.begin(), a.end());
+inline typename T::value_type l0_norm(const T &a, bool = true)
+{
+    return l0_norm(a.begin(), a.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -2671,18 +2950,21 @@ inline typename T::value_type l0_norm(const T &a, bool = true) {
  */
 template <typename It>
 inline typename std::iterator_traits<It>::value_type l1_norm(It begin, It end,
-                                                             bool = true) {
-  { NTA_ASSERT(begin <= end) << "l1_norm: Invalid range"; }
+                                                             bool = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "l1_norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  value_type n = static_cast<value_type> (0);
-  Lp1<value_type> lp1;
+    value_type n = static_cast<value_type>(0);
+    Lp1<value_type> lp1;
 
-  for (; begin != end; ++begin)
-    lp1(n, *begin);
+    for (; begin != end; ++begin)
+        lp1(n, *begin);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2690,8 +2972,9 @@ inline typename std::iterator_traits<It>::value_type l1_norm(It begin, It end,
  * Manhattan norm on a container.
  */
 template <typename T>
-inline typename T::value_type l1_norm(const T &a, bool = true) {
-  return l1_norm(a.begin(), a.end());
+inline typename T::value_type l1_norm(const T &a, bool = true)
+{
+    return l1_norm(a.begin(), a.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -2702,21 +2985,24 @@ inline typename T::value_type l1_norm(const T &a, bool = true) {
 //--------------------------------------------------------------------------------
 template <typename It>
 inline typename std::iterator_traits<It>::value_type
-l2_norm(It begin, It end, bool take_root = true) {
-  { NTA_ASSERT(begin <= end) << "l2_norm: Invalid range"; }
+l2_norm(It begin, It end, bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "l2_norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
-  value_type n = static_cast<value_type> (0);
+    typedef typename std::iterator_traits<It>::value_type value_type;
+    value_type n = static_cast<value_type>(0);
 
-  Lp2<value_type> lp2;
+    Lp2<value_type> lp2;
 
-  for (; begin != end; ++begin)
-    lp2(n, *begin);
+    for (; begin != end; ++begin)
+        lp2(n, *begin);
 
-  if (take_root)
-    n = lp2.root(n);
+    if (take_root)
+        n = lp2.root(n);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2724,8 +3010,9 @@ l2_norm(It begin, It end, bool take_root = true) {
  * Euclidean norm on a container.
  */
 template <typename T>
-inline typename T::value_type l2_norm(const T &a, bool take_root = true) {
-  return l2_norm(a.begin(), a.end(), take_root);
+inline typename T::value_type l2_norm(const T &a, bool take_root = true)
+{
+    return l2_norm(a.begin(), a.end(), take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -2735,21 +3022,24 @@ inline typename T::value_type l2_norm(const T &a, bool take_root = true) {
 template <typename It>
 inline typename std::iterator_traits<It>::value_type
 lp_norm(typename std::iterator_traits<It>::value_type p, It begin, It end,
-        bool take_root = true) {
-  { NTA_ASSERT(begin <= end) << "lp_norm: Invalid range"; }
+        bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "lp_norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  value_type n = static_cast<value_type> (0);
-  Lp<value_type> lp(p);
+    value_type n = static_cast<value_type>(0);
+    Lp<value_type> lp(p);
 
-  for (; begin != end; ++begin)
-    lp(n, *begin);
+    for (; begin != end; ++begin)
+        lp(n, *begin);
 
-  if (take_root)
-    n = lp.root(n);
+    if (take_root)
+        n = lp.root(n);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2758,8 +3048,9 @@ lp_norm(typename std::iterator_traits<It>::value_type p, It begin, It end,
  */
 template <typename T>
 inline typename T::value_type lp_norm(typename T::value_type p, const T &a,
-                                      bool take_root = true) {
-  return lp_norm(p, a.begin(), a.end(), take_root);
+                                      bool take_root = true)
+{
+    return lp_norm(p, a.begin(), a.end(), take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -2768,18 +3059,21 @@ inline typename T::value_type lp_norm(typename T::value_type p, const T &a,
  */
 template <typename It>
 inline typename std::iterator_traits<It>::value_type lmax_norm(It begin, It end,
-                                                               bool = true) {
-  { NTA_ASSERT(begin <= end) << "lmax_norm: Invalid range"; }
+                                                               bool = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "lmax_norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  value_type n = static_cast<value_type> (0);
-  LpMax<value_type> lmax;
+    value_type n = static_cast<value_type>(0);
+    LpMax<value_type> lmax;
 
-  for (; begin != end; ++begin)
-    lmax(n, *begin);
+    for (; begin != end; ++begin)
+        lmax(n, *begin);
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -2787,8 +3081,9 @@ inline typename std::iterator_traits<It>::value_type lmax_norm(It begin, It end,
  * L inf / L max norm on a container.
  */
 template <typename T>
-inline typename T::value_type lmax_norm(const T &a, bool = true) {
-  return lmax_norm(a.begin(), a.end());
+inline typename T::value_type lmax_norm(const T &a, bool = true)
+{
+    return lmax_norm(a.begin(), a.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -2803,21 +3098,24 @@ inline typename T::value_type lmax_norm(const T &a, bool = true) {
 template <typename It>
 inline typename std::iterator_traits<It>::value_type
 norm(typename std::iterator_traits<It>::value_type p, It begin, It end,
-     bool take_root = true) {
-  { NTA_ASSERT(begin <= end) << "norm: Invalid range"; }
+     bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin <= end) << "norm: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  if (p == static_cast<value_type> (0))
-    return l0_norm(begin, end);
-  else if (p == static_cast<value_type> (1))
-    return l1_norm(begin, end);
-  else if (p == static_cast<value_type> (2))
-    return l2_norm(begin, end, take_root);
-  else if (p == std::numeric_limits<value_type>::max())
-    return lmax_norm(begin, end);
-  else
-    return lp_norm(p, begin, end, take_root);
+    if (p == static_cast<value_type>(0))
+        return l0_norm(begin, end);
+    else if (p == static_cast<value_type>(1))
+        return l1_norm(begin, end);
+    else if (p == static_cast<value_type>(2))
+        return l2_norm(begin, end, take_root);
+    else if (p == std::numeric_limits<value_type>::max())
+        return lmax_norm(begin, end);
+    else
+        return lp_norm(p, begin, end, take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -2826,22 +3124,26 @@ norm(typename std::iterator_traits<It>::value_type p, It begin, It end,
 template <typename It>
 inline void
 multiply_val(It begin, It end,
-             const typename std::iterator_traits<It>::value_type &val) {
-  { NTA_ASSERT(begin <= end) << "multiply_val: Invalid range"; }
+             const typename std::iterator_traits<It>::value_type &val)
+{
+    {
+        NTA_ASSERT(begin <= end) << "multiply_val: Invalid range";
+    }
 
-  if (val == 1.0f)
-    return;
+    if (val == 1.0f)
+        return;
 
-  for (; begin != end; ++begin)
-    *begin *= val;
+    for (; begin != end; ++begin)
+        *begin *= val;
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename T>
-inline void multiply_val(T &x, const typename T::value_type &val) {
-  multiply_val(x.begin(), x.end(), val);
+inline void multiply_val(T &x, const typename T::value_type &val)
+{
+    multiply_val(x.begin(), x.end(), val);
 }
 
 //--------------------------------------------------------------------------------
@@ -2850,8 +3152,9 @@ inline void multiply_val(T &x, const typename T::value_type &val) {
  */
 template <typename T>
 inline typename T::value_type norm(typename T::value_type p, const T &a,
-                                   bool take_root = true) {
-  return norm(p, a.begin(), a.end(), take_root);
+                                   bool take_root = true)
+{
+    return norm(p, a.begin(), a.end(), take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -2867,24 +3170,27 @@ template <typename It>
 inline void
 normalize(It begin, It end,
           const typename std::iterator_traits<It>::value_type &p = 1.0,
-          const typename std::iterator_traits<It>::value_type &n = 1.0) {
-  { NTA_ASSERT(begin <= end) << "normalize: Invalid input range"; }
+          const typename std::iterator_traits<It>::value_type &n = 1.0)
+{
+    {
+        NTA_ASSERT(begin <= end) << "normalize: Invalid input range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  value_type s = static_cast<value_type> (0);
+    value_type s = static_cast<value_type>(0);
 
-  if (p == static_cast<value_type> (0))
-    s = l0_norm(begin, end);
-  else if (p == static_cast<value_type> (1))
-    s = l1_norm(begin, end);
-  else if (p == static_cast<value_type> (2))
-    s = l2_norm(begin, end);
-  else if (p == std::numeric_limits<value_type>::max())
-    s = lmax_norm(begin, end);
+    if (p == static_cast<value_type>(0))
+        s = l0_norm(begin, end);
+    else if (p == static_cast<value_type>(1))
+        s = l1_norm(begin, end);
+    else if (p == static_cast<value_type>(2))
+        s = l2_norm(begin, end);
+    else if (p == std::numeric_limits<value_type>::max())
+        s = lmax_norm(begin, end);
 
-  if (s != static_cast<value_type> (0))
-    multiply_val(begin, end, n / s);
+    if (s != static_cast<value_type>(0))
+        multiply_val(begin, end, n / s);
 }
 
 //--------------------------------------------------------------------------------
@@ -2893,8 +3199,9 @@ normalize(It begin, It end,
  */
 template <typename T>
 inline void normalize(T &a, const typename T::value_type &p = 1.0,
-                      const typename T::value_type &n = 1.0) {
-  normalize(a.begin(), a.end(), p, n);
+                      const typename T::value_type &n = 1.0)
+{
+    normalize(a.begin(), a.end(), p, n);
 }
 
 //--------------------------------------------------------------------------------
@@ -2906,12 +3213,15 @@ inline void normalize(T &a, const typename T::value_type &p = 1.0,
 template <typename It>
 inline void
 normalize_max(It begin, It end,
-              const typename std::iterator_traits<It>::value_type &n = 1.0) {
-  { NTA_ASSERT(begin <= end) << "normalize_max: Invalid range"; }
+              const typename std::iterator_traits<It>::value_type &n = 1.0)
+{
+    {
+        NTA_ASSERT(begin <= end) << "normalize_max: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  normalize(begin, end, std::numeric_limits<value_type>::max(), n);
+    normalize(begin, end, std::numeric_limits<value_type>::max(), n);
 }
 
 //--------------------------------------------------------------------------------
@@ -2919,9 +3229,9 @@ normalize_max(It begin, It end,
  * Normalization according to LpMax.
  */
 template <typename value_type>
-inline void normalize_max(std::vector<value_type> &x,
-                          const value_type &n = 1.0) {
-  normalize_max(x.begin(), x.end(), n);
+inline void normalize_max(std::vector<value_type> &x, const value_type &n = 1.0)
+{
+    normalize_max(x.begin(), x.end(), n);
 }
 
 //--------------------------------------------------------------------------------
@@ -2931,11 +3241,12 @@ inline void normalize_max(std::vector<value_type> &x,
 template <typename T>
 inline void generate_range(T &t, typename T::value_type start,
                            typename T::value_type end,
-                           typename T::value_type increment = 1) {
-  std::insert_iterator<T> it(t, t.begin());
+                           typename T::value_type increment = 1)
+{
+    std::insert_iterator<T> it(t, t.begin());
 
-  for (typename T::value_type i = start; i < end; i += increment, ++it)
-    *it = i;
+    for (typename T::value_type i = start; i < end; i += increment, ++it)
+        *it = i;
 }
 
 //--------------------------------------------------------------------------------
@@ -2947,15 +3258,17 @@ inline void generate_range(T &t, typename T::value_type start,
  * @param val the value to which the sum of the range will be equal to
  */
 template <typename It>
-inline void
-uniform_range(It begin, It end,
-              typename std::iterator_traits<It>::value_type val = 1) {
-  { NTA_ASSERT(begin <= end) << "uniform_range: Invalid input range"; }
+inline void uniform_range(It begin, It end,
+                          typename std::iterator_traits<It>::value_type val = 1)
+{
+    {
+        NTA_ASSERT(begin <= end) << "uniform_range: Invalid input range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  std::fill(begin, end, static_cast<value_type> (1));
-  normalize(begin, end, val);
+    std::fill(begin, end, static_cast<value_type>(1));
+    normalize(begin, end, val);
 }
 
 //--------------------------------------------------------------------------------
@@ -2966,8 +3279,9 @@ uniform_range(It begin, It end,
  * @param val the value for normalization
  */
 template <typename C>
-inline void uniform_range(C &a, typename C::value_type val = 1) {
-  uniform_range(a.begin(), a.end(), val);
+inline void uniform_range(C &a, typename C::value_type val = 1)
+{
+    uniform_range(a.begin(), a.end(), val);
 }
 
 //--------------------------------------------------------------------------------
@@ -2982,26 +3296,28 @@ inline void uniform_range(C &a, typename C::value_type val = 1) {
  */
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
-max_abs_diff(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "max_abs_diff: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "max_abs_diff: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "max_abs_diff: Ranges of different sizes";
-  }
+max_abs_diff(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "max_abs_diff: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "max_abs_diff: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "max_abs_diff: Ranges of different sizes";
+    }
 
-  typename std::iterator_traits<It1>::value_type d(0), val(0);
+    typename std::iterator_traits<It1>::value_type d(0), val(0);
 
-  while (begin1 != end1) {
-    val = *begin1 - *begin2;
-    val = val > 0 ? val : -val;
-    if (val > d)
-      d = val;
-    ++begin1;
-    ++begin2;
-  }
+    while (begin1 != end1)
+    {
+        val = *begin1 - *begin2;
+        val = val > 0 ? val : -val;
+        if (val > d)
+            d = val;
+        ++begin1;
+        ++begin2;
+    }
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3012,8 +3328,9 @@ max_abs_diff(It1 begin1, It1 end1, It2 begin2, It2 end2) {
  * @param b second container
  */
 template <typename T1, typename T2>
-inline typename T1::value_type max_abs_diff(const T1 &a, const T2 &b) {
-  return max_abs_diff(a.begin(), a.end(), b.begin(), b.end());
+inline typename T1::value_type max_abs_diff(const T1 &a, const T2 &b)
+{
+    return max_abs_diff(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3026,23 +3343,25 @@ inline typename T1::value_type max_abs_diff(const T1 &a, const T2 &b) {
  */
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
-hamming_distance(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "hamming_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "hamming_distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "hamming_distance: Ranges of different sizes";
-  }
+hamming_distance(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "hamming_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "hamming_distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "hamming_distance: Ranges of different sizes";
+    }
 
-  typename std::iterator_traits<It1>::value_type d(0);
+    typename std::iterator_traits<It1>::value_type d(0);
 
-  while (begin1 != end1) {
-    d += *begin1 != *begin2;
-    ++begin1;
-    ++begin2;
-  }
+    while (begin1 != end1)
+    {
+        d += *begin1 != *begin2;
+        ++begin1;
+        ++begin2;
+    }
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3053,8 +3372,9 @@ hamming_distance(It1 begin1, It1 end1, It2 begin2, It2 end2) {
  * @param b second container
  */
 template <typename T1, typename T2>
-inline typename T1::value_type hamming_distance(const T1 &a, const T2 &b) {
-  return hamming_distance(a.begin(), a.end(), b.begin(), b.end());
+inline typename T1::value_type hamming_distance(const T1 &a, const T2 &b)
+{
+    return hamming_distance(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3063,42 +3383,51 @@ inline typename T1::value_type hamming_distance(const T1 &a, const T2 &b) {
  */
 template <typename It1, typename It2>
 inline size_t sparse_hamming_distance(It1 begin1, It1 end1, It2 begin2,
-                                      It2 end2) {
-  {
-    // todo: check that ranges are valid sparse indices ranges
-    // (increasing, no duplicate...)
-    NTA_ASSERT(begin1 <= end1) << "sparse_hamming_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "sparse_hamming_distance: Invalid range 2";
-  }
-
-  typedef size_t size_type;
-
-  size_type d = 0;
-
-  while (begin1 != end1 && begin2 != end2) {
-    if (*begin1 < *begin2) {
-      ++d;
-      ++begin1;
-    } else if (*begin2 < *begin1) {
-      ++d;
-      ++begin2;
-    } else {
-      ++begin1;
-      ++begin2;
+                                      It2 end2)
+{
+    {
+        // todo: check that ranges are valid sparse indices ranges
+        // (increasing, no duplicate...)
+        NTA_ASSERT(begin1 <= end1)
+            << "sparse_hamming_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2)
+            << "sparse_hamming_distance: Invalid range 2";
     }
-  }
 
-  d += static_cast<size_type> (end1 - begin1);
-  d += static_cast<size_type> (end2 - begin2);
+    typedef size_t size_type;
 
-  return d;
+    size_type d = 0;
+
+    while (begin1 != end1 && begin2 != end2)
+    {
+        if (*begin1 < *begin2)
+        {
+            ++d;
+            ++begin1;
+        }
+        else if (*begin2 < *begin1)
+        {
+            ++d;
+            ++begin2;
+        }
+        else
+        {
+            ++begin1;
+            ++begin2;
+        }
+    }
+
+    d += static_cast<size_type>(end1 - begin1);
+    d += static_cast<size_type>(end2 - begin2);
+
+    return d;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline typename T1::size_type sparse_hamming_distance(const T1 &a,
-                                                      const T2 &b) {
-  return sparse_hamming_distance(a.begin(), a.end(), b.begin(), b.end());
+inline typename T1::size_type sparse_hamming_distance(const T1 &a, const T2 &b)
+{
+    return sparse_hamming_distance(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3111,23 +3440,24 @@ inline typename T1::size_type sparse_hamming_distance(const T1 &a,
  */
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
-manhattan_distance(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "manhattan_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "manhattan_distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "manhattan_distance: Ranges of different sizes";
-  }
+manhattan_distance(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "manhattan_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "manhattan_distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "manhattan_distance: Ranges of different sizes";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
 
-  value_type d = static_cast<value_type> (0);
-  Lp1<value_type> lp1;
+    value_type d = static_cast<value_type>(0);
+    Lp1<value_type> lp1;
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    lp1(d, *begin1 - *begin2);
+    for (; begin1 != end1; ++begin1, ++begin2)
+        lp1(d, *begin1 - *begin2);
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3138,8 +3468,9 @@ manhattan_distance(It1 begin1, It1 end1, It2 begin2, It2 end2) {
  * @param b second container
  */
 template <typename T1, typename T2>
-inline typename T1::value_type manhattan_distance(const T1 &a, const T2 &b) {
-  return manhattan_distance(a.begin(), a.end(), b.begin(), b.end());
+inline typename T1::value_type manhattan_distance(const T1 &a, const T2 &b)
+{
+    return manhattan_distance(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3153,26 +3484,27 @@ inline typename T1::value_type manhattan_distance(const T1 &a, const T2 &b) {
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
 euclidean_distance(It1 begin1, It1 end1, It2 begin2, It2 end2,
-                   bool take_root = true) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "euclidean_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "euclidean_distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "euclidean_distance: Ranges of different sizes";
-  }
+                   bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "euclidean_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "euclidean_distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "euclidean_distance: Ranges of different sizes";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
 
-  value_type d = static_cast<value_type> (0);
-  Lp2<value_type> lp2;
+    value_type d = static_cast<value_type>(0);
+    Lp2<value_type> lp2;
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    lp2(d, *begin1 - *begin2);
+    for (; begin1 != end1; ++begin1, ++begin2)
+        lp2(d, *begin1 - *begin2);
 
-  if (take_root)
-    d = lp2.root(d);
+    if (take_root)
+        d = lp2.root(d);
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3184,8 +3516,10 @@ euclidean_distance(It1 begin1, It1 end1, It2 begin2, It2 end2,
  */
 template <typename T1, typename T2>
 inline typename T1::value_type euclidean_distance(const T1 &a, const T2 &b,
-                                                  bool take_root = true) {
-  return euclidean_distance(a.begin(), a.end(), b.begin(), b.end(), take_root);
+                                                  bool take_root = true)
+{
+    return euclidean_distance(a.begin(), a.end(), b.begin(), b.end(),
+                              take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -3199,26 +3533,27 @@ inline typename T1::value_type euclidean_distance(const T1 &a, const T2 &b,
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
 lp_distance(typename std::iterator_traits<It1>::value_type p, It1 begin1,
-            It1 end1, It2 begin2, It2 end2, bool take_root = true) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "lp_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "lp_distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "lp_distance: Ranges of different sizes";
-  }
+            It1 end1, It2 begin2, It2 end2, bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "lp_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "lp_distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "lp_distance: Ranges of different sizes";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
 
-  value_type d = static_cast<value_type> (0);
-  Lp<value_type> lp(p);
+    value_type d = static_cast<value_type>(0);
+    Lp<value_type> lp(p);
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    lp(d, *begin1 - *begin2);
+    for (; begin1 != end1; ++begin1, ++begin2)
+        lp(d, *begin1 - *begin2);
 
-  if (take_root)
-    d = lp.root(d);
+    if (take_root)
+        d = lp.root(d);
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3231,8 +3566,9 @@ lp_distance(typename std::iterator_traits<It1>::value_type p, It1 begin1,
 template <typename T1, typename T2>
 inline typename T1::value_type lp_distance(typename T1::value_type p,
                                            const T1 &a, const T2 &b,
-                                           bool take_root = true) {
-  return lp_distance(p, a.begin(), a.end(), b.begin(), b.end(), take_root);
+                                           bool take_root = true)
+{
+    return lp_distance(p, a.begin(), a.end(), b.begin(), b.end(), take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -3245,23 +3581,24 @@ inline typename T1::value_type lp_distance(typename T1::value_type p,
  */
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
-lmax_distance(It1 begin1, It1 end1, It2 begin2, It2 end2, bool = true) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "lmax_distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "lmax_distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "lmax_distance: Ranges of different sizes";
-  }
+lmax_distance(It1 begin1, It1 end1, It2 begin2, It2 end2, bool = true)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "lmax_distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "lmax_distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "lmax_distance: Ranges of different sizes";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
 
-  value_type d = static_cast<value_type> (0);
-  LpMax<value_type> lmax;
+    value_type d = static_cast<value_type>(0);
+    LpMax<value_type> lmax;
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    lmax(d, *begin1 - *begin2);
+    for (; begin1 != end1; ++begin1, ++begin2)
+        lmax(d, *begin1 - *begin2);
 
-  return d;
+    return d;
 }
 
 //--------------------------------------------------------------------------------
@@ -3273,8 +3610,9 @@ lmax_distance(It1 begin1, It1 end1, It2 begin2, It2 end2, bool = true) {
  */
 template <typename T1, typename T2>
 inline typename T1::value_type lmax_distance(const T1 &a, const T2 &b,
-                                             bool = true) {
-  return lmax_distance(a.begin(), a.end(), b.begin(), b.end());
+                                             bool = true)
+{
+    return lmax_distance(a.begin(), a.end(), b.begin(), b.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3288,26 +3626,27 @@ inline typename T1::value_type lmax_distance(const T1 &a, const T2 &b,
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
 distance(typename std::iterator_traits<It1>::value_type p, It1 begin1, It1 end1,
-         It2 begin2, It2 end2, bool take_root = true) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "distance: Invalid range 1";
-    NTA_ASSERT(begin2 <= end2) << "distance: Invalid range 2";
-    NTA_ASSERT(end1 - begin1 == end2 - begin2)
-        << "distance: Ranges of different sizes";
-  }
+         It2 begin2, It2 end2, bool take_root = true)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "distance: Invalid range 1";
+        NTA_ASSERT(begin2 <= end2) << "distance: Invalid range 2";
+        NTA_ASSERT(end1 - begin1 == end2 - begin2)
+            << "distance: Ranges of different sizes";
+    }
 
-  typedef typename std::iterator_traits<It1>::value_type value_type;
+    typedef typename std::iterator_traits<It1>::value_type value_type;
 
-  if (p == static_cast<value_type> (0))
-    return hamming_distance(begin1, end1, begin2);
-  else if (p == static_cast<value_type> (1))
-    return manhattan_distance(begin1, end1, begin2);
-  else if (p == static_cast<value_type> (2))
-    return euclidean_distance(begin1, end1, begin2, take_root);
-  else if (p == std::numeric_limits<value_type>::max())
-    return lmax_distance(begin1, end1, begin2);
-  else
-    return lp_distance(p, begin1, end1, begin2, take_root);
+    if (p == static_cast<value_type>(0))
+        return hamming_distance(begin1, end1, begin2);
+    else if (p == static_cast<value_type>(1))
+        return manhattan_distance(begin1, end1, begin2);
+    else if (p == static_cast<value_type>(2))
+        return euclidean_distance(begin1, end1, begin2, take_root);
+    else if (p == std::numeric_limits<value_type>::max())
+        return lmax_distance(begin1, end1, begin2);
+    else
+        return lp_distance(p, begin1, end1, begin2, take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -3319,8 +3658,9 @@ distance(typename std::iterator_traits<It1>::value_type p, It1 begin1, It1 end1,
  */
 template <typename T1, typename T2>
 inline typename T1::value_type distance(typename T1::value_type p, const T1 &a,
-                                        const T2 &b, bool take_root = true) {
-  return distance(p, a.begin(), a.end(), b.begin(), b.end(), take_root);
+                                        const T2 &b, bool take_root = true)
+{
+    return distance(p, a.begin(), a.end(), b.begin(), b.end(), take_root);
 }
 
 //--------------------------------------------------------------------------------
@@ -3330,8 +3670,9 @@ inline typename T1::value_type distance(typename T1::value_type p, const T1 &a,
  * Counts the elements which satisfy the passed predicate in the given range.
  */
 template <typename C, typename Predicate>
-inline size_t count_if(const C &c, Predicate pred) {
-  return std::count_if(c.begin(), c.end(), pred);
+inline size_t count_if(const C &c, Predicate pred)
+{
+    return std::count_if(c.begin(), c.end(), pred);
 }
 
 //--------------------------------------------------------------------------------
@@ -3341,12 +3682,15 @@ inline size_t count_if(const C &c, Predicate pred) {
 template <typename It>
 inline size_t count_zeros(
     It begin, It end,
-    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon) {
-  { NTA_ASSERT(begin <= end) << "count_zeros: Invalid range"; }
+    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon)
+{
+    {
+        NTA_ASSERT(begin <= end) << "count_zeros: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
-  return std::count_if(begin, end,
-                       IsNearlyZero<DistanceToZero<value_type>>(eps));
+    typedef typename std::iterator_traits<It>::value_type value_type;
+    return std::count_if(begin, end,
+                         IsNearlyZero<DistanceToZero<value_type>>(eps));
 }
 
 //--------------------------------------------------------------------------------
@@ -3355,8 +3699,9 @@ inline size_t count_zeros(
  */
 template <typename C>
 inline size_t count_zeros(const C &c,
-                          const typename C::value_type &eps = nust::Epsilon) {
-  return count_zeros(c.begin, c.end(), eps);
+                          const typename C::value_type &eps = nust::Epsilon)
+{
+    return count_zeros(c.begin, c.end(), eps);
 }
 
 //--------------------------------------------------------------------------------
@@ -3366,12 +3711,15 @@ inline size_t count_zeros(const C &c,
 template <typename It>
 inline size_t count_ones(
     It begin, It end,
-    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon) {
-  { NTA_ASSERT(begin <= end) << "count_ones: Invalid range"; }
+    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon)
+{
+    {
+        NTA_ASSERT(begin <= end) << "count_ones: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It>::value_type value_type;
-  return std::count_if(begin, end,
-                       IsNearlyZero<DistanceToOne<value_type>>(eps));
+    typedef typename std::iterator_traits<It>::value_type value_type;
+    return std::count_if(begin, end,
+                         IsNearlyZero<DistanceToOne<value_type>>(eps));
 }
 
 //--------------------------------------------------------------------------------
@@ -3380,8 +3728,9 @@ inline size_t count_ones(
  */
 template <typename C>
 inline size_t count_ones(const C &c,
-                         const typename C::value_type &eps = nust::Epsilon) {
-  return count_ones(c.begin(), c.end(), eps);
+                         const typename C::value_type &eps = nust::Epsilon)
+{
+    return count_ones(c.begin(), c.end(), eps);
 }
 
 //--------------------------------------------------------------------------------
@@ -3399,156 +3748,164 @@ inline size_t count_ones(const C &c,
  * Doesn't work on win32.
  */
 inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
-                              nust::Real32 threshold) {
-  NTA_ASSERT(begin <= end);
+                             nust::Real32 threshold)
+{
+    NTA_ASSERT(begin <= end);
 
-  // Need this, because the asm syntax is not correct for win32,
-  // we simply can't compile the code as is on win32.
+    // Need this, because the asm syntax is not correct for win32,
+    // we simply can't compile the code as is on win32.
 
-  // Need this, because even on darwin32 (which is darwin86), some older
-  // machines might not have the right SSE instructions.
-  if (SSE_LEVEL >= 3) {
+    // Need this, because even on darwin32 (which is darwin86), some older
+    // machines might not have the right SSE instructions.
+    if (SSE_LEVEL >= 3)
+    {
 
-    // Compute offsets into array [begin..end):
-    // start is the first 4 bytes aligned address (to start movaps)
-    // n0 is the number of floats before we reach start and can use parallel
-    //  xmm operations
-    // n1 is the number floats we can process in parallel with xmm
-    // n2 is the number of "stragglers" what we will have to do one by one ( <
-    // 4)
-    NTA_UIntPtr x_addr = reinterpret_cast<NTA_UIntPtr> (begin); // 8 bytes on 64 bits platforms
-    nust::Real32 *start =
-        (x_addr % 16 == 0) ? begin : reinterpret_cast<nust::Real32 *> (16 * (x_addr / 16 + 1));
+        // Compute offsets into array [begin..end):
+        // start is the first 4 bytes aligned address (to start movaps)
+        // n0 is the number of floats before we reach start and can use parallel
+        //  xmm operations
+        // n1 is the number floats we can process in parallel with xmm
+        // n2 is the number of "stragglers" what we will have to do one by one (
+        // < 4)
+        NTA_UIntPtr x_addr = reinterpret_cast<NTA_UIntPtr>(
+            begin); // 8 bytes on 64 bits platforms
+        nust::Real32 *start =
+            (x_addr % 16 == 0)
+                ? begin
+                : reinterpret_cast<nust::Real32 *>(16 * (x_addr / 16 + 1));
 
 #if defined(NTA_ARCH_64) && !defined(NTA_OS_WINDOWS)
 
-    nust::Real32 count = 0;
-    int n0 = static_cast<int> (start - begin);
-    int n1 = static_cast<int> (4 * ((end - start) / 4));
-    int n2 = static_cast<int> (end - start - n1);
+        nust::Real32 count = 0;
+        int n0 = static_cast<int>(start - begin);
+        int n1 = static_cast<int>(4 * ((end - start) / 4));
+        int n2 = static_cast<int>(end - start - n1);
 
 #if defined(NTA_OS_DARWIN)
 
-    // DO NOT CHANGE THESE NEXT TWO LINES, OTHERWISE THE ASM CODE BELOW WILL
-    // BREAK. 'localThreshold' MUST BE STATIC!! Must always assign threshold to
-    // localThreshold also!
-    static float localThreshold;
-    localThreshold = threshold;
+        // DO NOT CHANGE THESE NEXT TWO LINES, OTHERWISE THE ASM CODE BELOW WILL
+        // BREAK. 'localThreshold' MUST BE STATIC!! Must always assign threshold
+        // to localThreshold also!
+        static float localThreshold;
+        localThreshold = threshold;
 #endif
 
-    __asm__ __volatile__(
+        __asm__ __volatile__(
 
 #if defined(NTA_OS_DARWIN)
-        // We need to access localThreshold by it's mangled name here because
-        // g++ and clang++ do things differently on OS X. They clobber eax by
-        // the time they get here and 'threshold' is not properly loaded into
-        // rax by the constraint at the end of this asm snippet. This means we
-        // need to use 'rip relative' addressing to access a 'static' variable
-        // (a global would also work) here and then load it into eax manually.
-        // Then things work fine.
-        "movq  __ZZN5nupic8count_gtEPfS0_fE14localThreshold@GOTPCREL(%%rip), "
-        "%%r11\n\t"
-        "movl  (%%r11), %%eax\n\t"
+            // We need to access localThreshold by it's mangled name here
+            // because g++ and clang++ do things differently on OS X. They
+            // clobber eax by the time they get here and 'threshold' is not
+            // properly loaded into rax by the constraint at the end of this asm
+            // snippet. This means we need to use 'rip relative' addressing to
+            // access a 'static' variable (a global would also work) here and
+            // then load it into eax manually. Then things work fine.
+            "movq  "
+            "__ZZN5nupic8count_gtEPfS0_fE14localThreshold@GOTPCREL(%%rip), "
+            "%%r11\n\t"
+            "movl  (%%r11), %%eax\n\t"
 #endif
 
-        "subq $16, %%rsp\n\t"        // allocate 4 floats on stack
-        "movl %%eax, (%%rsp)\n\t"    // copy threshold to 4 locations
-        "movl %%eax, 4(%%rsp)\n\t"   // on stack: we want threshold
-        "movl %%eax, 8(%%rsp)\n\t"   // to be filling xmm1 and xmm
-        "movl %%eax, 12(%%rsp)\n\t"  // (operate on 4 floats at a time)
-        "movaps (%%rsp), %%xmm1\n\t" // move 4 thresholds into xmm1
-        "movaps %%xmm1, %%xmm2\n\t"  // copy 4 thresholds to xmm2
+            "subq $16, %%rsp\n\t"        // allocate 4 floats on stack
+            "movl %%eax, (%%rsp)\n\t"    // copy threshold to 4 locations
+            "movl %%eax, 4(%%rsp)\n\t"   // on stack: we want threshold
+            "movl %%eax, 8(%%rsp)\n\t"   // to be filling xmm1 and xmm
+            "movl %%eax, 12(%%rsp)\n\t"  // (operate on 4 floats at a time)
+            "movaps (%%rsp), %%xmm1\n\t" // move 4 thresholds into xmm1
+            "movaps %%xmm1, %%xmm2\n\t"  // copy 4 thresholds to xmm2
 
-        "movl $0x3f800000, (%%rsp)\n\t"   // $0x3f800000 = (float) 1.0
-        "movl $0x3f800000, 4(%%rsp)\n\t"  // we want to have that constant
-        "movl $0x3f800000, 8(%%rsp)\n\t"  // 8 times, in xmm3 and xmm4,
-        "movl $0x3f800000, 12(%%rsp)\n\t" // since the xmm4 registers allow
-        "movaps (%%rsp), %%xmm3\n\t"      // us to operate on 4 floats at
-        "movaps (%%rsp), %%xmm4\n\t"      // a time
+            "movl $0x3f800000, (%%rsp)\n\t"   // $0x3f800000 = (float) 1.0
+            "movl $0x3f800000, 4(%%rsp)\n\t"  // we want to have that constant
+            "movl $0x3f800000, 8(%%rsp)\n\t"  // 8 times, in xmm3 and xmm4,
+            "movl $0x3f800000, 12(%%rsp)\n\t" // since the xmm4 registers allow
+            "movaps (%%rsp), %%xmm3\n\t"      // us to operate on 4 floats at
+            "movaps (%%rsp), %%xmm4\n\t"      // a time
 
-        "addq $16, %%rsp\n\t" // deallocate 4 floats on stack
+            "addq $16, %%rsp\n\t" // deallocate 4 floats on stack
 
-        "xorps %%xmm5, %%xmm5\n\t" // set xmm5 to 0
+            "xorps %%xmm5, %%xmm5\n\t" // set xmm5 to 0
 
-        // Loop over individual floats till we reach the right alignment
-        // that was computed in n0. If we don't start handling 4 floats
-        // at a time with SSE on a 4 bytes boundary, we get a crash
-        // in movaps (here, we use only movss, moving only 1 float at a
-        // time).
-        "0:\n\t"
-        "test %%rcx, %%rcx\n\t" // if n0 == 0, jump to next loop
-        "jz 1f\n\t"
+            // Loop over individual floats till we reach the right alignment
+            // that was computed in n0. If we don't start handling 4 floats
+            // at a time with SSE on a 4 bytes boundary, we get a crash
+            // in movaps (here, we use only movss, moving only 1 float at a
+            // time).
+            "0:\n\t"
+            "test %%rcx, %%rcx\n\t" // if n0 == 0, jump to next loop
+            "jz 1f\n\t"
 
-        "movss (%%rsi), %%xmm0\n\t"    // move a single float to xmm0
-        "cmpss $1, %%xmm0, %%xmm1\n\t" // compare to threshold
-        "andps %%xmm1, %%xmm3\n\t"     // and with all 1s
-        "addss %%xmm3, %%xmm5\n\t"     // add result to xmm5 (=count!)
-        "movaps %%xmm2, %%xmm1\n\t"    // restore threshold in xmm1
-        "movaps %%xmm4, %%xmm3\n\t"    // restore all 1s in xmm3
-        "addq $4, %%rsi\n\t"           // move to next float (4 bytes)
-        "decq %%rcx\n\t"               // decrement rcx, which started at n0
-        "ja 0b\n\t"                    // jump if not done yet
+            "movss (%%rsi), %%xmm0\n\t"    // move a single float to xmm0
+            "cmpss $1, %%xmm0, %%xmm1\n\t" // compare to threshold
+            "andps %%xmm1, %%xmm3\n\t"     // and with all 1s
+            "addss %%xmm3, %%xmm5\n\t"     // add result to xmm5 (=count!)
+            "movaps %%xmm2, %%xmm1\n\t"    // restore threshold in xmm1
+            "movaps %%xmm4, %%xmm3\n\t"    // restore all 1s in xmm3
+            "addq $4, %%rsi\n\t"           // move to next float (4 bytes)
+            "decq %%rcx\n\t"               // decrement rcx, which started at n0
+            "ja 0b\n\t"                    // jump if not done yet
 
-        // Loop over 4 floats at a time: this time, we have reached
-        // the proper alignment for movaps, so we can operate in parallel
-        // on 4 floats at a time. The code is the same as the previous loop
-        // except that the "ss" instructions are now "ps" instructions.
-        "1:\n\t"
-        "test %%rdx, %%rdx\n\t"
-        "jz 2f\n\t"
+            // Loop over 4 floats at a time: this time, we have reached
+            // the proper alignment for movaps, so we can operate in parallel
+            // on 4 floats at a time. The code is the same as the previous loop
+            // except that the "ss" instructions are now "ps" instructions.
+            "1:\n\t"
+            "test %%rdx, %%rdx\n\t"
+            "jz 2f\n\t"
 
-        "movaps (%%rsi), %%xmm0\n\t" // note movaps, not movss
-        "cmpps $1, %%xmm0, %%xmm1\n\t"
-        "andps %%xmm1, %%xmm3\n\t"
-        "addps %%xmm3, %%xmm5\n\t" // addps, not addss
-        "movaps %%xmm2, %%xmm1\n\t"
-        "movaps %%xmm4, %%xmm3\n\t"
-        "addq $16, %%rsi\n\t" // jump over 4 floats
-        "subq $4, %%rdx\n\t"  // decrement rdx (n1) by 4
-        "ja 1b\n\t"
+            "movaps (%%rsi), %%xmm0\n\t" // note movaps, not movss
+            "cmpps $1, %%xmm0, %%xmm1\n\t"
+            "andps %%xmm1, %%xmm3\n\t"
+            "addps %%xmm3, %%xmm5\n\t" // addps, not addss
+            "movaps %%xmm2, %%xmm1\n\t"
+            "movaps %%xmm4, %%xmm3\n\t"
+            "addq $16, %%rsi\n\t" // jump over 4 floats
+            "subq $4, %%rdx\n\t"  // decrement rdx (n1) by 4
+            "ja 1b\n\t"
 
-        // Tally up count so far into last float of xmm5: we were
-        // doing operations in parallels on the 4 floats in the xmm
-        // registers, resulting in 4 partial counts in xmm5.
-        "xorps %%xmm0, %%xmm0\n\t"
-        "haddps %%xmm0, %%xmm5\n\t"
-        "haddps %%xmm0, %%xmm5\n\t"
+            // Tally up count so far into last float of xmm5: we were
+            // doing operations in parallels on the 4 floats in the xmm
+            // registers, resulting in 4 partial counts in xmm5.
+            "xorps %%xmm0, %%xmm0\n\t"
+            "haddps %%xmm0, %%xmm5\n\t"
+            "haddps %%xmm0, %%xmm5\n\t"
 
-        // Last loop, for stragglers in case the array is not evenly
-        // divisible by 4. We are back to operating on a single float
-        // at a time, using movss and addss.
-        "2:\n\t"
-        "test %%rdi, %%rdi\n\t"
-        "jz 3f\n\t"
+            // Last loop, for stragglers in case the array is not evenly
+            // divisible by 4. We are back to operating on a single float
+            // at a time, using movss and addss.
+            "2:\n\t"
+            "test %%rdi, %%rdi\n\t"
+            "jz 3f\n\t"
 
-        "movss (%%rsi), %%xmm0\n\t"
-        "cmpss $1, %%xmm0, %%xmm1\n\t"
-        "andps %%xmm1, %%xmm3\n\t"
-        "addss %%xmm3, %%xmm5\n\t"
-        "movaps %%xmm2, %%xmm1\n\t"
-        "movaps %%xmm4, %%xmm3\n\t"
-        "addq $4, %%rsi\n\t"
-        "decq %%rdi\n\t"
-        "ja 0b\n\t"
+            "movss (%%rsi), %%xmm0\n\t"
+            "cmpss $1, %%xmm0, %%xmm1\n\t"
+            "andps %%xmm1, %%xmm3\n\t"
+            "addss %%xmm3, %%xmm5\n\t"
+            "movaps %%xmm2, %%xmm1\n\t"
+            "movaps %%xmm4, %%xmm3\n\t"
+            "addq $4, %%rsi\n\t"
+            "decq %%rdi\n\t"
+            "ja 0b\n\t"
 
-        // Push result from xmm5 to variable count in memory.
-        "3:\n\t"
-        "movss %%xmm5, %0\n\t"
+            // Push result from xmm5 to variable count in memory.
+            "3:\n\t"
+            "movss %%xmm5, %0\n\t"
 
-        : "=m"(count)
-        : "S"(begin), "a"(threshold), "c"(n0), "d"(n1), "D"(n2)
-        :);
+            : "=m"(count)
+            : "S"(begin), "a"(threshold), "c"(n0), "d"(n1), "D"(n2)
+            :);
 
-    return static_cast<UInt32> (count);
+        return static_cast<UInt32>(count);
 
 #else
-    return std::count_if(
-        begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold));
+        return std::count_if(
+            begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold));
 #endif
-  } else {
-    return static_cast<UInt32> (std::count_if(
-        begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold)));
-  }
+    }
+    else
+    {
+        return static_cast<UInt32>(std::count_if(
+            begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold)));
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -3562,20 +3919,23 @@ inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
  *
  */
 inline nust::UInt32 count_gte(nust::Real32 *begin, nust::Real32 *end,
-                               nust::Real32 threshold) {
-  NTA_ASSERT(begin <= end);
+                              nust::Real32 threshold)
+{
+    NTA_ASSERT(begin <= end);
 
-  return static_cast<UInt32> (std::count_if(
-      begin, end, std::bind2nd(std::greater_equal<nust::Real32>(), threshold)));
+    return static_cast<UInt32>(std::count_if(
+        begin, end,
+        std::bind2nd(std::greater_equal<nust::Real32>(), threshold)));
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Counts the number of non-zeros in a vector.
  */
-inline size_t count_non_zeros(nust::Real32 *begin, nust::Real32 *end) {
-  NTA_ASSERT(begin <= end);
-  return count_gt(begin, end, 0);
+inline size_t count_non_zeros(nust::Real32 *begin, nust::Real32 *end)
+{
+    NTA_ASSERT(begin <= end);
+    return count_gt(begin, end, 0);
 }
 
 //--------------------------------------------------------------------------------
@@ -3583,11 +3943,12 @@ inline size_t count_non_zeros(nust::Real32 *begin, nust::Real32 *end) {
  * Counts the number of non-zeros in a vector.
  * Doesn't work with vector<bool>.
  */
-template <typename T> inline size_t count_non_zeros(const std::vector<T> &x) {
-  NTA_ASSERT(sizeof(T) == 4);
-  nust::Real32 *begin = static_cast<nust::Real32 *> (&x[0]);
-  nust::Real32 *end = begin + x.size();
-  return count_gt(begin, end, 0);
+template <typename T> inline size_t count_non_zeros(const std::vector<T> &x)
+{
+    NTA_ASSERT(sizeof(T) == 4);
+    nust::Real32 *begin = static_cast<nust::Real32 *>(&x[0]);
+    nust::Real32 *end = begin + x.size();
+    return count_gt(begin, end, 0);
 }
 
 //--------------------------------------------------------------------------------
@@ -3595,21 +3956,23 @@ template <typename T> inline size_t count_non_zeros(const std::vector<T> &x) {
  * TODO: Use SSE. Maybe requires having our own vector<bool> so that we can
  * avoid the shenanigans with the bit references and iterators.
  */
-template <> inline size_t count_non_zeros(const std::vector<bool> &x) {
-  size_t count = 0;
-  for (size_t i = 0; i != x.size(); ++i)
-    count += x[i];
-  return count;
+template <> inline size_t count_non_zeros(const std::vector<bool> &x)
+{
+    size_t count = 0;
+    for (size_t i = 0; i != x.size(); ++i)
+        count += x[i];
+    return count;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
-inline size_t count_non_zeros(const std::vector<std::pair<T1, T2>> &x) {
-  size_t count = 0;
-  for (size_t i = 0; i != x.size(); ++i)
-    if (!is_zero(x[i]))
-      ++count;
-  return count;
+inline size_t count_non_zeros(const std::vector<std::pair<T1, T2>> &x)
+{
+    size_t count = 0;
+    for (size_t i = 0; i != x.size(); ++i)
+        if (!is_zero(x[i]))
+            ++count;
+    return count;
 }
 
 //--------------------------------------------------------------------------------
@@ -3619,10 +3982,11 @@ inline size_t count_non_zeros(const std::vector<std::pair<T1, T2>> &x) {
 template <typename It>
 inline size_t
 count_lt(It begin, It end,
-         const typename std::iterator_traits<It>::value_type &thres) {
-  typedef typename std::iterator_traits<It>::value_type value_type;
-  return std::count_if(begin, end,
-                       std::bind2nd(std::less<value_type>(), thres));
+         const typename std::iterator_traits<It>::value_type &thres)
+{
+    typedef typename std::iterator_traits<It>::value_type value_type;
+    return std::count_if(begin, end,
+                         std::bind2nd(std::less<value_type>(), thres));
 }
 
 //--------------------------------------------------------------------------------
@@ -3633,28 +3997,33 @@ count_lt(It begin, It end,
 template <typename It>
 inline void
 round_01(It begin, It end,
-         const typename std::iterator_traits<It>::value_type &threshold = .5) {
-  { NTA_ASSERT(begin <= end) << "round_01: Invalid range"; }
+         const typename std::iterator_traits<It>::value_type &threshold = .5)
+{
+    {
+        NTA_ASSERT(begin <= end) << "round_01: Invalid range";
+    }
 
-  typename std::iterator_traits<It>::value_type val;
+    typename std::iterator_traits<It>::value_type val;
 
-  while (begin != end) {
-    val = *begin;
-    if (val >= threshold)
-      val = 1;
-    else
-      val = 0;
-    *begin = val;
-    ++begin;
-  }
+    while (begin != end)
+    {
+        val = *begin;
+        if (val >= threshold)
+            val = 1;
+        else
+            val = 0;
+        *begin = val;
+        ++begin;
+    }
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename T>
-inline void round_01(T &a, const typename T::value_type &threshold = .5) {
-  round_01(a.begin(), a.end(), threshold);
+inline void round_01(T &a, const typename T::value_type &threshold = .5)
+{
+    round_01(a.begin(), a.end(), threshold);
 }
 
 //--------------------------------------------------------------------------------
@@ -3670,13 +4039,16 @@ inline void round_01(T &a, const typename T::value_type &threshold = .5) {
  * vDSP also handles unaligned vectors correctly, and has good performance
  * also when the vectors are small, not just when they are big.
  */
-inline nust::Real32 sum(nust::Real32 *begin, nust::Real32 *end) {
-  { NTA_ASSERT(begin <= end) << "sum: Invalid range"; }
+inline nust::Real32 sum(nust::Real32 *begin, nust::Real32 *end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "sum: Invalid range";
+    }
 
-  nust::Real32 result = 0;
-  for (; begin != end; ++begin)
-    result += *begin;
-  return result;
+    nust::Real32 result = 0;
+    for (; begin != end; ++begin)
+        result += *begin;
+    return result;
 }
 
 //--------------------------------------------------------------------------------
@@ -3686,20 +4058,22 @@ inline nust::Real32 sum(nust::Real32 *begin, nust::Real32 *end) {
  * function, but it will work for a container of anything, that container not
  * necessarily being a contiguous vector of numbers.
  */
-template <typename T> inline typename T::value_type sum(const T &x) {
-  typename T::value_type result = 0;
-  typename T::const_iterator it;
-  for (it = x.begin(); it != x.end(); ++it)
-    result += *it;
-  return result;
+template <typename T> inline typename T::value_type sum(const T &x)
+{
+    typename T::value_type result = 0;
+    typename T::const_iterator it;
+    for (it = x.begin(); it != x.end(); ++it)
+        result += *it;
+    return result;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2, typename T3>
 inline void sum(const std::vector<T1> &a, const std::vector<T2> &b,
-                size_t begin, size_t end, std::vector<T3> &c) {
-  for (size_t i = begin; i != end; ++i)
-    c[i] = a[i] + b[i];
+                size_t begin, size_t end, std::vector<T3> &c)
+{
+    for (size_t i = begin; i != end; ++i)
+        c[i] = a[i] + b[i];
 }
 
 //--------------------------------------------------------------------------------
@@ -3707,23 +4081,27 @@ inline void sum(const std::vector<T1> &a, const std::vector<T2> &b,
  * Computes the product of the elements in a range.
  */
 template <typename It>
-inline typename std::iterator_traits<It>::value_type product(It begin, It end) {
-  { NTA_ASSERT(begin <= end) << "product: Invalid range"; }
+inline typename std::iterator_traits<It>::value_type product(It begin, It end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "product: Invalid range";
+    }
 
-  typename std::iterator_traits<It>::value_type p(1);
+    typename std::iterator_traits<It>::value_type p(1);
 
-  for (; begin != end; ++begin)
-    p *= *begin;
+    for (; begin != end; ++begin)
+        p *= *begin;
 
-  return p;
+    return p;
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Computes the product of all the elements in a container.
  */
-template <typename T> inline typename T::value_type product(const T &x) {
-  return product(x.begin(), x.end());
+template <typename T> inline typename T::value_type product(const T &x)
+{
+    return product(x.begin(), x.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3731,22 +4109,26 @@ template <typename T> inline typename T::value_type product(const T &x) {
  */
 template <typename It>
 inline void add_val(It begin, It end,
-                    const typename std::iterator_traits<It>::value_type &val) {
-  { NTA_ASSERT(begin <= end) << "add_val: Invalid range"; }
+                    const typename std::iterator_traits<It>::value_type &val)
+{
+    {
+        NTA_ASSERT(begin <= end) << "add_val: Invalid range";
+    }
 
-  if (val == 0.0f)
-    return;
+    if (val == 0.0f)
+        return;
 
-  for (; begin != end; ++begin)
-    *begin += val;
+    for (; begin != end; ++begin)
+        *begin += val;
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename T>
-inline void add_val(T &x, const typename T::value_type &val) {
-  add_val(x.begin(), x.end(), val);
+inline void add_val(T &x, const typename T::value_type &val)
+{
+    add_val(x.begin(), x.end(), val);
 }
 
 //--------------------------------------------------------------------------------
@@ -3755,26 +4137,31 @@ inline void add_val(T &x, const typename T::value_type &val) {
 template <typename It>
 inline void
 subtract_val(It begin, It end,
-             const typename std::iterator_traits<It>::value_type &val) {
-  add_val(begin, end, -val);
+             const typename std::iterator_traits<It>::value_type &val)
+{
+    add_val(begin, end, -val);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename T>
-inline void subtract_val(T &x, const typename T::value_type &val) {
-  subtract_val(x.begin(), x.end(), val);
+inline void subtract_val(T &x, const typename T::value_type &val)
+{
+    subtract_val(x.begin(), x.end(), val);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
-template <typename It> inline void negate(It begin, It end) {
-  { NTA_ASSERT(begin <= end) << "negate: Invalid range"; }
+template <typename It> inline void negate(It begin, It end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "negate: Invalid range";
+    }
 
-  for (; begin != end; ++begin)
-    *begin = -*begin;
+    for (; begin != end; ++begin)
+        *begin = -*begin;
 }
 
 //--------------------------------------------------------------------------------
@@ -3786,15 +4173,15 @@ template <typename T> inline void negate(T &x) { negate(x.begin(), x.end()); }
 /**
  */
 template <typename It>
-inline void
-divide_val(It begin, It end,
-           const typename std::iterator_traits<It>::value_type &val) {
-  {
-    NTA_ASSERT(begin <= end) << "divide_val: Invalid range";
-    NTA_ASSERT(val != 0) << "divide_val: Division by zero";
-  }
+inline void divide_val(It begin, It end,
+                       const typename std::iterator_traits<It>::value_type &val)
+{
+    {
+        NTA_ASSERT(begin <= end) << "divide_val: Invalid range";
+        NTA_ASSERT(val != 0) << "divide_val: Division by zero";
+    }
 
-  multiply_val(begin, end, 1.0f / val);
+    multiply_val(begin, end, 1.0f / val);
 }
 
 //--------------------------------------------------------------------------------
@@ -3802,98 +4189,108 @@ divide_val(It begin, It end,
 /**
  */
 template <typename T>
-inline void divide_val(T &x, const typename T::value_type &val) {
-  divide_val(x.begin(), x.end(), val);
+inline void divide_val(T &x, const typename T::value_type &val)
+{
+    divide_val(x.begin(), x.end(), val);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename It1, typename It2>
-inline void add(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "add: Invalid range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2) << "add: Incompatible ranges";
-  }
+inline void add(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "add: Invalid range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "add: Incompatible ranges";
+    }
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    *begin1 += *begin2;
+    for (; begin1 != end1; ++begin1, ++begin2)
+        *begin1 += *begin2;
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
-template <typename T1, typename T2> inline void add(T1 &x, const T2 &y) {
-  add(x.begin(), x.end(), y.begin(), y.end());
+template <typename T1, typename T2> inline void add(T1 &x, const T2 &y)
+{
+    add(x.begin(), x.end(), y.begin(), y.end());
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename It1, typename It2>
-inline void subtract(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "subtract: Invalid range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2)
-        << "subtract: Incompatible ranges";
-  }
+inline void subtract(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "subtract: Invalid range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "subtract: Incompatible ranges";
+    }
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    *begin1 -= *begin2;
+    for (; begin1 != end1; ++begin1, ++begin2)
+        *begin1 -= *begin2;
 }
 
 //--------------------------------------------------------------------------------
 // TODO: should we have the same argument ordering as copy??
 /**
  */
-template <typename T1, typename T2> inline void subtract(T1 &x, const T2 &y) {
-  subtract(x.begin(), x.end(), y.begin(), y.end());
+template <typename T1, typename T2> inline void subtract(T1 &x, const T2 &y)
+{
+    subtract(x.begin(), x.end(), y.begin(), y.end());
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename It1, typename It2>
-inline void multiply(It1 begin1, It1 end1, It2 begin2, It2 end2) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "Binary multiply: Invalid range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2)
-        << "Binary multiply: Incompatible ranges";
-  }
+inline void multiply(It1 begin1, It1 end1, It2 begin2, It2 end2)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "Binary multiply: Invalid range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "Binary multiply: Incompatible ranges";
+    }
 
-  for (; begin1 != end1; ++begin1, ++begin2)
-    *begin1 *= *begin2;
+    for (; begin1 != end1; ++begin1, ++begin2)
+        *begin1 *= *begin2;
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
-template <typename T1, typename T2> inline void multiply(T1 &x, const T2 &y) {
-  multiply(x.begin(), x.end(), y.begin(), y.end());
+template <typename T1, typename T2> inline void multiply(T1 &x, const T2 &y)
+{
+    multiply(x.begin(), x.end(), y.begin(), y.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename It1, typename It2, typename It3>
 inline void multiply(It1 begin1, It1 end1, It2 begin2, It2 end2, It3 begin3,
-                     It3 end3) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "Ternary multiply: Invalid range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2)
-        << "Ternary multiply: Incompatible input ranges";
-    NTA_ASSERT(end1 - begin1 <= end3 - begin3)
-        << "Ternary multiply: Not enough memory for result";
-  }
+                     It3 end3)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "Ternary multiply: Invalid range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "Ternary multiply: Incompatible input ranges";
+        NTA_ASSERT(end1 - begin1 <= end3 - begin3)
+            << "Ternary multiply: Not enough memory for result";
+    }
 
-  typedef typename std::iterator_traits<It3>::value_type value_type;
+    typedef typename std::iterator_traits<It3>::value_type value_type;
 
-  for (; begin1 != end1; ++begin1, ++begin2, ++begin3)
-    *begin3 = static_cast<value_type> (*begin1 * *begin2);
+    for (; begin1 != end1; ++begin1, ++begin2, ++begin3)
+        *begin3 = static_cast<value_type>(*begin1 * *begin2);
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2, typename T3>
-inline void multiply(const T1 &x, const T2 &y, T3 &z) {
-  multiply(x.begin(), x.end(), y.begin(), y.end(), z.begin(), z.end());
+inline void multiply(const T1 &x, const T2 &y, T3 &z)
+{
+    multiply(x.begin(), x.end(), y.begin(), y.end(), z.begin(), z.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3903,20 +4300,25 @@ inline void multiply(const T1 &x, const T2 &y, T3 &z) {
  * in order of increasing indices.
  */
 template <typename I, typename T>
-inline void multiply_val(T val, const Buffer<I> &indices,
-                         SparseVector<I, T> &x) {
-  I n1 = indices.nnz, n2 = x.nnz, i1 = 0, i2 = 0;
+inline void multiply_val(T val, const Buffer<I> &indices, SparseVector<I, T> &x)
+{
+    I n1 = indices.nnz, n2 = x.nnz, i1 = 0, i2 = 0;
 
-  while (i1 != n1 && i2 != n2)
-    if (x[i2].first < indices[i1]) {
-      ++i2;
-    } else if (indices[i1] < x[i2].first) {
-      ++i1;
-    } else {
-      x[i2].second *= val;
-      ++i1;
-      ++i2;
-    }
+    while (i1 != n1 && i2 != n2)
+        if (x[i2].first < indices[i1])
+        {
+            ++i2;
+        }
+        else if (indices[i1] < x[i2].first)
+        {
+            ++i1;
+        }
+        else
+        {
+            x[i2].second *= val;
+            ++i1;
+            ++i2;
+        }
 }
 
 //--------------------------------------------------------------------------------
@@ -3924,18 +4326,20 @@ inline void multiply_val(T val, const Buffer<I> &indices,
  */
 template <typename It1, typename It2>
 inline void divide(It1 begin1, It1 end1, It2 begin2, It2 end2,
-                   typename std::iterator_traits<It1>::value_type fuzz = 0) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "divide: Invalid range";
-    NTA_ASSERT(end1 - begin1 <= end2 - begin2) << "divide: Incompatible ranges";
-  }
+                   typename std::iterator_traits<It1>::value_type fuzz = 0)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "divide: Invalid range";
+        NTA_ASSERT(end1 - begin1 <= end2 - begin2)
+            << "divide: Incompatible ranges";
+    }
 
-  if (fuzz == 0)
-    for (; begin1 != end1; ++begin1, ++begin2)
-      *begin1 /= *begin2;
-  else
-    for (; begin1 != end1; ++begin1, ++begin2)
-      *begin1 /= (*begin2 + fuzz);
+    if (fuzz == 0)
+        for (; begin1 != end1; ++begin1, ++begin2)
+            *begin1 /= *begin2;
+    else
+        for (; begin1 != end1; ++begin1, ++begin2)
+            *begin1 /= (*begin2 + fuzz);
 }
 
 //--------------------------------------------------------------------------------
@@ -3943,25 +4347,30 @@ inline void divide(It1 begin1, It1 end1, It2 begin2, It2 end2,
 /**
  */
 template <typename T1, typename T2>
-inline void divide(T1 &x, const T2 &y, typename T1::value_type fuzz = 0) {
-  divide(x.begin(), x.end(), y.begin(), y.end(), fuzz);
+inline void divide(T1 &x, const T2 &y, typename T1::value_type fuzz = 0)
+{
+    divide(x.begin(), x.end(), y.begin(), y.end(), fuzz);
 }
 
 //--------------------------------------------------------------------------------
-template <typename It1> inline void divide_by_max(It1 begin, It1 end) {
-  { NTA_ASSERT(begin <= end) << "divide_by_max: Invalid range"; }
+template <typename It1> inline void divide_by_max(It1 begin, It1 end)
+{
+    {
+        NTA_ASSERT(begin <= end) << "divide_by_max: Invalid range";
+    }
 
-  typename std::iterator_traits<It1>::value_type max_val =
-      *(std::max_element(begin, end));
+    typename std::iterator_traits<It1>::value_type max_val =
+        *(std::max_element(begin, end));
 
-  if (!nust::nearlyZero(max_val))
-    for (It1 it = begin; it != end; ++it)
-      *it /= max_val;
+    if (!nust::nearlyZero(max_val))
+        for (It1 it = begin; it != end; ++it)
+            *it /= max_val;
 }
 
 //--------------------------------------------------------------------------------
-template <typename T1> inline void divide_by_max(T1 &v) {
-  divide_by_max(v.begin(), v.end());
+template <typename T1> inline void divide_by_max(T1 &v)
+{
+    divide_by_max(v.begin(), v.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -3970,22 +4379,24 @@ template <typename T1> inline void divide_by_max(T1 &v) {
 template <typename It1, typename It2, typename TFuncIsNearlyZero,
           typename TFuncHandleZero>
 inline void inverseNZ(It1 begin1, It1 end1, It2 out, It2 out_end,
-                      TFuncIsNearlyZero fIsZero, TFuncHandleZero fHandleZero) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "inverseNZ: Invalid input range";
-    NTA_ASSERT(out <= out_end) << "inverseNZ: Invalid output range";
-    NTA_ASSERT(end1 - begin1 == out_end - out)
-        << "inverseNZ: Incompatible ranges";
-  }
+                      TFuncIsNearlyZero fIsZero, TFuncHandleZero fHandleZero)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "inverseNZ: Invalid input range";
+        NTA_ASSERT(out <= out_end) << "inverseNZ: Invalid output range";
+        NTA_ASSERT(end1 - begin1 == out_end - out)
+            << "inverseNZ: Incompatible ranges";
+    }
 
-  const typename std::iterator_traits<It2>::value_type one(1.0);
+    const typename std::iterator_traits<It2>::value_type one(1.0);
 
-  for (; begin1 != end1; ++begin1, ++out) {
-    if (fIsZero(*begin1))
-      *out = fHandleZero(*begin1); // Can't pass one?
-    else
-      *out = one / *begin1;
-  }
+    for (; begin1 != end1; ++begin1, ++out)
+    {
+        if (fIsZero(*begin1))
+            *out = fHandleZero(*begin1); // Can't pass one?
+        else
+            *out = one / *begin1;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4010,32 +4421,35 @@ inline void inverseNZ(It1 begin1, It1 end1, It2 out, It2 out_end,
 template <typename T1, typename T2, typename TFuncIsNearlyZero,
           typename TFuncHandleZero>
 inline void inverseNZ(const T1 &x, T2 &out, TFuncIsNearlyZero fIsNearlyZero,
-                      TFuncHandleZero fHandleZero) {
-  inverseNZ(x.begin(), x.end(), out.begin(), out.end(), fIsNearlyZero,
-            fHandleZero);
+                      TFuncHandleZero fHandleZero)
+{
+    inverseNZ(x.begin(), x.end(), out.begin(), out.end(), fIsNearlyZero,
+              fHandleZero);
 }
 
 //--------------------------------------------------------------------------------
 template <typename It1, typename It2>
 inline void
 inverse(It1 begin1, It1 end1, It2 out, It2 out_end,
-        const typename std::iterator_traits<It2>::value_type one = 1.0) {
-  {
-    NTA_ASSERT(begin1 <= end1) << "inverse: Invalid input range";
-    NTA_ASSERT(out <= out_end) << "inverse: Invalid output range";
-    NTA_ASSERT(end1 - begin1 == out_end - out)
-        << "inverse: Incompatible ranges";
-  }
+        const typename std::iterator_traits<It2>::value_type one = 1.0)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "inverse: Invalid input range";
+        NTA_ASSERT(out <= out_end) << "inverse: Invalid output range";
+        NTA_ASSERT(end1 - begin1 == out_end - out)
+            << "inverse: Incompatible ranges";
+    }
 
-  for (; begin1 != end1; ++begin1, ++out)
-    *out = one / *begin1;
+    for (; begin1 != end1; ++begin1, ++out)
+        *out = one / *begin1;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T1, typename T2>
 inline void inverse(const T1 &x, T2 &out,
-                    const typename T2::value_type one = 1.0) {
-  inverse(x.begin(), x.end(), out.begin(), out.end(), one);
+                    const typename T2::value_type one = 1.0)
+{
+    inverse(x.begin(), x.end(), out.begin(), out.end(), one);
 }
 
 //--------------------------------------------------------------------------------
@@ -4044,26 +4458,29 @@ inline void inverse(const T1 &x, T2 &out,
  */
 template <typename It1, typename It2>
 inline void add_ky(const typename std::iterator_traits<It1>::value_type &k,
-                   It1 y, It1 y_end, It2 x, It2 x_end) {
-  {
-    NTA_ASSERT(y <= y_end) << "add_ky: Invalid y range";
-    NTA_ASSERT(x <= x_end) << "add_ky: Invalid x range";
-    NTA_ASSERT(y_end - y <= x - x_end) << "add_ky: Result range too small";
-  }
+                   It1 y, It1 y_end, It2 x, It2 x_end)
+{
+    {
+        NTA_ASSERT(y <= y_end) << "add_ky: Invalid y range";
+        NTA_ASSERT(x <= x_end) << "add_ky: Invalid x range";
+        NTA_ASSERT(y_end - y <= x - x_end) << "add_ky: Result range too small";
+    }
 
-  while (y != y_end) {
-    *x += k * *y;
-    ++x;
-    ++y;
-  }
+    while (y != y_end)
+    {
+        *x += k * *y;
+        ++x;
+        ++y;
+    }
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename T1, typename T2>
-inline void add_ky(const typename T1::value_type &k, const T2 &y, T1 &x) {
-  add_ky(k, y.begin(), y.end(), x.begin(), x.end());
+inline void add_ky(const typename T1::value_type &k, const T2 &y, T1 &x)
+{
+    add_ky(k, y.begin(), y.end(), x.begin(), x.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -4073,13 +4490,15 @@ inline void add_ky(const typename T1::value_type &k, const T2 &y, T1 &x) {
 template <typename It1, typename It2, typename It3>
 inline void add_ky(It1 x1, It1 x1_end,
                    const typename std::iterator_traits<It1>::value_type &k,
-                   It2 y, It3 x2) {
-  while (x1 != x1_end) {
-    *x2 = *x1 + k * *y;
-    ++x2;
-    ++x1;
-    ++y;
-  }
+                   It2 y, It3 x2)
+{
+    while (x1 != x1_end)
+    {
+        *x2 = *x1 + k * *y;
+        ++x2;
+        ++x1;
+        ++y;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4087,10 +4506,11 @@ inline void add_ky(It1 x1, It1 x1_end,
  */
 template <typename T1, typename T2, typename T3>
 inline void add_ky(const T1 &x1, const typename T1::value_type &k, const T2 &y,
-                   T3 &x2) {
-  ////assert(y.size() >= x.size());
+                   T3 &x2)
+{
+    ////assert(y.size() >= x.size());
 
-  add_ky(x1.begin(), x1.end(), k, y.begin(), x2.begin());
+    add_ky(x1.begin(), x1.end(), k, y.begin(), x2.begin());
 }
 
 // TODO: write binary operations x = y + z ...
@@ -4102,17 +4522,19 @@ inline void add_ky(const T1 &x1, const typename T1::value_type &k, const T2 &y,
  * TODO: write the rest of BLAS level 1
  */
 template <typename T1, typename T2>
-inline void axpy(T1 &x, const typename T1::value_type &a, const T2 &y) {
-  ////assert(y.size() >= x.size());
+inline void axpy(T1 &x, const typename T1::value_type &a, const T2 &y)
+{
+    ////assert(y.size() >= x.size());
 
-  typename T1::iterator it_x = x.begin(), it_x_end = x.end();
-  typename T2::const_iterator it_y = y.begin();
+    typename T1::iterator it_x = x.begin(), it_x_end = x.end();
+    typename T2::const_iterator it_y = y.begin();
 
-  while (it_x != it_x_end) {
-    *it_x = a * *it_x + *it_y;
-    ++it_x;
-    ++it_y;
-  }
+    while (it_x != it_x_end)
+    {
+        *it_x = a * *it_x + *it_y;
+        ++it_x;
+        ++it_y;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4122,12 +4544,14 @@ inline void axpy(T1 &x, const typename T1::value_type &a, const T2 &y) {
 template <typename X, typename Y>
 inline void axby(const typename std::iterator_traits<X>::value_type &a, X x,
                  X x_end, const typename std::iterator_traits<X>::value_type &b,
-                 Y y) {
-  while (x != x_end) {
-    *x = a * *x + b * *y;
-    ++x;
-    ++y;
-  }
+                 Y y)
+{
+    while (x != x_end)
+    {
+        *x = a * *x + b * *y;
+        ++x;
+        ++y;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4135,10 +4559,11 @@ inline void axby(const typename std::iterator_traits<X>::value_type &a, X x,
  */
 template <typename T1, typename T2>
 inline void axby(const typename T1::value_type &a, T1 &x,
-                 const typename T1::value_type &b, const T2 &y) {
-  ////assert(y.size() >= x.size());
+                 const typename T1::value_type &b, const T2 &y)
+{
+    ////assert(y.size() >= x.size());
 
-  axby(a, x.begin(), x.end(), b, y.begin());
+    axby(a, x.begin(), x.end(), b, y.begin());
 }
 
 //--------------------------------------------------------------------------------
@@ -4147,20 +4572,22 @@ inline void axby(const typename T1::value_type &a, T1 &x,
  */
 template <typename It>
 inline void range_exp(typename std::iterator_traits<It>::value_type k, It begin,
-                      It end) {
-  typedef typename std::iterator_traits<It>::value_type value_type;
+                      It end)
+{
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  Exp<value_type> e_f;
+    Exp<value_type> e_f;
 
-  for (; begin != end; ++begin)
-    *begin = e_f(k * *begin);
+    for (; begin != end; ++begin)
+        *begin = e_f(k * *begin);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
-template <typename C> inline void range_exp(typename C::value_type k, C &c) {
-  range_exp(k, c.begin(), c.end());
+template <typename C> inline void range_exp(typename C::value_type k, C &c)
+{
+    range_exp(k, c.begin(), c.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -4170,13 +4597,14 @@ template <typename C> inline void range_exp(typename C::value_type k, C &c) {
 template <typename It>
 inline void range_exp(typename std::iterator_traits<It>::value_type k1,
                       typename std::iterator_traits<It>::value_type k2,
-                      It begin, It end) {
-  typedef typename std::iterator_traits<It>::value_type value_type;
+                      It begin, It end)
+{
+    typedef typename std::iterator_traits<It>::value_type value_type;
 
-  Exp<value_type> e_f;
+    Exp<value_type> e_f;
 
-  for (; begin != end; ++begin)
-    *begin = k1 * e_f(k2 * *begin);
+    for (; begin != end; ++begin)
+        *begin = k1 * e_f(k2 * *begin);
 }
 
 //--------------------------------------------------------------------------------
@@ -4184,8 +4612,9 @@ inline void range_exp(typename std::iterator_traits<It>::value_type k1,
  */
 template <typename C>
 inline void range_exp(typename C::value_type k1, typename C::value_type k2,
-                      C &c) {
-  range_exp(k1, k2, c.begin(), c.end());
+                      C &c)
+{
+    range_exp(k1, k2, c.begin(), c.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -4197,16 +4626,18 @@ inline void range_exp(typename C::value_type k1, typename C::value_type k2,
  */
 template <typename It1, typename It2>
 inline typename std::iterator_traits<It1>::value_type
-inner_product(It1 it_x, It1 it_x_end, It2 it_y) {
-  typename std::iterator_traits<It1>::value_type n(0);
+inner_product(It1 it_x, It1 it_x_end, It2 it_y)
+{
+    typename std::iterator_traits<It1>::value_type n(0);
 
-  while (it_x != it_x_end) {
-    n += *it_x * *it_y;
-    ++it_x;
-    ++it_y;
-  }
+    while (it_x != it_x_end)
+    {
+        n += *it_x * *it_y;
+        ++it_x;
+        ++it_y;
+    }
 
-  return n;
+    return n;
 }
 
 //--------------------------------------------------------------------------------
@@ -4214,72 +4645,79 @@ inner_product(It1 it_x, It1 it_x_end, It2 it_y) {
  * In place transform of a range.
  */
 template <typename F1, typename It>
-inline void transform(It begin, It end, F1 f) {
-  { NTA_ASSERT(begin <= end) << "transform: Invalid range"; }
+inline void transform(It begin, It end, F1 f)
+{
+    {
+        NTA_ASSERT(begin <= end) << "transform: Invalid range";
+    }
 
-  for (; begin != end; ++begin)
-    *begin = f(*begin);
+    for (; begin != end; ++begin)
+        *begin = f(*begin);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
-template <typename F1, typename T1> inline void transform(T1 &a, F1 f) {
-  typename T1::iterator ia = a.begin(), iae = a.end();
+template <typename F1, typename T1> inline void transform(T1 &a, F1 f)
+{
+    typename T1::iterator ia = a.begin(), iae = a.end();
 
-  for (; ia != iae; ++ia)
-    *ia = f(*ia);
+    for (; ia != iae; ++ia)
+        *ia = f(*ia);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename F1, typename T1, typename T2>
-inline void transform(const T1 &a, T2 &b, F1 f) {
-  ////assert(b.size() >= a.size());
+inline void transform(const T1 &a, T2 &b, F1 f)
+{
+    ////assert(b.size() >= a.size());
 
-  typename T1::const_iterator ia = a.begin(), iae = a.end();
-  typename T2::iterator ib = b.begin();
+    typename T1::const_iterator ia = a.begin(), iae = a.end();
+    typename T2::iterator ib = b.begin();
 
-  for (; ia != iae; ++ia, ++ib)
-    *ib = f(*ia);
+    for (; ia != iae; ++ia, ++ib)
+        *ib = f(*ia);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename F2, typename T1, typename T2, typename T3>
-inline void transform(const T1 &a, const T2 &b, T3 &c, F2 f) {
-  ////assert(c.size() >= a.size());
-  ////assert(b.size() >= a.size());
-  ////assert(c.size() >= b.size());
+inline void transform(const T1 &a, const T2 &b, T3 &c, F2 f)
+{
+    ////assert(c.size() >= a.size());
+    ////assert(b.size() >= a.size());
+    ////assert(c.size() >= b.size());
 
-  typename T1::const_iterator ia = a.begin(), iae = a.end();
-  typename T2::const_iterator ib = b.begin();
-  typename T3::iterator ic = c.begin();
+    typename T1::const_iterator ia = a.begin(), iae = a.end();
+    typename T2::const_iterator ib = b.begin();
+    typename T3::iterator ic = c.begin();
 
-  for (; ia != iae; ++ia, ++ib, ++ic)
-    *ic = f(*ia, *ib);
+    for (; ia != iae; ++ia, ++ib, ++ic)
+        *ic = f(*ia, *ib);
 }
 
 //--------------------------------------------------------------------------------
 /**
  */
 template <typename F3, typename T1, typename T2, typename T3, typename T4>
-inline void transform(const T1 &a, const T2 &b, const T3 &c, T4 &d, F3 f) {
-  ////assert(d.size() >= a.size());
-  ////assert(d.size() >= b.size());
-  ////assert(d.size() >= c.size());
-  ////assert(b.size() >= a.size());
-  ////assert(c.size() >= a.size());
+inline void transform(const T1 &a, const T2 &b, const T3 &c, T4 &d, F3 f)
+{
+    ////assert(d.size() >= a.size());
+    ////assert(d.size() >= b.size());
+    ////assert(d.size() >= c.size());
+    ////assert(b.size() >= a.size());
+    ////assert(c.size() >= a.size());
 
-  typename T1::const_iterator ia = a.begin(), iae = a.end();
-  typename T2::const_iterator ib = b.begin();
-  typename T3::const_iterator ic = c.begin();
-  typename T4::iterator id = d.begin();
+    typename T1::const_iterator ia = a.begin(), iae = a.end();
+    typename T2::const_iterator ib = b.begin();
+    typename T3::const_iterator ic = c.begin();
+    typename T4::iterator id = d.begin();
 
-  for (; ia != iae; ++ia, ++ib, ++ic, ++id)
-    *id = f(*ia, *ib, *ic);
+    for (; ia != iae; ++ia, ++ib, ++ic, ++id)
+        *id = f(*ia, *ib, *ic);
 }
 
 //--------------------------------------------------------------------------------
@@ -4290,24 +4728,29 @@ inline void transform(const T1 &a, const T2 &b, const T3 &c, T4 &d, F3 f) {
  */
 template <typename ForwardIterator, typename F>
 inline ForwardIterator min_element(ForwardIterator first, ForwardIterator last,
-                                   F f) {
-  { NTA_ASSERT(first <= last) << "min_element: Invalid range"; }
-
-  typedef typename ForwardIterator::value_type value_type;
-
-  ForwardIterator min_it = first;
-  value_type min_val = f(*first);
-
-  while (first != last) {
-    value_type val = f(*first);
-    if (val < min_val) {
-      min_it = first;
-      min_val = val;
+                                   F f)
+{
+    {
+        NTA_ASSERT(first <= last) << "min_element: Invalid range";
     }
-    ++first;
-  }
 
-  return min_it;
+    typedef typename ForwardIterator::value_type value_type;
+
+    ForwardIterator min_it = first;
+    value_type min_val = f(*first);
+
+    while (first != last)
+    {
+        value_type val = f(*first);
+        if (val < min_val)
+        {
+            min_it = first;
+            min_val = val;
+        }
+        ++first;
+    }
+
+    return min_it;
 }
 
 //--------------------------------------------------------------------------------
@@ -4316,46 +4759,55 @@ inline ForwardIterator min_element(ForwardIterator first, ForwardIterator last,
  */
 template <typename ForwardIterator, typename F>
 inline ForwardIterator max_element(ForwardIterator first, ForwardIterator last,
-                                   F f) {
-  { NTA_ASSERT(first <= last) << "max_element: Invalid range"; }
-
-  typedef typename ForwardIterator::value_type value_type;
-
-  ForwardIterator max_it = first;
-  value_type max_val = f(*first);
-
-  while (first != last) {
-    value_type val = f(*first);
-    if (val > max_val) {
-      max_it = first;
-      max_val = val;
+                                   F f)
+{
+    {
+        NTA_ASSERT(first <= last) << "max_element: Invalid range";
     }
-    ++first;
-  }
 
-  return max_it;
+    typedef typename ForwardIterator::value_type value_type;
+
+    ForwardIterator max_it = first;
+    value_type max_val = f(*first);
+
+    while (first != last)
+    {
+        value_type val = f(*first);
+        if (val > max_val)
+        {
+            max_it = first;
+            max_val = val;
+        }
+        ++first;
+    }
+
+    return max_it;
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Finds the min element in a container.
  */
-template <typename C> inline size_t min_element(const C &c) {
-  if (c.empty())
-    return static_cast<size_t> (0);
-  else
-    return static_cast<size_t> (std::min_element(c.begin(), c.end()) - c.begin());
+template <typename C> inline size_t min_element(const C &c)
+{
+    if (c.empty())
+        return static_cast<size_t>(0);
+    else
+        return static_cast<size_t>(std::min_element(c.begin(), c.end()) -
+                                   c.begin());
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Finds the maximum element in a container.
  */
-template <typename C> inline size_t max_element(const C &c) {
-  if (c.empty())
-    return static_cast<size_t> (0);
-  else
-    return static_cast<size_t> (std::max_element(c.begin(), c.end()) - c.begin());
+template <typename C> inline size_t max_element(const C &c)
+{
+    if (c.empty())
+        return static_cast<size_t>(0);
+    else
+        return static_cast<size_t>(std::max_element(c.begin(), c.end()) -
+                                   c.begin());
 }
 
 //--------------------------------------------------------------------------------
@@ -4363,13 +4815,17 @@ template <typename C> inline size_t max_element(const C &c) {
  * Writes the component-wise minimum to the output vector.
  */
 template <typename It1, typename It2, typename It3>
-inline void minimum(It1 begin1, It1 end1, It2 begin2, It3 out) {
-  { NTA_ASSERT(begin1 <= end1) << "minimum: Invalid range"; }
+inline void minimum(It1 begin1, It1 end1, It2 begin2, It3 out)
+{
+    {
+        NTA_ASSERT(begin1 <= end1) << "minimum: Invalid range";
+    }
 
-  typedef typename std::iterator_traits<It3>::value_type T;
-  for (; begin1 != end1; ++begin1, ++begin2, ++out) {
-    *out = std::min<T>(*begin1, *begin2);
-  }
+    typedef typename std::iterator_traits<It3>::value_type T;
+    for (; begin1 != end1; ++begin1, ++begin2, ++out)
+    {
+        *out = std::min<T>(*begin1, *begin2);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4377,34 +4833,38 @@ inline void minimum(It1 begin1, It1 end1, It2 begin2, It3 out) {
  * Writes the component-wise minimum to the output vector.
  */
 template <typename T1, typename T2, typename T3>
-inline void minimum(const T1 &x, const T2 &y, T3 &out) {
-  minimum(x.begin(), x.end(), y.begin(), out.begin());
+inline void minimum(const T1 &x, const T2 &y, T3 &out)
+{
+    minimum(x.begin(), x.end(), y.begin(), out.begin());
 }
 
 //--------------------------------------------------------------------------------
 // contains
 //--------------------------------------------------------------------------------
 template <typename C>
-inline bool contains(const C &c, typename C::value_type &v) {
-  return std::find(c.begin(), c.end(), v) != c.end();
+inline bool contains(const C &c, typename C::value_type &v)
+{
+    return std::find(c.begin(), c.end(), v) != c.end();
 }
 
 //--------------------------------------------------------------------------------
 template <typename C1, typename C2>
-inline bool is_subsequence(const C1 &seq, const C2 &sub) {
-  return std::search(seq.begin(), seq.end(), sub.begin(), sub.end()) !=
-         seq.end();
+inline bool is_subsequence(const C1 &seq, const C2 &sub)
+{
+    return std::search(seq.begin(), seq.end(), sub.begin(), sub.end()) !=
+           seq.end();
 }
 
 //--------------------------------------------------------------------------------
 template <typename C1, typename C2>
-inline bool is_subsequence_of(const C1 &c, const C2 &sub) {
-  bool found = false;
-  typename C1::const_iterator it, end = c.end();
-  for (it = c.begin(); it != end; ++it)
-    if (is_subsequence(*it, sub))
-      found = true;
-  return found;
+inline bool is_subsequence_of(const C1 &c, const C2 &sub)
+{
+    bool found = false;
+    typename C1::const_iterator it, end = c.end();
+    for (it = c.begin(); it != end; ++it)
+        if (is_subsequence(*it, sub))
+            found = true;
+    return found;
 }
 
 //--------------------------------------------------------------------------------
@@ -4414,22 +4874,26 @@ inline bool is_subsequence_of(const C1 &c, const C2 &sub) {
  * Sample n times from a given pdf.
  */
 template <typename It1, typename It2, typename RNG>
-inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output, RNG &rng) {
-  { NTA_ASSERT(pdf_begin <= pdf_end) << "sample: Invalid range for pdf"; }
+inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output, RNG &rng)
+{
+    {
+        NTA_ASSERT(pdf_begin <= pdf_end) << "sample: Invalid range for pdf";
+    }
 
-  typedef typename std::iterator_traits<It2>::value_type size_type2;
+    typedef typename std::iterator_traits<It2>::value_type size_type2;
 
-  size_t size = static_cast<size_t> (pdf_end - pdf_begin);
-  std::vector<double> cdf(size, 0);
-  std::vector<double>::const_iterator it = cdf.begin();
-  cumulative(pdf_begin, pdf_end, cdf.begin(), cdf.end());
-  double m = cdf[size - 1];
+    size_t size = static_cast<size_t>(pdf_end - pdf_begin);
+    std::vector<double> cdf(size, 0);
+    std::vector<double>::const_iterator it = cdf.begin();
+    cumulative(pdf_begin, pdf_end, cdf.begin(), cdf.end());
+    double m = cdf[size - 1];
 
-  for (size_t i = 0; i != n; ++i, ++output) {
-    double p = m * double(rng()) / double(rng.max() - rng.min());
-    it = std::lower_bound(cdf.begin(), cdf.end(), p);
-    *output = static_cast<size_type2> (it - cdf.begin());
-  }
+    for (size_t i = 0; i != n; ++i, ++output)
+    {
+        double p = m * double(rng()) / double(rng.max() - rng.min());
+        it = std::lower_bound(cdf.begin(), cdf.end(), p);
+        *output = static_cast<size_type2>(it - cdf.begin());
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -4437,29 +4901,34 @@ inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output, RNG &rng) {
  * Sample n times from a given pdf.
  */
 template <typename It1, typename It2>
-inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output) {
-  { NTA_ASSERT(pdf_begin <= pdf_end) << "sample: Invalid range for pdf"; }
+inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output)
+{
+    {
+        NTA_ASSERT(pdf_begin <= pdf_end) << "sample: Invalid range for pdf";
+    }
 
-  nust::Random rng;
-  sample(n, pdf_begin, pdf_end, output, rng);
+    nust::Random rng;
+    sample(n, pdf_begin, pdf_end, output, rng);
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Sample one time from a given pdf.
  */
-template <typename C1> inline size_t sample_one(const C1 &pdf) {
-  size_t c = 0;
-  sample(1, pdf.begin(), pdf.end(), &c);
-  return c;
+template <typename C1> inline size_t sample_one(const C1 &pdf)
+{
+    size_t c = 0;
+    sample(1, pdf.begin(), pdf.end(), &c);
+    return c;
 }
 
 //--------------------------------------------------------------------------------
 template <typename C1, typename RNG>
-inline size_t sample_one(const C1 &pdf, RNG &rng) {
-  size_t c = 0;
-  sample(1, pdf.begin(), pdf.end(), &c, rng);
-  return c;
+inline size_t sample_one(const C1 &pdf, RNG &rng)
+{
+    size_t c = 0;
+    sample(1, pdf.begin(), pdf.end(), &c, rng);
+    return c;
 }
 
 //--------------------------------------------------------------------------------
@@ -4484,116 +4953,129 @@ inline size_t sample_one(const C1 &pdf, RNG &rng) {
 template <typename InputIterator, typename OutputIterator>
 inline void logical_and(InputIterator x, InputIterator x_end, InputIterator y,
                         InputIterator y_end, OutputIterator z,
-                        OutputIterator z_end) {
-  {
-    NTA_ASSERT(x_end - x == y_end - y);
-    NTA_ASSERT(x_end - x == z_end - z);
-  }
-
-  // See comments in count_gt. We need both conditional compilation and
-  // SSE_LEVEL check.
-#if !defined(NTA_OS_WINDOWS) && defined(NTA_ASM)
-
-  if (SSE_LEVEL >= 3) {
-
-    // n is the total number of floats to process
-    // n1 is 0 if any of the arrays x,y,z is not aligned on a 4 bytes
-    // boundary, or the number of floats we'll be able to process in parallel
-    // using the xmm.
-    int n = static_cast<int> (x_end - x);
-    int n1 = 0;
-    if (static_cast<long> (x) % 16 == 0 && static_cast<long> (y) % 16 == 0 && static_cast<long> (z) % 16 == 0)
-      n1 = 16 * (n / 16);
-
-    // If we are not aligned on 4 bytes, n1 == 0, and we simply
-    // skip the asm.
-    if (n1 > 0) {
-
-#if defined(NTA_ARCH_32)
-      __asm__ __volatile__(
-          "pusha\n\t" // save all registers
-
-          "0:\n\t"
-          "movaps (%%esi), %%xmm0\n\t"   // move 4 floats of x to xmm0
-          "andps (%%edi), %%xmm0\n\t"    // parallel and with 4 floats of y
-          "movaps 16(%%esi), %%xmm1\n\t" // play again with next 4 floats
-          "andps 16(%%edi), %%xmm1\n\t"
-          "movaps 32(%%esi), %%xmm2\n\t" // and next 4 floats
-          "andps 32(%%edi), %%xmm2\n\t"
-          "movaps 48(%%esi), %%xmm3\n\t" // and next 4 floats: we've and'ed
-          "andps 48(%%edi), %%xmm3\n\t"  // 16 floats of x and y at this point
-
-          "movaps %%xmm0, (%%ecx)\n\t"   // simply move 4 floats at a time to z
-          "movaps %%xmm1, 16(%%ecx)\n\t" // and next 4 floats
-          "movaps %%xmm2, 32(%%ecx)\n\t" // and next 4 floats
-          "movaps %%xmm3, 48(%%ecx)\n\t" // and next 4: moved 16 floats to z
-
-          "addl $64, %%esi\n\t" // increment pointer into x by 16 floats
-          "addl $64, %%edi\n\t" // increment pointer into y
-          "addl $64, %%ecx\n\t" // increment pointer into z
-          "subl $16, %%edx\n\t" // we've processed 16 floats
-          "ja 0b\n\t"           // loop
-
-          "popa\n\t" // restore registers
-
-          :
-          : "S"(x), "D"(y), "c"(z), "d"(n1)
-          :);
-
-#else
-      __asm__ __volatile__(
-          "pushq %%rsi\n\t" // save affected registers
-          "pushq %%rdi\n\t" // this 'shouldn't' be necessary
-          "pushq %%rcx\n\t" // but I was seeing some random
-          "pushq %%rdx\n\t" // crashes on OS X. Remove?
-
-          "0:\n\t"
-          "movaps (%%rsi), %%xmm0\n\t"   // move 4 floats of x to xmm0
-          "andps (%%rdi), %%xmm0\n\t"    // parallel and with 4 floats of y
-          "movaps 16(%%rsi), %%xmm1\n\t" // play again with next 4 floats
-          "andps 16(%%rdi), %%xmm1\n\t"
-          "movaps 32(%%rsi), %%xmm2\n\t" // and next 4 floats
-          "andps 32(%%rdi), %%xmm2\n\t"
-          "movaps 48(%%rsi), %%xmm3\n\t" // and next 4 floats: we've and'ed
-          "andps 48(%%rdi), %%xmm3\n\t"  // 16 floats of x and y at this point
-
-          "movaps %%xmm0, (%%rcx)\n\t"   // simply move 4 floats at a time to z
-          "movaps %%xmm1, 16(%%rcx)\n\t" // and next 4 floats
-          "movaps %%xmm2, 32(%%rcx)\n\t" // and next 4 floats
-          "movaps %%xmm3, 48(%%rcx)\n\t" // and next 4: moved 16 floats to z
-
-          "addq $64, %%rsi\n\t" // increment pointer into x by 16 floats
-          "addq $64, %%rdi\n\t" // increment pointer into y
-          "addq $64, %%rcx\n\t" // increment pointer into z
-          "subq $16, %%rdx\n\t" // we've processed 16 floats
-
-          "ja 0b\n\t" // loop
-
-          "popq %%rdx\n\t" // restore saved registers
-          "popq %%rcx\n\t"
-          "popq %%rdi\n\t"
-          "popq %%rsi\n\t"
-
-          :
-          : "S"(x), "D"(y), "c"(z), "d"(n1)
-          :);
-
-#endif
+                        OutputIterator z_end)
+{
+    {
+        NTA_ASSERT(x_end - x == y_end - y);
+        NTA_ASSERT(x_end - x == z_end - z);
     }
 
-    // Finish up for stragglers in case the array length was not
-    // evenly divisible by 4
-    for (int i = n1; i != n; ++i)
-      *(z + i) = *(x + i) && *(y + i);
+    // See comments in count_gt. We need both conditional compilation and
+    // SSE_LEVEL check.
+#if !defined(NTA_OS_WINDOWS) && defined(NTA_ASM)
 
-  } else {
+    if (SSE_LEVEL >= 3)
+    {
 
-    for (; x != x_end; ++x, ++y, ++z)
-      *z = (*x) && (*y);
-  }
+        // n is the total number of floats to process
+        // n1 is 0 if any of the arrays x,y,z is not aligned on a 4 bytes
+        // boundary, or the number of floats we'll be able to process in
+        // parallel using the xmm.
+        int n = static_cast<int>(x_end - x);
+        int n1 = 0;
+        if (static_cast<long>(x) % 16 == 0 && static_cast<long>(y) % 16 == 0 &&
+            static_cast<long>(z) % 16 == 0)
+            n1 = 16 * (n / 16);
+
+        // If we are not aligned on 4 bytes, n1 == 0, and we simply
+        // skip the asm.
+        if (n1 > 0)
+        {
+
+#if defined(NTA_ARCH_32)
+            __asm__ __volatile__(
+                "pusha\n\t" // save all registers
+
+                "0:\n\t"
+                "movaps (%%esi), %%xmm0\n\t" // move 4 floats of x to xmm0
+                "andps (%%edi), %%xmm0\n\t"  // parallel and with 4 floats of y
+                "movaps 16(%%esi), %%xmm1\n\t" // play again with next 4 floats
+                "andps 16(%%edi), %%xmm1\n\t"
+                "movaps 32(%%esi), %%xmm2\n\t" // and next 4 floats
+                "andps 32(%%edi), %%xmm2\n\t"
+                "movaps 48(%%esi), %%xmm3\n\t" // and next 4 floats: we've
+                                               // and'ed
+                "andps 48(%%edi), %%xmm3\n\t"  // 16 floats of x and y at this
+                                               // point
+
+                "movaps %%xmm0, (%%ecx)\n\t"   // simply move 4 floats at a time
+                                               // to z
+                "movaps %%xmm1, 16(%%ecx)\n\t" // and next 4 floats
+                "movaps %%xmm2, 32(%%ecx)\n\t" // and next 4 floats
+                "movaps %%xmm3, 48(%%ecx)\n\t" // and next 4: moved 16 floats to
+                                               // z
+
+                "addl $64, %%esi\n\t" // increment pointer into x by 16 floats
+                "addl $64, %%edi\n\t" // increment pointer into y
+                "addl $64, %%ecx\n\t" // increment pointer into z
+                "subl $16, %%edx\n\t" // we've processed 16 floats
+                "ja 0b\n\t"           // loop
+
+                "popa\n\t" // restore registers
+
+                :
+                : "S"(x), "D"(y), "c"(z), "d"(n1)
+                :);
+
 #else
-  for (; x != x_end; ++x, ++y, ++z)
-    *z = (*x) && (*y);
+            __asm__ __volatile__(
+                "pushq %%rsi\n\t" // save affected registers
+                "pushq %%rdi\n\t" // this 'shouldn't' be necessary
+                "pushq %%rcx\n\t" // but I was seeing some random
+                "pushq %%rdx\n\t" // crashes on OS X. Remove?
+
+                "0:\n\t"
+                "movaps (%%rsi), %%xmm0\n\t" // move 4 floats of x to xmm0
+                "andps (%%rdi), %%xmm0\n\t"  // parallel and with 4 floats of y
+                "movaps 16(%%rsi), %%xmm1\n\t" // play again with next 4 floats
+                "andps 16(%%rdi), %%xmm1\n\t"
+                "movaps 32(%%rsi), %%xmm2\n\t" // and next 4 floats
+                "andps 32(%%rdi), %%xmm2\n\t"
+                "movaps 48(%%rsi), %%xmm3\n\t" // and next 4 floats: we've
+                                               // and'ed
+                "andps 48(%%rdi), %%xmm3\n\t"  // 16 floats of x and y at this
+                                               // point
+
+                "movaps %%xmm0, (%%rcx)\n\t"   // simply move 4 floats at a time
+                                               // to z
+                "movaps %%xmm1, 16(%%rcx)\n\t" // and next 4 floats
+                "movaps %%xmm2, 32(%%rcx)\n\t" // and next 4 floats
+                "movaps %%xmm3, 48(%%rcx)\n\t" // and next 4: moved 16 floats to
+                                               // z
+
+                "addq $64, %%rsi\n\t" // increment pointer into x by 16 floats
+                "addq $64, %%rdi\n\t" // increment pointer into y
+                "addq $64, %%rcx\n\t" // increment pointer into z
+                "subq $16, %%rdx\n\t" // we've processed 16 floats
+
+                "ja 0b\n\t" // loop
+
+                "popq %%rdx\n\t" // restore saved registers
+                "popq %%rcx\n\t"
+                "popq %%rdi\n\t"
+                "popq %%rsi\n\t"
+
+                :
+                : "S"(x), "D"(y), "c"(z), "d"(n1)
+                :);
+
+#endif
+        }
+
+        // Finish up for stragglers in case the array length was not
+        // evenly divisible by 4
+        for (int i = n1; i != n; ++i)
+            *(z + i) = *(x + i) && *(y + i);
+    }
+    else
+    {
+
+        for (; x != x_end; ++x, ++y, ++z)
+            *z = (*x) && (*y);
+    }
+#else
+    for (; x != x_end; ++x, ++y, ++z)
+        *z = (*x) && (*y);
 #endif
 }
 
@@ -4604,101 +5086,107 @@ inline void logical_and(InputIterator x, InputIterator x_end, InputIterator y,
  */
 template <typename Iterator>
 inline void in_place_logical_and(Iterator x, Iterator x_end, Iterator y,
-                                 Iterator y_end) {
-  { NTA_ASSERT(x_end - x == y_end - y); }
-
-  // See comments in count_gt. We need conditional compilation
-  // _AND_ SSE_LEVEL check.
-#if (defined(NTA_OS_LINUX) || defined(NTA_OS_DARWIN)) && defined(NTA_ASM)
-
-  if (SSE_LEVEL >= 3) {
-
-    // See comments in logical_and.
-    int n = static_cast<int>(x_end - x);
-    int n1 = 0;
-    if (static_cast<long> (x) % 16 == 0 && static_cast<long> (y) % 16 == 0)
-      n1 = 16 * (n / 16);
-
-    if (n1 > 0) {
-
-#if defined(NTA_ARCH_32)
-      __asm__ __volatile__("pusha\n\t"
-
-                           "0:\n\t"
-                           "movaps (%%esi), %%xmm0\n\t"
-                           "movaps 16(%%esi), %%xmm1\n\t"
-                           "movaps 32(%%esi), %%xmm2\n\t"
-                           "movaps 48(%%esi), %%xmm3\n\t"
-                           "andps (%%edi), %%xmm0\n\t"
-                           "andps 16(%%edi), %%xmm1\n\t"
-                           "andps 32(%%edi), %%xmm2\n\t"
-                           "andps 48(%%edi), %%xmm3\n\t"
-                           "movaps %%xmm0, (%%edi)\n\t"
-                           "movaps %%xmm1, 16(%%edi)\n\t"
-                           "movaps %%xmm2, 32(%%edi)\n\t"
-                           "movaps %%xmm3, 48(%%edi)\n\t"
-
-                           "addl $64, %%esi\n\t"
-                           "addl $64, %%edi\n\t"
-                           "subl $16, %%edx\n\t"
-                           "prefetch (%%esi)\n\t"
-                           "ja 0b\n\t"
-
-                           "popa\n\t"
-
-                           :
-                           : "S"(x), "D"(y), "d"(n1)
-                           :);
-
-#else // 64bit
-      __asm__ __volatile__(
-          "pushq %%rsi\n\t" // save affected registers
-          "pushq %%rdi\n\t"
-          "pushq %%rdx\n\t"
-
-          "0:\n\t"
-          "movaps (%%rsi), %%xmm0\n\t"
-          "movaps 16(%%rsi), %%xmm1\n\t"
-          "movaps 32(%%rsi), %%xmm2\n\t"
-          "movaps 48(%%rsi), %%xmm3\n\t"
-
-          "andps (%%rdi), %%xmm0\n\t"
-          "andps 16(%%rdi), %%xmm1\n\t" // in place and
-          "andps 32(%%rdi), %%xmm2\n\t"
-          "andps 48(%%rdi), %%xmm3\n\t"
-
-          "movaps %%xmm0, (%%rdi)\n\t"
-          "movaps %%xmm1, 16(%%rdi)\n\t"
-          "movaps %%xmm2, 32(%%rdi)\n\t"
-          "movaps %%xmm3, 48(%%rdi)\n\t"
-
-          "addq $64, %%rsi\n\t" // increment pointer into x by 16 floats
-          "addq $64, %%rdi\n\t" // increment pointer into y
-          "subq $16, %%rdx\n\t" // we've processed 16 floats
-
-          "ja 0b\n\t" // loop
-
-          "popq %%rdx\n\t" // restore saved registers
-          "popq %%rdi\n\t"
-          "popq %%rsi\n\t"
-
-          :
-          : "S"(x), "D"(y), "d"(n1)
-          :);
-#endif
+                                 Iterator y_end)
+{
+    {
+        NTA_ASSERT(x_end - x == y_end - y);
     }
 
-    for (int i = n1; i != n; ++i)
-      *(y + i) = *(x + i) && *(y + i);
+    // See comments in count_gt. We need conditional compilation
+    // _AND_ SSE_LEVEL check.
+#if (defined(NTA_OS_LINUX) || defined(NTA_OS_DARWIN)) && defined(NTA_ASM)
 
-  } else {
+    if (SSE_LEVEL >= 3)
+    {
 
-    for (; x != x_end; ++x, ++y)
-      *y = (*x) && *(y);
-  }
+        // See comments in logical_and.
+        int n = static_cast<int>(x_end - x);
+        int n1 = 0;
+        if (static_cast<long>(x) % 16 == 0 && static_cast<long>(y) % 16 == 0)
+            n1 = 16 * (n / 16);
+
+        if (n1 > 0)
+        {
+
+#if defined(NTA_ARCH_32)
+            __asm__ __volatile__("pusha\n\t"
+
+                                 "0:\n\t"
+                                 "movaps (%%esi), %%xmm0\n\t"
+                                 "movaps 16(%%esi), %%xmm1\n\t"
+                                 "movaps 32(%%esi), %%xmm2\n\t"
+                                 "movaps 48(%%esi), %%xmm3\n\t"
+                                 "andps (%%edi), %%xmm0\n\t"
+                                 "andps 16(%%edi), %%xmm1\n\t"
+                                 "andps 32(%%edi), %%xmm2\n\t"
+                                 "andps 48(%%edi), %%xmm3\n\t"
+                                 "movaps %%xmm0, (%%edi)\n\t"
+                                 "movaps %%xmm1, 16(%%edi)\n\t"
+                                 "movaps %%xmm2, 32(%%edi)\n\t"
+                                 "movaps %%xmm3, 48(%%edi)\n\t"
+
+                                 "addl $64, %%esi\n\t"
+                                 "addl $64, %%edi\n\t"
+                                 "subl $16, %%edx\n\t"
+                                 "prefetch (%%esi)\n\t"
+                                 "ja 0b\n\t"
+
+                                 "popa\n\t"
+
+                                 :
+                                 : "S"(x), "D"(y), "d"(n1)
+                                 :);
+
+#else // 64bit
+            __asm__ __volatile__(
+                "pushq %%rsi\n\t" // save affected registers
+                "pushq %%rdi\n\t"
+                "pushq %%rdx\n\t"
+
+                "0:\n\t"
+                "movaps (%%rsi), %%xmm0\n\t"
+                "movaps 16(%%rsi), %%xmm1\n\t"
+                "movaps 32(%%rsi), %%xmm2\n\t"
+                "movaps 48(%%rsi), %%xmm3\n\t"
+
+                "andps (%%rdi), %%xmm0\n\t"
+                "andps 16(%%rdi), %%xmm1\n\t" // in place and
+                "andps 32(%%rdi), %%xmm2\n\t"
+                "andps 48(%%rdi), %%xmm3\n\t"
+
+                "movaps %%xmm0, (%%rdi)\n\t"
+                "movaps %%xmm1, 16(%%rdi)\n\t"
+                "movaps %%xmm2, 32(%%rdi)\n\t"
+                "movaps %%xmm3, 48(%%rdi)\n\t"
+
+                "addq $64, %%rsi\n\t" // increment pointer into x by 16 floats
+                "addq $64, %%rdi\n\t" // increment pointer into y
+                "subq $16, %%rdx\n\t" // we've processed 16 floats
+
+                "ja 0b\n\t" // loop
+
+                "popq %%rdx\n\t" // restore saved registers
+                "popq %%rdi\n\t"
+                "popq %%rsi\n\t"
+
+                :
+                : "S"(x), "D"(y), "d"(n1)
+                :);
+#endif
+        }
+
+        for (int i = n1; i != n; ++i)
+            *(y + i) = *(x + i) && *(y + i);
+    }
+    else
+    {
+
+        for (; x != x_end; ++x, ++y)
+            *y = (*x) && *(y);
+    }
 #else
-  for (; x != x_end; ++x, ++y)
-    *y = (*x) && *(y);
+    for (; x != x_end; ++x, ++y)
+        *y = (*x) && *(y);
 #endif
 }
 
@@ -4710,12 +5198,13 @@ inline void in_place_logical_and(Iterator x, Iterator x_end, Iterator y,
  * TODO: vectorize, but watch out for alignments
  */
 inline void in_place_logical_and(const ByteVector &x, ByteVector &y,
-                                 int begin = -1, int end = -1) {
-  size_t b = begin == -1 ? 0 : static_cast<size_t> (begin);
-  size_t e = end == -1 ? x.size() : static_cast<size_t> (end);
+                                 int begin = -1, int end = -1)
+{
+    size_t b = begin == -1 ? 0 : static_cast<size_t>(begin);
+    size_t e = end == -1 ? x.size() : static_cast<size_t>(end);
 
-  for (size_t i = b; i != e; ++i)
-    y[i] &= x[i];
+    for (size_t i = b; i != e; ++i)
+        y[i] &= x[i];
 }
 
 //--------------------------------------------------------------------------------
@@ -4723,25 +5212,28 @@ inline void in_place_logical_and(const ByteVector &x, ByteVector &y,
  * TODO: write with SSE for big enough vectors.
  */
 inline void in_place_logical_or(const ByteVector &x, ByteVector &y,
-                                int begin = -1, int end = -1) {
-  size_t b = begin == -1 ? 0 : static_cast<size_t> (begin);
-  size_t e = end == -1 ? x.size() : static_cast<size_t> (end);
+                                int begin = -1, int end = -1)
+{
+    size_t b = begin == -1 ? 0 : static_cast<size_t>(begin);
+    size_t e = end == -1 ? x.size() : static_cast<size_t>(end);
 
-  for (size_t i = b; i != e; ++i)
-    y[i] |= x[i];
+    for (size_t i = b; i != e; ++i)
+        y[i] |= x[i];
 }
 
 //--------------------------------------------------------------------------------
 inline void logical_or(size_t n, const ByteVector &x, const ByteVector &y,
-                       ByteVector &z) {
-  for (size_t i = 0; i != n; ++i)
-    z[i] = x[i] || y[i];
+                       ByteVector &z)
+{
+    for (size_t i = 0; i != n; ++i)
+        z[i] = x[i] || y[i];
 }
 
 //--------------------------------------------------------------------------------
-inline void in_place_logical_or(size_t n, const ByteVector &x, ByteVector &y) {
-  for (size_t i = 0; i != n; ++i)
-    y[i] |= x[i];
+inline void in_place_logical_or(size_t n, const ByteVector &x, ByteVector &y)
+{
+    for (size_t i = 0; i != n; ++i)
+        y[i] |= x[i];
 }
 
 //--------------------------------------------------------------------------------
@@ -4751,68 +5243,78 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 inline size_t sparseOr(size_t n, InputIterator1 begin1, InputIterator1 end1,
                        InputIterator2 begin2, InputIterator2 end2,
-                       OutputIterator out, OutputIterator out_end) {
-  { // Pre-conditions
-    NTA_ASSERT(0 <= end1 - begin1)
-        << "sparseOr: Mismatched iterators for first vector";
-    NTA_ASSERT(0 <= end2 - begin2)
-        << "sparseOr: Mismatched iterators for second vector";
-    NTA_ASSERT(0 <= out_end - out)
-        << "sparseOr: Mismatched iterators for output vector";
-    NTA_ASSERT(0 <= n) << "sparseOr: Invalid max size: " << n;
-    NTA_ASSERT(static_cast<size_t> (end1 - begin1) <= n)
-        << "sparseOr: Invalid first vector size";
-    NTA_ASSERT(static_cast<size_t> (end2 - begin2) <= n)
-        << "sparseOr: Invalid second vector size";
-    NTA_ASSERT(n <= static_cast<size_t> (out_end - out))
-        << "sparseOr: Insufficient memory for result";
-    for (int i = 0; i < static_cast<int> (end1 - begin1); ++i)
-      NTA_ASSERT(/*0 <= *(begin1 + i) &&*/ *(begin1 + i) < n)
-          << "sparseOr: Invalid index in first vector: " << *(begin1 + i);
-    for (int i = 1; i < static_cast<int> (end1 - begin1); ++i)
-      NTA_ASSERT(*(begin1 + i - 1) < *(begin1 + i))
-          << "sparseOr: Indices need to be in strictly increasing order"
-          << " (first vector)";
-    for (int i = 0; i < static_cast<int> (end2 - begin2); ++i)
-      NTA_ASSERT(/*0 <= *(begin2 + i) &&*/ *(begin2 + i) < n)
-          << "sparseOr: Invalid index in second vector: " << *(begin2 + i);
-    for (int i = 1; i < static_cast<int> (end2 - begin2); ++i)
-      NTA_ASSERT(*(begin2 + i - 1) < *(begin2 + i))
-          << "sparseOr: Indices need to be in strictly increasing order"
-          << " (second vector)";
-  } // End pre-conditions
+                       OutputIterator out, OutputIterator out_end)
+{
+    { // Pre-conditions
+        NTA_ASSERT(0 <= end1 - begin1)
+            << "sparseOr: Mismatched iterators for first vector";
+        NTA_ASSERT(0 <= end2 - begin2)
+            << "sparseOr: Mismatched iterators for second vector";
+        NTA_ASSERT(0 <= out_end - out)
+            << "sparseOr: Mismatched iterators for output vector";
+        NTA_ASSERT(0 <= n) << "sparseOr: Invalid max size: " << n;
+        NTA_ASSERT(static_cast<size_t>(end1 - begin1) <= n)
+            << "sparseOr: Invalid first vector size";
+        NTA_ASSERT(static_cast<size_t>(end2 - begin2) <= n)
+            << "sparseOr: Invalid second vector size";
+        NTA_ASSERT(n <= static_cast<size_t>(out_end - out))
+            << "sparseOr: Insufficient memory for result";
+        for (int i = 0; i < static_cast<int>(end1 - begin1); ++i)
+            NTA_ASSERT(/*0 <= *(begin1 + i) &&*/ *(begin1 + i) < n)
+                << "sparseOr: Invalid index in first vector: " << *(begin1 + i);
+        for (int i = 1; i < static_cast<int>(end1 - begin1); ++i)
+            NTA_ASSERT(*(begin1 + i - 1) < *(begin1 + i))
+                << "sparseOr: Indices need to be in strictly increasing order"
+                << " (first vector)";
+        for (int i = 0; i < static_cast<int>(end2 - begin2); ++i)
+            NTA_ASSERT(/*0 <= *(begin2 + i) &&*/ *(begin2 + i) < n)
+                << "sparseOr: Invalid index in second vector: "
+                << *(begin2 + i);
+        for (int i = 1; i < static_cast<int>(end2 - begin2); ++i)
+            NTA_ASSERT(*(begin2 + i - 1) < *(begin2 + i))
+                << "sparseOr: Indices need to be in strictly increasing order"
+                << " (second vector)";
+    } // End pre-conditions
 
-  typedef typename std::iterator_traits<OutputIterator>::value_type value_type;
+    typedef
+        typename std::iterator_traits<OutputIterator>::value_type value_type;
 
-  OutputIterator out_begin = out;
+    OutputIterator out_begin = out;
 
-  while (begin1 != end1 && begin2 != end2) {
+    while (begin1 != end1 && begin2 != end2)
+    {
 
-    if (*begin1 < *begin2) {
-      *out++ = static_cast<value_type> (*begin1++);
-    } else if (*begin2 < *begin1) {
-      *out++ = static_cast<value_type> (*begin2++);
-    } else {
-      *out++ = static_cast<value_type> (*begin1++);
-      ++begin2;
+        if (*begin1 < *begin2)
+        {
+            *out++ = static_cast<value_type>(*begin1++);
+        }
+        else if (*begin2 < *begin1)
+        {
+            *out++ = static_cast<value_type>(*begin2++);
+        }
+        else
+        {
+            *out++ = static_cast<value_type>(*begin1++);
+            ++begin2;
+        }
     }
-  }
 
-  for (; begin1 != end1; ++begin1)
-    *out++ = static_cast<value_type> (*begin1);
+    for (; begin1 != end1; ++begin1)
+        *out++ = static_cast<value_type>(*begin1);
 
-  for (; begin2 != end2; ++begin2)
-    *out++ = static_cast<value_type> (*begin2);
+    for (; begin2 != end2; ++begin2)
+        *out++ = static_cast<value_type>(*begin2);
 
-  return static_cast<size_t> (out - out_begin);
+    return static_cast<size_t>(out - out_begin);
 }
 
 //--------------------------------------------------------------------------------
 template <typename U>
 inline size_t sparseOr(size_t n, const std::vector<U> &x1,
-                       const std::vector<U> &x2, std::vector<U> &out) {
-  return sparseOr(n, x1.begin(), x1.end(), x2.begin(), x2.end(), out.begin(),
-                  out.end());
+                       const std::vector<U> &x2, std::vector<U> &out)
+{
+    return sparseOr(n, x1.begin(), x1.end(), x2.begin(), x2.end(), out.begin(),
+                    out.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -4820,62 +5322,73 @@ template <typename InputIterator1, typename InputIterator2,
           typename OutputIterator>
 inline size_t sparseAnd(size_t n, InputIterator1 begin1, InputIterator1 end1,
                         InputIterator2 begin2, InputIterator2 end2,
-                        OutputIterator out, OutputIterator out_end) {
-  { // Pre-conditions
-    NTA_ASSERT(0 <= end1 - begin1)
-        << "sparseAnd: Mismatched iterators for first vector";
-    NTA_ASSERT(0 <= end2 - begin2)
-        << "sparseAnd: Mismatched iterators for second vector";
-    NTA_ASSERT(0 <= out_end - out)
-        << "sparseAnd: Mismatched iterators for output vector";
-    NTA_ASSERT(0 <= n) << "sparseAnd: Invalid max size: " << n;
-    NTA_ASSERT(static_cast<size_t> (end1 - begin1) <= n)
-        << "sparseAnd: Invalid first vector size";
-    NTA_ASSERT(static_cast<size_t> (end2 - begin2) <= n)
-        << "sparseAnd: Invalid second vector size";
-    // NTA_ASSERT(n <= (size_t)(out_end - out))
-    //<< "sparseAnd: Insufficient memory for result";
-    for (int i = 0; i < static_cast<int> (end1 - begin1); ++i)
-      NTA_ASSERT(/*0 <= *(begin1 + i) &&*/ *(begin1 + i) < n)
-          << "sparseAnd: Invalid index in first vector: " << *(begin1 + i);
-    for (int i = 1; i < static_cast<int> (end1 - begin1); ++i)
-      NTA_ASSERT(*(begin1 + i - 1) < *(begin1 + i))
-          << "sparseAnd: Indices need to be in strictly increasing order"
-          << " (first vector)";
-    for (int i = 0; i < static_cast<int> (end2 - begin2); ++i)
-      NTA_ASSERT(/*0 <= *(begin2 + i) &&*/ *(begin2 + i) < n)
-          << "sparseAnd: Invalid index in second vector: " << *(begin2 + i);
-    for (int i = 1; i < static_cast<int> (end2 - begin2); ++i)
-      NTA_ASSERT(*(begin2 + i - 1) < *(begin2 + i))
-          << "sparseAnd: Indices need to be in strictly increasing order"
-          << " (second vector)";
-  } // End pre-conditions
+                        OutputIterator out, OutputIterator out_end)
+{
+    { // Pre-conditions
+        NTA_ASSERT(0 <= end1 - begin1)
+            << "sparseAnd: Mismatched iterators for first vector";
+        NTA_ASSERT(0 <= end2 - begin2)
+            << "sparseAnd: Mismatched iterators for second vector";
+        NTA_ASSERT(0 <= out_end - out)
+            << "sparseAnd: Mismatched iterators for output vector";
+        NTA_ASSERT(0 <= n) << "sparseAnd: Invalid max size: " << n;
+        NTA_ASSERT(static_cast<size_t>(end1 - begin1) <= n)
+            << "sparseAnd: Invalid first vector size";
+        NTA_ASSERT(static_cast<size_t>(end2 - begin2) <= n)
+            << "sparseAnd: Invalid second vector size";
+        // NTA_ASSERT(n <= (size_t)(out_end - out))
+        //<< "sparseAnd: Insufficient memory for result";
+        for (int i = 0; i < static_cast<int>(end1 - begin1); ++i)
+            NTA_ASSERT(/*0 <= *(begin1 + i) &&*/ *(begin1 + i) < n)
+                << "sparseAnd: Invalid index in first vector: "
+                << *(begin1 + i);
+        for (int i = 1; i < static_cast<int>(end1 - begin1); ++i)
+            NTA_ASSERT(*(begin1 + i - 1) < *(begin1 + i))
+                << "sparseAnd: Indices need to be in strictly increasing order"
+                << " (first vector)";
+        for (int i = 0; i < static_cast<int>(end2 - begin2); ++i)
+            NTA_ASSERT(/*0 <= *(begin2 + i) &&*/ *(begin2 + i) < n)
+                << "sparseAnd: Invalid index in second vector: "
+                << *(begin2 + i);
+        for (int i = 1; i < static_cast<int>(end2 - begin2); ++i)
+            NTA_ASSERT(*(begin2 + i - 1) < *(begin2 + i))
+                << "sparseAnd: Indices need to be in strictly increasing order"
+                << " (second vector)";
+    } // End pre-conditions
 
-  typedef typename std::iterator_traits<OutputIterator>::value_type value_type;
+    typedef
+        typename std::iterator_traits<OutputIterator>::value_type value_type;
 
-  OutputIterator out_begin = out;
+    OutputIterator out_begin = out;
 
-  while (begin1 != end1 && begin2 != end2) {
+    while (begin1 != end1 && begin2 != end2)
+    {
 
-    if (*begin1 < *begin2) {
-      ++begin1;
-    } else if (*begin2 < *begin1) {
-      ++begin2;
-    } else {
-      *out++ = static_cast<value_type> (*begin1++);
-      ++begin2;
+        if (*begin1 < *begin2)
+        {
+            ++begin1;
+        }
+        else if (*begin2 < *begin1)
+        {
+            ++begin2;
+        }
+        else
+        {
+            *out++ = static_cast<value_type>(*begin1++);
+            ++begin2;
+        }
     }
-  }
 
-  return static_cast<size_t> (out - out_begin);
+    return static_cast<size_t>(out - out_begin);
 }
 
 //--------------------------------------------------------------------------------
 template <typename U>
 inline size_t sparseAnd(size_t n, const std::vector<U> &x1,
-                        const std::vector<U> &x2, std::vector<U> &out) {
-  return sparseAnd(n, x1.begin(), x1.end(), x2.begin(), x2.end(), out.begin(),
-                   out.end());
+                        const std::vector<U> &x2, std::vector<U> &out)
+{
+    return sparseAnd(n, x1.begin(), x1.end(), x2.begin(), x2.end(), out.begin(),
+                     out.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -4886,43 +5399,51 @@ inline size_t sparseAnd(size_t n, const std::vector<U> &x1,
 template <typename C> inline void sort(C &c) { std::sort(c.begin(), c.end()); }
 
 //--------------------------------------------------------------------------------
-template <typename C, typename F> inline void sort(C &c, F f) {
-  std::sort(c.begin(), c.end(), f);
+template <typename C, typename F> inline void sort(C &c, F f)
+{
+    std::sort(c.begin(), c.end(), f);
 }
 
 //--------------------------------------------------------------------------------
 template <typename It>
-inline void sort_on_first(It x_begin, It x_end, int direction = 1) {
-  typedef typename std::iterator_traits<It>::value_type P;
-  typedef typename P::first_type I;
-  typedef typename P::second_type F;
+inline void sort_on_first(It x_begin, It x_end, int direction = 1)
+{
+    typedef typename std::iterator_traits<It>::value_type P;
+    typedef typename P::first_type I;
+    typedef typename P::second_type F;
 
-  typedef select1st<std::pair<I, F>> sel1st;
+    typedef select1st<std::pair<I, F>> sel1st;
 
-  if (direction == -1) {
-    std::sort(x_begin, x_end, predicate_compose<std::greater<I>, sel1st>());
-  } else {
-    std::sort(x_begin, x_end, predicate_compose<std::less<I>, sel1st>());
-  }
+    if (direction == -1)
+    {
+        std::sort(x_begin, x_end, predicate_compose<std::greater<I>, sel1st>());
+    }
+    else
+    {
+        std::sort(x_begin, x_end, predicate_compose<std::less<I>, sel1st>());
+    }
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename F>
 inline void sort_on_first(size_t n, std::vector<std::pair<I, F>> &x,
-                          int direction = 1) {
-  sort_on_first(x.begin(), x.begin() + n, direction);
+                          int direction = 1)
+{
+    sort_on_first(x.begin(), x.begin() + n, direction);
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename F>
-inline void sort_on_first(std::vector<std::pair<I, F>> &x, int direction = 1) {
-  sort_on_first(x.begin(), x.end(), direction);
+inline void sort_on_first(std::vector<std::pair<I, F>> &x, int direction = 1)
+{
+    sort_on_first(x.begin(), x.end(), direction);
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename F>
-inline void sort_on_first(SparseVector<I, F> &x, int direction = 1) {
-  sort_on_first(x.begin(), x.begin() + x.nnz, direction);
+inline void sort_on_first(SparseVector<I, F> &x, int direction = 1)
+{
+    sort_on_first(x.begin(), x.begin() + x.nnz, direction);
 }
 
 //--------------------------------------------------------------------------------
@@ -4930,8 +5451,9 @@ inline void sort_on_first(SparseVector<I, F> &x, int direction = 1) {
  * Partial sort of a container given a functor.
  */
 template <typename I, typename C, typename F>
-inline void partial_sort(I k, C &elts, F f) {
-  std::partial_sort(elts.begin(), elts.begin() + k, elts.end(), f);
+inline void partial_sort(I k, C &elts, F f)
+{
+    std::partial_sort(elts.begin(), elts.begin() + k, elts.end(), f);
 }
 
 //--------------------------------------------------------------------------------
@@ -4942,20 +5464,21 @@ template <typename size_type, typename InputIterator, typename OutputIterator,
           typename Order>
 inline void partial_sort_2nd(size_type k, InputIterator in_begin,
                              InputIterator in_end, OutputIterator out_begin,
-                             Order) {
-  typedef typename std::iterator_traits<InputIterator>::value_type value_type;
-  typedef select2nd<std::pair<size_type, value_type>> sel2nd;
+                             Order)
+{
+    typedef typename std::iterator_traits<InputIterator>::value_type value_type;
+    typedef select2nd<std::pair<size_type, value_type>> sel2nd;
 
-  std::vector<std::pair<size_type, value_type>> v(in_end - in_begin);
+    std::vector<std::pair<size_type, value_type>> v(in_end - in_begin);
 
-  for (size_type i = 0; in_begin != in_end; ++in_begin, ++i)
-    v[i] = std::make_pair(i, *in_begin);
+    for (size_type i = 0; in_begin != in_end; ++in_begin, ++i)
+        v[i] = std::make_pair(i, *in_begin);
 
-  std::partial_sort(v.begin(), v.begin() + k, v.end(),
-                    predicate_compose<Order, sel2nd>());
+    std::partial_sort(v.begin(), v.begin() + k, v.end(),
+                      predicate_compose<Order, sel2nd>());
 
-  for (size_type i = 0; i != k; ++i, ++out_begin)
-    *out_begin = v[i];
+    for (size_type i = 0; i != k; ++i, ++out_begin)
+        *out_begin = v[i];
 }
 
 //--------------------------------------------------------------------------------
@@ -4964,8 +5487,9 @@ inline void partial_sort_2nd(size_type k, InputIterator in_begin,
  */
 template <typename C1, typename OutputIterator, typename Order>
 inline void partial_sort_2nd(size_t k, const C1 &c1, OutputIterator out_begin,
-                             Order order) {
-  partial_sort_2nd(k, c1.begin(), c1.end(), out_begin, order);
+                             Order order)
+{
+    partial_sort_2nd(k, c1.begin(), c1.end(), out_begin, order);
 }
 
 //--------------------------------------------------------------------------------
@@ -4985,26 +5509,29 @@ template <typename size_type, typename InIter, typename OutputIterator1,
 inline void partial_sort(size_type k, InIter in_begin, InIter in_end,
                          OutputIterator1 ind, OutputIterator2 nz, Order order,
                          size_type start_offset = 0,
-                         bool resort_on_first = false) {
-  typedef typename std::iterator_traits<InIter>::value_type value_type;
-  typedef select1st<std::pair<size_type, value_type>> sel1st;
+                         bool resort_on_first = false)
+{
+    typedef typename std::iterator_traits<InIter>::value_type value_type;
+    typedef select1st<std::pair<size_type, value_type>> sel1st;
 
-  std::vector<std::pair<size_type, value_type>> v(in_end - in_begin);
+    std::vector<std::pair<size_type, value_type>> v(in_end - in_begin);
 
-  for (size_type i = start_offset; in_begin != in_end; ++in_begin, ++i)
-    v[i - start_offset] = std::make_pair(i, *in_begin);
+    for (size_type i = start_offset; in_begin != in_end; ++in_begin, ++i)
+        v[i - start_offset] = std::make_pair(i, *in_begin);
 
-  std::partial_sort(v.begin(), v.begin() + k, v.end(), order);
+    std::partial_sort(v.begin(), v.begin() + k, v.end(), order);
 
-  if (resort_on_first) {
-    std::sort(v.begin(), v.begin() + k,
-              predicate_compose<std::less<size_type>, sel1st>());
-  }
+    if (resort_on_first)
+    {
+        std::sort(v.begin(), v.begin() + k,
+                  predicate_compose<std::less<size_type>, sel1st>());
+    }
 
-  for (size_type i = 0; i != k; ++i, ++ind, ++nz) {
-    *ind = v[i].first;
-    *nz = v[i].second;
-  }
+    for (size_type i = 0; i != k; ++i, ++ind, ++nz)
+    {
+        *ind = v[i].first;
+        *nz = v[i].second;
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -5012,26 +5539,29 @@ inline void partial_sort(size_type k, InIter in_begin, InIter in_end,
  * In place.
  */
 template <typename I0, typename I, typename T>
-inline void partial_argsort(I0 k, SparseVector<I, T> &x, int direction = -1) {
-  {
-    NTA_ASSERT(0 < k);
-    NTA_ASSERT(k <= x.size());
-    NTA_ASSERT(direction == -1 || direction == 1);
-  }
+inline void partial_argsort(I0 k, SparseVector<I, T> &x, int direction = -1)
+{
+    {
+        NTA_ASSERT(0 < k);
+        NTA_ASSERT(k <= x.size());
+        NTA_ASSERT(direction == -1 || direction == 1);
+    }
 
-  typedef I size_type;
-  typedef T value_type;
+    typedef I size_type;
+    typedef T value_type;
 
-  if (direction == -1) {
+    if (direction == -1)
+    {
 
-    greater_2nd_no_ties<size_type, value_type> order;
-    std::partial_sort(x.begin(), x.begin() + k, x.begin() + x.nnz, order);
+        greater_2nd_no_ties<size_type, value_type> order;
+        std::partial_sort(x.begin(), x.begin() + k, x.begin() + x.nnz, order);
+    }
+    else if (direction == 1)
+    {
 
-  } else if (direction == 1) {
-
-    less_2nd<size_type, value_type> order;
-    std::partial_sort(x.begin(), x.begin() + k, x.begin() + x.nnz, order);
-  }
+        less_2nd<size_type, value_type> order;
+        std::partial_sort(x.begin(), x.begin() + k, x.begin() + x.nnz, order);
+    }
 }
 
 //--------------------------------------------------------------------------------
@@ -5057,38 +5587,40 @@ static SparseVector<size_t, float> partial_argsort_buffer;
 //--------------------------------------------------------------------------------
 template <typename InIter, typename OutIter>
 inline void partial_argsort(size_t k, InIter begin, InIter end, OutIter sorted,
-                            OutIter sorted_end, int direction = -1) {
-  {
-    NTA_ASSERT(0 < k);
-    NTA_ASSERT(0 < end - begin);
-    NTA_ASSERT(k <= static_cast<size_t> (end - begin));
-    NTA_ASSERT(k <= static_cast<size_t> (sorted_end - sorted));
-    NTA_ASSERT(direction == -1 || direction == 1);
-  }
+                            OutIter sorted_end, int direction = -1)
+{
+    {
+        NTA_ASSERT(0 < k);
+        NTA_ASSERT(0 < end - begin);
+        NTA_ASSERT(k <= static_cast<size_t>(end - begin));
+        NTA_ASSERT(k <= static_cast<size_t>(sorted_end - sorted));
+        NTA_ASSERT(direction == -1 || direction == 1);
+    }
 
-  typedef size_t size_type;
-  typedef float value_type;
+    typedef size_t size_type;
+    typedef float value_type;
 
-  SparseVector<size_type, value_type> &buff = partial_argsort_buffer;
+    SparseVector<size_type, value_type> &buff = partial_argsort_buffer;
 
-  size_type n = static_cast<size_type> (end - begin);
+    size_type n = static_cast<size_type>(end - begin);
 
-  // Need to clean up, lest the next sort, with a possibly smaller range,
-  // picks up values that are not in the current [begin,end).
-  buff.resize(n);
-  buff.nnz = n;
+    // Need to clean up, lest the next sort, with a possibly smaller range,
+    // picks up values that are not in the current [begin,end).
+    buff.resize(n);
+    buff.nnz = n;
 
-  InIter it = begin;
+    InIter it = begin;
 
-  for (size_type i = 0; i != n; ++i, ++it) {
-    buff[i].first = i;
-    buff[i].second = *it;
-  }
+    for (size_type i = 0; i != n; ++i, ++it)
+    {
+        buff[i].first = i;
+        buff[i].second = *it;
+    }
 
-  partial_argsort(k, buff, direction);
+    partial_argsort(k, buff, direction);
 
-  for (size_type i = 0; i != k; ++i)
-    sorted[i] = buff[i].first;
+    for (size_type i = 0; i != k; ++i)
+        sorted[i] = buff[i].first;
 }
 
 //--------------------------------------------------------------------------------
@@ -5099,48 +5631,52 @@ inline void partial_argsort(size_t k, InIter begin, InIter end, OutIter sorted,
 template <typename InIter, typename OutIter>
 inline void partial_argsort_rnd_tie_break(size_t k, InIter begin, InIter end,
                                           OutIter sorted, OutIter sorted_end,
-                                          Random &rng,
-                                          bool real_random = false) {
-  {
-    NTA_ASSERT(0 < k);
-    NTA_ASSERT(0 < end - begin);
-    NTA_ASSERT(k <= static_cast<size_t> (end - begin));
-    NTA_ASSERT(k <= static_cast<size_t> (sorted_end - sorted));
-  }
+                                          Random &rng, bool real_random = false)
+{
+    {
+        NTA_ASSERT(0 < k);
+        NTA_ASSERT(0 < end - begin);
+        NTA_ASSERT(k <= static_cast<size_t>(end - begin));
+        NTA_ASSERT(k <= static_cast<size_t>(sorted_end - sorted));
+    }
 
-  typedef size_t size_type;
-  typedef float value_type;
+    typedef size_t size_type;
+    typedef float value_type;
 
-  SparseVector<size_type, value_type> &buff = partial_argsort_buffer;
+    SparseVector<size_type, value_type> &buff = partial_argsort_buffer;
 
-  size_type n = static_cast<size_type> (end - begin);
+    size_type n = static_cast<size_type>(end - begin);
 
-  // Need to clean up, lest the next sort, with a possibly smaller range,
-  // picks up values that are not in the current [begin,end).
-  buff.resize(n);
-  buff.nnz = n;
+    // Need to clean up, lest the next sort, with a possibly smaller range,
+    // picks up values that are not in the current [begin,end).
+    buff.resize(n);
+    buff.nnz = n;
 
-  InIter it = begin;
+    InIter it = begin;
 
-  for (size_type i = 0; i != n; ++i, ++it) {
-    buff[i].first = i;
-    buff[i].second = *it;
-  }
+    for (size_type i = 0; i != n; ++i, ++it)
+    {
+        buff[i].first = i;
+        buff[i].second = *it;
+    }
 
-  if (!real_random) {
-    greater_2nd<size_type, value_type> order;
-    std::partial_sort(buff.begin(), buff.begin() + static_cast<ptrdiff_t> (k),
-                      buff.begin() + static_cast<ptrdiff_t> (buff.nnz),
-                      order);
-  } else {
-    greater_2nd_rnd_ties<size_type, value_type, Random> order(rng);
-    std::partial_sort(buff.begin(), buff.begin() + static_cast<ptrdiff_t> (k),
-                      buff.begin() + static_cast<ptrdiff_t> (buff.nnz),
-                      order);
-  }
+    if (!real_random)
+    {
+        greater_2nd<size_type, value_type> order;
+        std::partial_sort(
+            buff.begin(), buff.begin() + static_cast<ptrdiff_t>(k),
+            buff.begin() + static_cast<ptrdiff_t>(buff.nnz), order);
+    }
+    else
+    {
+        greater_2nd_rnd_ties<size_type, value_type, Random> order(rng);
+        std::partial_sort(
+            buff.begin(), buff.begin() + static_cast<ptrdiff_t>(k),
+            buff.begin() + static_cast<ptrdiff_t>(buff.nnz), order);
+    }
 
-  for (size_type i = 0; i != k; ++i)
-    sorted[i] = buff[i].first;
+    for (size_type i = 0; i != k; ++i)
+        sorted[i] = buff[i].first;
 }
 
 //--------------------------------------------------------------------------------
@@ -5150,33 +5686,37 @@ template <typename It1>
 inline void update_with_indices_of_non_zeros(nust::UInt32 segment_size,
                                              It1 input_begin, It1 input_end,
                                              It1 prev_begin, It1 /*prev_end*/,
-                                             It1 curr_begin, It1 curr_end) {
-  typedef nust::UInt32 size_type;
+                                             It1 curr_begin, It1 curr_end)
+{
+    typedef nust::UInt32 size_type;
 
-  size_type input_size = static_cast<size_type> (input_end - input_begin);
+    size_type input_size = static_cast<size_type>(input_end - input_begin);
 
-  std::fill(curr_begin, curr_end, 0);
+    std::fill(curr_begin, curr_end, 0);
 
-  for (size_type i = 0; i != input_size; ++i) {
+    for (size_type i = 0; i != input_size; ++i)
+    {
 
-    if (*(input_begin + i) == 0)
-      continue;
+        if (*(input_begin + i) == 0)
+            continue;
 
-    size_type begin = i * segment_size;
-    size_type end = begin + segment_size;
-    bool all_zero = true;
+        size_type begin = i * segment_size;
+        size_type end = begin + segment_size;
+        bool all_zero = true;
 
-    for (size_type j = begin; j != end; ++j) {
+        for (size_type j = begin; j != end; ++j)
+        {
 
-      if (*(prev_begin + j) > 0) {
-        all_zero = false;
-        *(curr_begin + j) = 1;
-      }
+            if (*(prev_begin + j) > 0)
+            {
+                all_zero = false;
+                *(curr_begin + j) = 1;
+            }
+        }
+
+        if (all_zero)
+            std::fill(curr_begin + begin, curr_begin + end, 1);
     }
-
-    if (all_zero)
-      std::fill(curr_begin + begin, curr_begin + end, 1);
-  }
 }
 
 //--------------------------------------------------------------------------------
@@ -5189,26 +5729,30 @@ inline void update_with_indices_of_non_zeros(nust::UInt32 segment_size,
  */
 template <typename I, typename InIter, typename OutIter>
 inline void winnerTakesAll(const std::vector<I> &boundaries, InIter begin1,
-                           OutIter begin2) {
-  typedef typename std::iterator_traits<InIter>::value_type value_type;
+                           OutIter begin2)
+{
+    typedef typename std::iterator_traits<InIter>::value_type value_type;
 
-  I max_i = 0, size = static_cast<I> (boundaries.size());
-  value_type max_v = 0;
+    I max_i = 0, size = static_cast<I>(boundaries.size());
+    value_type max_v = 0;
 
-  for (I i = 0, k = 0; i < size; ++i) {
-    max_v = 0;
-    max_i = i == 0 ? 0 : boundaries[i - 1];
-    while (k < boundaries[i]) {
-      if (*begin1 > max_v) {
-        max_i = k;
-        max_v = *begin1;
-      }
-      ++k;
-      ++begin1;
+    for (I i = 0, k = 0; i < size; ++i)
+    {
+        max_v = 0;
+        max_i = i == 0 ? 0 : boundaries[i - 1];
+        while (k < boundaries[i])
+        {
+            if (*begin1 > max_v)
+            {
+                max_i = k;
+                max_v = *begin1;
+            }
+            ++k;
+            ++begin1;
+        }
+        *begin2 = static_cast<value_type>(max_i);
+        ++begin2;
     }
-    *begin2 = static_cast<value_type> (max_i);
-    ++begin2;
-  }
 }
 
 //--------------------------------------------------------------------------------
@@ -5217,28 +5761,33 @@ inline void winnerTakesAll(const std::vector<I> &boundaries, InIter begin1,
  */
 template <typename I, typename InIter, typename OutIter>
 std::pair<I, typename std::iterator_traits<InIter>::value_type>
-winnerTakesAll2(const std::vector<I> &boundaries, InIter begin1,
-                OutIter begin2) {
-  I max_i = 0;
-  typedef typename std::iterator_traits<InIter>::value_type value_type;
-  value_type max_v = 0;
+winnerTakesAll2(const std::vector<I> &boundaries, InIter begin1, OutIter begin2)
+{
+    I max_i = 0;
+    typedef typename std::iterator_traits<InIter>::value_type value_type;
+    value_type max_v = 0;
 
-  for (I i = 0, k = 0; i < boundaries.size(); ++i) {
-    max_v = 0;
-    max_i = i == 0 ? 0 : boundaries[i - 1];
-    while (k < boundaries[i]) {
-      if (begin1[k] > max_v) {
-        begin2[max_i] = 0;
-        max_i = k;
-        max_v = static_cast<value_type> (begin1[k]);
-      } else {
-        begin2[k] = 0;
-      }
-      ++k;
+    for (I i = 0, k = 0; i < boundaries.size(); ++i)
+    {
+        max_v = 0;
+        max_i = i == 0 ? 0 : boundaries[i - 1];
+        while (k < boundaries[i])
+        {
+            if (begin1[k] > max_v)
+            {
+                begin2[max_i] = 0;
+                max_i = k;
+                max_v = static_cast<value_type>(begin1[k]);
+            }
+            else
+            {
+                begin2[k] = 0;
+            }
+            ++k;
+        }
+        begin2[max_i] = 1;
     }
-    begin2[max_i] = 1;
-  }
-  return std::make_pair(max_i, max_v);
+    return std::make_pair(max_i, max_v);
 }
 
 //--------------------------------------------------------------------------------
@@ -5253,65 +5802,72 @@ winnerTakesAll2(const std::vector<I> &boundaries, InIter begin1,
 template <typename I, typename InIter, typename OutIter1, typename OutIter2,
           typename RNG>
 inline void winnerTakesAll3(I k, I seg_size, InIter begin, InIter end,
-                            OutIter1 ind, OutIter2 nz, RNG &rng) {
-  typedef I size_type;
-  typedef typename std::iterator_traits<InIter>::value_type value_type;
+                            OutIter1 ind, OutIter2 nz, RNG &rng)
+{
+    typedef I size_type;
+    typedef typename std::iterator_traits<InIter>::value_type value_type;
 
-  { // Pre-conditions
-    NTA_ASSERT(k > 0) << "winnerTakesAll3: Invalid k: " << k
-                      << " - Needs to be > 0";
+    { // Pre-conditions
+        NTA_ASSERT(k > 0) << "winnerTakesAll3: Invalid k: " << k
+                          << " - Needs to be > 0";
 
-    NTA_ASSERT(seg_size > 0)
-        << "winnerTakesAll3: Invalid segment size: " << seg_size
-        << " - Needs to be  > 0";
+        NTA_ASSERT(seg_size > 0)
+            << "winnerTakesAll3: Invalid segment size: " << seg_size
+            << " - Needs to be  > 0";
 
-    NTA_ASSERT(k <= seg_size) << "winnerTakesAll3: Invalid k (" << k << ") or "
-                              << "segment size (" << seg_size << ")"
-                              << " - k needs to be <= seg_size";
+        NTA_ASSERT(k <= seg_size)
+            << "winnerTakesAll3: Invalid k (" << k << ") or "
+            << "segment size (" << seg_size << ")"
+            << " - k needs to be <= seg_size";
 
-    NTA_ASSERT(static_cast<size_type> (end - begin) % seg_size == 0)
-        << "winnerTakesAll3: Invalid input range of size: "
-        << static_cast<size_type> (end - begin)
-        << " - Needs to be integer multiple of segment size: " << seg_size;
-  } // End pre-conditions
+        NTA_ASSERT(static_cast<size_type>(end - begin) % seg_size == 0)
+            << "winnerTakesAll3: Invalid input range of size: "
+            << static_cast<size_type>(end - begin)
+            << " - Needs to be integer multiple of segment size: " << seg_size;
+    } // End pre-conditions
 
-  typedef select2nd<std::pair<size_type, value_type>> sel2nd;
+    typedef select2nd<std::pair<size_type, value_type>> sel2nd;
 
-  InIter seg_begin = begin;
-  size_type offset = static_cast<size_type> (0);
+    InIter seg_begin = begin;
+    size_type offset = static_cast<size_type>(0);
 
-  for (; seg_begin != end; seg_begin += seg_size, offset += seg_size) {
+    for (; seg_begin != end; seg_begin += seg_size, offset += seg_size)
+    {
 
-    InIter seg_end = seg_begin + seg_size;
-    size_type offset = static_cast<size_type> (seg_begin - begin);
+        InIter seg_end = seg_begin + seg_size;
+        size_type offset = static_cast<size_type>(seg_begin - begin);
 
-    if (nearlyZeroRange(seg_begin, seg_end)) {
+        if (nearlyZeroRange(seg_begin, seg_end))
+        {
 
-      std::vector<size_type> indices(seg_size);
-      random_perm_interval(indices, offset, 1, rng);
+            std::vector<size_type> indices(seg_size);
+            random_perm_interval(indices, offset, 1, rng);
 
-      sort(indices.begin(), indices.begin() + k, std::less<size_type>());
+            sort(indices.begin(), indices.begin() + k, std::less<size_type>());
 
-      for (size_type i = 0; i != k; ++i, ++ind, ++nz) {
-        *ind = indices[i];
-        *nz = static_cast<value_type> (0);
-      }
+            for (size_type i = 0; i != k; ++i, ++ind, ++nz)
+            {
+                *ind = indices[i];
+                *nz = static_cast<value_type>(0);
+            }
+        }
+        else
+        {
 
-    } else {
-
-      partial_sort(k, seg_begin, seg_end, ind, nz,
-                   predicate_compose<std::greater<value_type>, sel2nd>(),
-                   offset, true);
+            partial_sort(k, seg_begin, seg_end, ind, nz,
+                         predicate_compose<std::greater<value_type>, sel2nd>(),
+                         offset, true);
+        }
     }
-  }
 }
 
 //--------------------------------------------------------------------------------
 template <typename I, typename InIter, typename OutIter1, typename OutIter2>
 inline void winnerTakesAll3(I k, I seg_size, InIter begin, InIter end,
-                            OutIter1 ind, OutIter2 nz) {
-  nust::Random rng;
-  winnerTakesAll3(k, seg_size, begin, end, ind, nz, rng);
+                            OutIter1 ind, OutIter2 nz)
+{
+    nust::Random rng;
+    winnerTakesAll3(k, seg_size, begin, end, ind, nz, rng);
 }
 
 //--------------------------------------------------------------------------------

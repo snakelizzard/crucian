@@ -35,7 +35,8 @@
 
 //----------------------------------------------------------------------
 
-namespace nust {
+namespace nust
+{
 /**
  * @b Responsibility
  *  The Exception class is the standard Numenta exception class.
@@ -68,90 +69,91 @@ namespace nust {
  *  only if you have access to the source code. It is not recommended
  *  to display this information to users most of the time.
  */
-class Exception : public std::runtime_error {
+class Exception : public std::runtime_error
+{
 public:
-  /**
-   * Constructor
-   *
-   * Take the filename, line number and message
-   * and store it in private members
-   *
-   * @param filename [const std::string &] the name of the source file
-   *        where the exception originated.
-   * @param lineno [UInt32] the line number in the source file where
-   *        the exception originated.
-   *
-   * @param message [const std::string &] the description of exception
-   */
-  Exception(std::string filename, UInt32 lineno, std::string message,
-            std::string stacktrace = "");
+    /**
+     * Constructor
+     *
+     * Take the filename, line number and message
+     * and store it in private members
+     *
+     * @param filename [const std::string &] the name of the source file
+     *        where the exception originated.
+     * @param lineno [UInt32] the line number in the source file where
+     *        the exception originated.
+     *
+     * @param message [const std::string &] the description of exception
+     */
+    Exception(std::string filename, UInt32 lineno, std::string message,
+              std::string stacktrace = "");
 
-  /**
-   * Destructor
-   *
-   * Doesn't do anything, but must be present
-   * because the base class std::runtime_error
-   * defines a pure virtual destructor and the
-   * default destructor provided by the compiler
-   * doesn't have a empty exception specification
-   *
-   */
-  virtual ~Exception() = default;
+    /**
+     * Destructor
+     *
+     * Doesn't do anything, but must be present
+     * because the base class std::runtime_error
+     * defines a pure virtual destructor and the
+     * default destructor provided by the compiler
+     * doesn't have a empty exception specification
+     *
+     */
+    virtual ~Exception() = default;
 
-  /**
-   * Get the exception message via what()
-   *
-   * Overload the what() method of std::runtime_error
-   * and returns the exception description message.
-   * The emptry exception specification is required because
-   * it is part of the signature of std::runtime_error::what().
-   *
-   * @retval [const Byte *] the exception message
-   */
-  virtual const char *what() const noexcept;
+    /**
+     * Get the exception message via what()
+     *
+     * Overload the what() method of std::runtime_error
+     * and returns the exception description message.
+     * The emptry exception specification is required because
+     * it is part of the signature of std::runtime_error::what().
+     *
+     * @retval [const Byte *] the exception message
+     */
+    virtual const char *what() const noexcept;
 
-  /**
-   * Get the source filename
-   *
-   * Returns the full path to the source file, from which
-   * the exception was thrown.
-   *
-   * @retval [const Byte *] the source filename
-   */
-  const char *getFilename() const;
+    /**
+     * Get the source filename
+     *
+     * Returns the full path to the source file, from which
+     * the exception was thrown.
+     *
+     * @retval [const Byte *] the source filename
+     */
+    const char *getFilename() const;
 
-  /**
-   * Get the line number in the source file
-   *
-   * Returns the (0-based) line number in the source file,
-   * from which the exception was thrown.
-   *
-   * @retval [UInt32] the line number in the source file
-   */
-  UInt32 getLineNumber() const;
+    /**
+     * Get the line number in the source file
+     *
+     * Returns the (0-based) line number in the source file,
+     * from which the exception was thrown.
+     *
+     * @retval [UInt32] the line number in the source file
+     */
+    UInt32 getLineNumber() const;
 
-  /**
-   * Get the error message
-   *
-   * @retval [const char *] the error message
-   */
-  virtual const char *getMessage() const;
+    /**
+     * Get the error message
+     *
+     * @retval [const char *] the error message
+     */
+    virtual const char *getMessage() const;
 
-  /**
-   * Get the stack trace
-   *
-   * Returns the stack trace from the point the exception
-   * was thrown.
-   *
-   * @retval [const Byte *] the stack trace
-   */
-  virtual const char *getStackTrace() const;
+    /**
+     * Get the stack trace
+     *
+     * Returns the stack trace from the point the exception
+     * was thrown.
+     *
+     * @retval [const Byte *] the stack trace
+     */
+    virtual const char *getStackTrace() const;
 
 protected:
-  std::string filename_;
-  UInt32 lineno_;
-  std::string message_;
-  std::string stackTrace_;
+    std::string filename_;
+    UInt32 lineno_;
+    std::string message_;
+    std::string stackTrace_;
 
 }; // end class Exception
 } // end namespace nust

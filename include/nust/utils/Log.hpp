@@ -32,23 +32,23 @@
 #include <nust/utils/LoggingException.hpp>
 
 #define NTA_DEBUG                                                              \
-  nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
+    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 // Can be used in Loggable classes
 #define NTA_LDEBUG(level)                                                      \
-  if (logLevel_ < (level)) {                                                   \
-  } else                                                                       \
-    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
+    if (logLevel_ < (level))                                                   \
+    {                                                                          \
+    }                                                                          \
+    else                                                                       \
+        nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 // For informational messages that report status but do not indicate that
 // anything is wrong
-#define NTA_INFO                                                               \
-  nust::LogItem(__FILE__, __LINE__, nust::LogItem::info).stream()
+#define NTA_INFO nust::LogItem(__FILE__, __LINE__, nust::LogItem::info).stream()
 
 // For messages that indicate a recoverable error or something else that it may
 // be important for the end user to know about.
-#define NTA_WARN                                                               \
-  nust::LogItem(__FILE__, __LINE__, nust::LogItem::warn).stream()
+#define NTA_WARN nust::LogItem(__FILE__, __LINE__, nust::LogItem::warn).stream()
 
 // To throw an exception and make sure the exception message is logged
 // appropriately
@@ -59,16 +59,20 @@
 // build. Both throw an exception on error.
 
 #define NTA_CHECK(condition)                                                   \
-  if (condition) {                                                             \
-  } else                                                                       \
-    NTA_THROW << "CHECK FAILED: \"" << #condition << "\" "
+    if (condition)                                                             \
+    {                                                                          \
+    }                                                                          \
+    else                                                                       \
+        NTA_THROW << "CHECK FAILED: \"" << #condition << "\" "
 
 #ifdef NTA_ASSERTIONS_ON
 
 #define NTA_ASSERT(condition)                                                  \
-  if (condition) {                                                             \
-  } else                                                                       \
-    NTA_THROW << "ASSERTION FAILED: \"" << #condition << "\" "
+    if (condition)                                                             \
+    {                                                                          \
+    }                                                                          \
+    else                                                                       \
+        NTA_THROW << "ASSERTION FAILED: \"" << #condition << "\" "
 
 #else
 
@@ -76,9 +80,11 @@
 // The second line should never be executed, or even compiled, but we
 // need something that is syntactically compatible with NTA_ASSERT
 #define NTA_ASSERT(condition)                                                  \
-  if (1) {                                                                     \
-  } else                                                                       \
-    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
+    if (1)                                                                     \
+    {                                                                          \
+    }                                                                          \
+    else                                                                       \
+        nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
 
 #endif // NTA_ASSERTIONS_ON
 

@@ -24,27 +24,34 @@
 
 //----------------------------------------------------------------------
 
-#include "nust/utils/LoggingException.hpp"
-#include "nust/utils/LogItem.hpp"
 #include <iostream>
+
+#include <nust/utils/LogItem.hpp>
+#include <nust/utils/LoggingException.hpp>
 
 namespace nust
 {
 
-LoggingException::~LoggingException() {
-  try {
-    if (!alreadyLogged_) {
-      // Let LogItem do the work for us. This code is a bit complex
-      // because LogItem was designed to be used from a logging macro
-      LogItem *li = new LogItem(filename_.c_str(), static_cast<int> (lineno_), LogItem::error);
-      li->stream() << getMessage();
-      delete li;
+LoggingException::~LoggingException()
+{
+    try
+    {
+        if (!alreadyLogged_)
+        {
+            // Let LogItem do the work for us. This code is a bit complex
+            // because LogItem was designed to be used from a logging macro
+            LogItem *li = new LogItem(
+                filename_.c_str(), static_cast<int>(lineno_), LogItem::error);
+            li->stream() << getMessage();
+            delete li;
 
-      alreadyLogged_ = true;
+            alreadyLogged_ = true;
+        }
     }
-  } catch(...) {
-    // nothing
-  }
+    catch (...)
+    {
+        // nothing
+    }
 }
 
-}
+} // namespace nust

@@ -31,7 +31,8 @@
 
 //----------------------------------------------------------------------
 
-namespace nust {
+namespace nust
+{
 /**
  * @name Basic types
  *
@@ -144,23 +145,24 @@ typedef NTA_Size Size;
  *
  * Use it like `LDEBUG(nust::LogLevel_XXX)`.
  */
-enum LogLevel {
-  /**
-   * Log level: None.
-   */
-  LogLevel_None = NTA_LogLevel_None,
-  /**
-   * Log level: Minimal.
-   */
-  LogLevel_Minimal,
-  /**
-   * Log level: Normal.
-   */
-  LogLevel_Normal,
-  /**
-   * Log level: Verbose.
-   */
-  LogLevel_Verbose,
+enum LogLevel
+{
+    /**
+     * Log level: None.
+     */
+    LogLevel_None = NTA_LogLevel_None,
+    /**
+     * Log level: Minimal.
+     */
+    LogLevel_Minimal,
+    /**
+     * Log level: Normal.
+     */
+    LogLevel_Normal,
+    /**
+     * Log level: Verbose.
+     */
+    LogLevel_Verbose,
 };
 
 } // end namespace nust

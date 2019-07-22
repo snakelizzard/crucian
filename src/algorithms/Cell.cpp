@@ -22,7 +22,8 @@
 
 #include <nust/algorithms/Cell.hpp>
 
-namespace nust {
+namespace nust
+{
 
 Cell::Cell() : _segments(0), _freeSegments(0) {}
 
@@ -40,11 +41,13 @@ Cell::Cell() : _segments(0), _freeSegments(0) {}
  */
 static bool cellMatchPythonSegOrder = false;
 
-void Cell::setSegmentOrder(bool matchPythonOrder) {
-  if (matchPythonOrder) {
-    std::cout << "*** Python segment match turned on for Cells4\n";
-  }
-  cellMatchPythonSegOrder = matchPythonOrder;
+void Cell::setSegmentOrder(bool matchPythonOrder)
+{
+    if (matchPythonOrder)
+    {
+        std::cout << "*** Python segment match turned on for Cells4\n";
+    }
+    cellMatchPythonSegOrder = matchPythonOrder;
 }
 
 //------------------------------------------------------------------------------
@@ -55,87 +58,103 @@ void Cell::setSegmentOrder(bool matchPythonOrder) {
  */
 UInt Cell::getFreeSegment(const Segment::InSynapses &synapses,
                           Real initFrequency, bool sequenceSegmentFlag,
-                          Real permConnected, UInt iteration) {
-  NTA_ASSERT(!synapses.empty());
+                          Real permConnected, UInt iteration)
+{
+    NTA_ASSERT(!synapses.empty());
 
-  UInt segIdx = 0;
+    UInt segIdx = 0;
 
-  if (cellMatchPythonSegOrder) {
-    // for unit tests where segment order matters
+    if (cellMatchPythonSegOrder)
+    {
+        // for unit tests where segment order matters
 
-    segIdx = static_cast<UInt> (_segments.size());
-    _segments.resize(_segments.size() + 1);
-
-  } else {
-
-    // Reuse segment slots, but that causes some unit tests
-    // to fail, for example when 2 segments are in a different order
-    // between C++ and Python, and they happen to have the same activity
-    // level: both C++ and Python will compute the same update, but apply
-    // it to 2 different segments!
-
-    if (_freeSegments.empty()) {
-      segIdx = static_cast<UInt> (_segments.size());
-      // TODO: Should we grow by larger amounts here?
-      _segments.resize(_segments.size() + 1);
-    } else {
-      segIdx = _freeSegments.back();
-      _freeSegments.pop_back();
+        segIdx = static_cast<UInt>(_segments.size());
+        _segments.resize(_segments.size() + 1);
     }
-  }
+    else
+    {
 
-  NTA_ASSERT(segIdx < _segments.size());
-  NTA_ASSERT(not_in(segIdx, _freeSegments));
-  NTA_ASSERT(_segments[segIdx].empty()); // important in case we push_back
+        // Reuse segment slots, but that causes some unit tests
+        // to fail, for example when 2 segments are in a different order
+        // between C++ and Python, and they happen to have the same activity
+        // level: both C++ and Python will compute the same update, but apply
+        // it to 2 different segments!
 
-  _segments[segIdx] = Segment(synapses, initFrequency, sequenceSegmentFlag,
-                              permConnected, iteration);
+        if (_freeSegments.empty())
+        {
+            segIdx = static_cast<UInt>(_segments.size());
+            // TODO: Should we grow by larger amounts here?
+            _segments.resize(_segments.size() + 1);
+        }
+        else
+        {
+            segIdx = _freeSegments.back();
+            _freeSegments.pop_back();
+        }
+    }
 
-  return segIdx;
+    NTA_ASSERT(segIdx < _segments.size());
+    NTA_ASSERT(not_in(segIdx, _freeSegments));
+    NTA_ASSERT(_segments[segIdx].empty()); // important in case we push_back
+
+    _segments[segIdx] = Segment(synapses, initFrequency, sequenceSegmentFlag,
+                                permConnected, iteration);
+
+    return segIdx;
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Update the duty cycle of each segment in this cell
  */
-void Cell::updateDutyCycle(UInt iterations) {
-  for (UInt i = 0; i != _segments.size(); ++i) {
-    if (!_segments[i].empty()) {
-      _segments[i].dutyCycle(iterations, false, false);
+void Cell::updateDutyCycle(UInt iterations)
+{
+    for (UInt i = 0; i != _segments.size(); ++i)
+    {
+        if (!_segments[i].empty())
+        {
+            _segments[i].dutyCycle(iterations, false, false);
+        }
     }
-  }
 }
 
 //-----------------------------------------------------------------------------
-void Cell::save(std::ostream &outStream) const {
-  outStream << _segments.size() << ' ';
-  // TODO: save only non-empty segments
-  for (UInt i = 0; i != _segments.size(); ++i) {
-    _segments[i].save(outStream);
-    outStream << ' ';
-  }
+void Cell::save(std::ostream &outStream) const
+{
+    outStream << _segments.size() << ' ';
+    // TODO: save only non-empty segments
+    for (UInt i = 0; i != _segments.size(); ++i)
+    {
+        _segments[i].save(outStream);
+        outStream << ' ';
+    }
 }
 
 //----------------------------------------------------------------------------
-void Cell::load(std::istream &inStream) {
-  UInt n = 0;
+void Cell::load(std::istream &inStream)
+{
+    UInt n = 0;
 
-  inStream >> n;
+    inStream >> n;
 
-  _segments.resize(n);
-  _freeSegments.resize(0);
+    _segments.resize(n);
+    _freeSegments.resize(0);
 
-  for (UInt i = 0; i != n; ++i) {
-    _segments[i].load(inStream);
-    if (_segments[i].empty())
-      _freeSegments.push_back(i);
-  }
+    for (UInt i = 0; i != n; ++i)
+    {
+        _segments[i].load(inStream);
+        if (_segments[i].empty())
+            _freeSegments.push_back(i);
+    }
 }
-bool Cell::operator==(const Cell &other) const {
-  if (_freeSegments != other._freeSegments) {
-    return false;
-  }
-  return _segments == other._segments;
+
+bool Cell::operator==(const Cell &other) const
+{
+    if (_freeSegments != other._freeSegments)
+    {
+        return false;
+    }
+    return _segments == other._segments;
 }
 
 } // namespace nust

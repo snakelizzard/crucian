@@ -26,10 +26,11 @@
 #include <fstream>
 #include <ostream>
 
-#include <nust/types/Types.hpp>
 #include <nust/math/Math.hpp>
+#include <nust/types/Types.hpp>
 
-namespace nust {
+namespace nust
+{
 
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
@@ -38,43 +39,57 @@ namespace nust {
  * of the synapse, and a permanence value. The source cell index is between
  * 0 and nCols * nCellsPerCol.
  */
-class InSynapse {
+class InSynapse
+{
 private:
-  UInt _srcCellIdx;
-  Real _permanence;
+    UInt _srcCellIdx;
+    Real _permanence;
 
 public:
-  inline InSynapse() : _srcCellIdx(static_cast<UInt> (-1)), _permanence(0) {}
+    inline InSynapse() : _srcCellIdx(static_cast<UInt>(-1)), _permanence(0) {}
 
-  inline InSynapse(UInt srcCellIdx, Real permanence)
-      : _srcCellIdx(srcCellIdx), _permanence(permanence) {}
+    inline InSynapse(UInt srcCellIdx, Real permanence)
+        : _srcCellIdx(srcCellIdx), _permanence(permanence)
+    {
+    }
 
-  inline InSynapse(const InSynapse &o)
-      : _srcCellIdx(o._srcCellIdx), _permanence(o._permanence) {}
+    inline InSynapse(const InSynapse &o)
+        : _srcCellIdx(o._srcCellIdx), _permanence(o._permanence)
+    {
+    }
 
-  inline InSynapse &operator=(const InSynapse &o) {
-    _srcCellIdx = o._srcCellIdx;
-    _permanence = o._permanence;
-    return *this;
-  }
+    inline InSynapse &operator=(const InSynapse &o)
+    {
+        _srcCellIdx = o._srcCellIdx;
+        _permanence = o._permanence;
+        return *this;
+    }
 
-  inline bool operator==(const InSynapse &other) const {
-    return _srcCellIdx == other._srcCellIdx && nearlyEqual(_permanence, other._permanence);
-  }
-  inline bool operator!=(const InSynapse &other) const {
-    return !operator==(other);
-  }
+    inline bool operator==(const InSynapse &other) const
+    {
+        return _srcCellIdx == other._srcCellIdx &&
+               nearlyEqual(_permanence, other._permanence);
+    }
 
-  inline UInt srcCellIdx() const { return _srcCellIdx; }
-  const inline Real &permanence() const { return _permanence; }
-  inline Real &permanence() { return _permanence; }
+    inline bool operator!=(const InSynapse &other) const
+    {
+        return !operator==(other);
+    }
 
-  inline void print(std::ostream &outStream) const;
+    inline UInt srcCellIdx() const { return _srcCellIdx; }
+
+    const inline Real &permanence() const { return _permanence; }
+
+    inline Real &permanence() { return _permanence; }
+
+    inline void print(std::ostream &outStream) const;
 };
 
 //--------------------------------------------------------------------------------
 #ifndef SWIG
+
 std::ostream &operator<<(std::ostream &outStream, const InSynapse &s);
+
 #endif
 
 } // namespace nust

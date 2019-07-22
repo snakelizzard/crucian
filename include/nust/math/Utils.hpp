@@ -45,7 +45,8 @@
 #include <nust/types/Types.hpp>
 #include <nust/utils/Log.hpp>
 
-namespace nust {
+namespace nust
+{
 
 //--------------------------------------------------------------------------------
 /**
@@ -61,12 +62,15 @@ namespace nust {
  * vector of 4 bytes each: 16 % 4 = 0.
  */
 template <typename SizeType>
-inline const SizeType padding(const SizeType &s1, const SizeType &s2) {
-  if (s2) {
-    SizeType extra = s1 % s2;
-    return extra == 0 ? 0 : s2 - extra;
-  } else
-    return 0;
+inline const SizeType padding(const SizeType &s1, const SizeType &s2)
+{
+    if (s2)
+    {
+        SizeType extra = s1 % s2;
+        return extra == 0 ? 0 : s2 - extra;
+    }
+    else
+        return 0;
 }
 
 /*
@@ -77,45 +81,52 @@ inline const SizeType padding(const SizeType &s1, const SizeType &s2) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
-inline bool isSystemLittleEndian() {
-  static const char test[2] = {1, 0};
-  return (*reinterpret_cast<const short *>(test)) == 1;
+
+inline bool isSystemLittleEndian()
+{
+    static const char test[2] = {1, 0};
+    return (*reinterpret_cast<const short *>(test)) == 1;
 }
+
 #if !defined(NTA_OS_WINDOWS)
 #pragma GCC diagnostic pop // return back to defaults
 #endif
 
-template <typename T> inline void swapBytesInPlace(T *pxIn, Size n) {
-  union SwapType {
-    T x;
-    unsigned char b[sizeof(T)];
-  };
-  SwapType *px = reinterpret_cast<SwapType *>(pxIn);
-  SwapType *pxend = px + n;
-  const int stop = sizeof(T) / 2;
-  for (; px != pxend; ++px) {
-    for (int j = 0; j < stop; ++j)
-      std::swap(px->b[j], px->b[sizeof(T) - j - 1]);
-  }
+template <typename T> inline void swapBytesInPlace(T *pxIn, Size n)
+{
+    union SwapType {
+        T x;
+        unsigned char b[sizeof(T)];
+    };
+    SwapType *px = reinterpret_cast<SwapType *>(pxIn);
+    SwapType *pxend = px + n;
+    const int stop = sizeof(T) / 2;
+    for (; px != pxend; ++px)
+    {
+        for (int j = 0; j < stop; ++j)
+            std::swap(px->b[j], px->b[sizeof(T) - j - 1]);
+    }
 }
 
-template <typename T> inline void swapBytes(T *pxOut, Size n, const T *pxIn) {
-  NTA_ASSERT(pxOut != pxIn) << "Use swapBytesInPlace() instead.";
-  NTA_ASSERT(!(((pxOut > pxIn) && (pxOut < (pxIn + n))) ||
-               ((pxIn > pxOut) && (pxIn < (pxOut + n)))))
-      << "Overlapping ranges not supported.";
+template <typename T> inline void swapBytes(T *pxOut, Size n, const T *pxIn)
+{
+    NTA_ASSERT(pxOut != pxIn) << "Use swapBytesInPlace() instead.";
+    NTA_ASSERT(!(((pxOut > pxIn) && (pxOut < (pxIn + n))) ||
+                 ((pxIn > pxOut) && (pxIn < (pxOut + n)))))
+        << "Overlapping ranges not supported.";
 
-  union SwapType {
-    T x;
-    unsigned char b[sizeof(T)];
-  };
-  const SwapType *px0 = reinterpret_cast<SwapType *>(pxIn);
-  const SwapType *pxend = px0 + n;
-  SwapType *px1 = reinterpret_cast<SwapType *>(pxOut);
-  for (; px0 != pxend; ++px0, ++px1) {
-    for (int j = 0; j < sizeof(T); ++j)
-      px1->b[j] = px0->b[sizeof(T) - j - 1];
-  }
+    union SwapType {
+        T x;
+        unsigned char b[sizeof(T)];
+    };
+    const SwapType *px0 = reinterpret_cast<SwapType *>(pxIn);
+    const SwapType *pxend = px0 + n;
+    SwapType *px1 = reinterpret_cast<SwapType *>(pxOut);
+    for (; px0 != pxend; ++px0, ++px1)
+    {
+        for (int j = 0; j < sizeof(T); ++j)
+            px1->b[j] = px0->b[sizeof(T) - j - 1];
+    }
 }
 
 /**
@@ -169,12 +180,13 @@ extern std::string GetTypeName(NTA_BasicType type);
  */
 template <typename T>
 inline void utilsPrintArray_(std::ostream &out, const void *theBeginP,
-                             const void *theEndP) {
-  const T *beginP = static_cast<const T *> (theBeginP);
-  const T *endP = static_cast<const T *> (theEndP);
+                             const void *theEndP)
+{
+    const T *beginP = static_cast<const T *>(theBeginP);
+    const T *endP = static_cast<const T *>(theEndP);
 
-  for (; beginP != endP; ++beginP)
-    out << *beginP << " ";
+    for (; beginP != endP; ++beginP)
+        out << *beginP << " ";
 }
 
 /**
@@ -188,14 +200,15 @@ inline void utilsPrintArray_(std::ostream &out, const void *theBeginP,
  *
  */
 template <typename T>
-inline void utilsSetArray_(std::istream &in, void *theBeginP, void *theEndP) {
-    T *beginP = static_cast<T *> (theBeginP);
-    T *endP = static_cast<T *> (theEndP);
+inline void utilsSetArray_(std::istream &in, void *theBeginP, void *theEndP)
+{
+    T *beginP = static_cast<T *>(theBeginP);
+    T *endP = static_cast<T *>(theEndP);
 
-  for (; beginP != endP && in.good(); ++beginP)
-    in >> *beginP;
-  if (beginP != endP && !in.eof())
-    NTA_THROW << "UtilsSetArray() - error reading stream of values";
+    for (; beginP != endP && in.good(); ++beginP)
+        in >> *beginP;
+    if (beginP != endP && !in.eof())
+        NTA_THROW << "UtilsSetArray() - error reading stream of values";
 }
 
 /**
@@ -247,19 +260,19 @@ extern void SetVariableArray(std::istream &inStream, Byte *beginP, Byte *endP,
 
 #define NO_DEFAULTS(X)                                                         \
 private:                                                                       \
-  X();                                                                         \
-  X(const X &);                                                                \
-  X &operator=(const X &);
+    X();                                                                       \
+    X(const X &);                                                              \
+    X &operator=(const X &);
 
 /**
  * Puts Y in current scope
  * Iterates on whole Z, which must have begin() and end()
  */
 #define LOOP(X, Y, Z)                                                          \
-  X::iterator Y;                                                               \
-  X::iterator Y##beginXX = (Z).begin();                                        \
-  X::iterator Y##endXX = (Z).end();                                            \
-  for (Y = Y##beginXX; Y != Y##endXX; ++Y)
+    X::iterator Y;                                                             \
+    X::iterator Y##beginXX = (Z).begin();                                      \
+    X::iterator Y##endXX = (Z).end();                                          \
+    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
 
 /**
  * Puts Y in current scope
@@ -267,28 +280,28 @@ private:                                                                       \
  * Iterates on partial Z, between Z.begin() and Z.begin() + L
  */
 #define PARTIAL_LOOP(X, Y, Z, L)                                               \
-  X::iterator Y;                                                               \
-  X::iterator Y##beginXX = (Z).begin();                                        \
-  X::iterator Y##endXX = (Z).begin() + (L);                                    \
-  for (Y = Y##beginXX; Y != Y##endXX; ++Y)
+    X::iterator Y;                                                             \
+    X::iterator Y##beginXX = (Z).begin();                                      \
+    X::iterator Y##endXX = (Z).begin() + (L);                                  \
+    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
 
 /**
  * Puts Y in current scope
  * Iterates on whole Z, with a const_iterator
  */
 #define CONST_LOOP(X, Y, Z)                                                    \
-  X::const_iterator Y;                                                         \
-  X::const_iterator Y##beginXX = (Z).begin();                                  \
-  X::const_iterator Y##endXX = (Z).end();                                      \
-  for (Y = Y##beginXX; Y != Y##endXX; ++Y)
+    X::const_iterator Y;                                                       \
+    X::const_iterator Y##beginXX = (Z).begin();                                \
+    X::const_iterator Y##endXX = (Z).end();                                    \
+    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
 
 /**
  * Puts Y in current scope
  * Iterates from Y to Z by steps of 1
  */
 #define ITER(X, Y, Z)                                                          \
-  Size X##minXX = (Y), X##maxXX = (Z);                                         \
-  for (Size X = X##minXX; X < X##maxXX; ++X)
+    Size X##minXX = (Y), X##maxXX = (Z);                                       \
+    for (Size X = X##minXX; X < X##maxXX; ++X)
 
 /**
  * Puts Y1 and Y2 in current scope
@@ -296,9 +309,10 @@ private:                                                                       \
  * X2 is the inner index
  */
 #define ITER2(X1, X2, Y1, Y2, Z1, Z2)                                          \
-  UInt X1##minXX = (Y1), X1##maxXX = (Z1), X2##minXX = (Y2), X2##maxXX = (Z2); \
-  for (Size X1 = X1##minXX; X1 < X1##maxXX; ++X1)                              \
-    for (Size X2 = X2##minXX; X2 < X2##maxXX; ++X2)
+    UInt X1##minXX = (Y1), X1##maxXX = (Z1), X2##minXX = (Y2),                 \
+         X2##maxXX = (Z2);                                                     \
+    for (Size X1 = X1##minXX; X1 < X1##maxXX; ++X1)                            \
+        for (Size X2 = X2##minXX; X2 < X2##maxXX; ++X2)
 
 /**
  * Iterates with a single index, from 0 to M.
@@ -309,46 +323,46 @@ private:                                                                       \
  * Iterates over 2 indices, from 0 to M, and 0 to N.
  */
 #define ITER_2(M, N)                                                           \
-  for (UInt i = 0; i < M; ++i)                                                 \
-    for (UInt j = 0; j < N; ++j)
+    for (UInt i = 0; i < M; ++i)                                               \
+        for (UInt j = 0; j < N; ++j)
 
 /**
  * Iterates over 3 indices, from 0 to M, 0 to N, and 0 to P.
  */
 #define ITER_3(M, N, P)                                                        \
-  for (UInt i = 0; i < M; ++i)                                                 \
-    for (UInt j = 0; j < N; ++j)                                               \
-      for (UInt k = 0; k < P; ++k)
+    for (UInt i = 0; i < M; ++i)                                               \
+        for (UInt j = 0; j < N; ++j)                                           \
+            for (UInt k = 0; k < P; ++k)
 
 /**
  * Iterates over 4 indices, from 0 to M, 0 to N, 0 to P and 0 to Q.
  */
 #define ITER_4(M, N, P, Q)                                                     \
-  for (UInt i = 0; i < M; ++i)                                                 \
-    for (UInt j = 0; j < N; ++j)                                               \
-      for (UInt k = 0; k < P; ++k)                                             \
-        for (UInt l = 0; l < Q; ++l)
+    for (UInt i = 0; i < M; ++i)                                               \
+        for (UInt j = 0; j < N; ++j)                                           \
+            for (UInt k = 0; k < P; ++k)                                       \
+                for (UInt l = 0; l < Q; ++l)
 
 /**
  * Iterates over 5 indices.
  */
 #define ITER_5(M, N, P, Q, R)                                                  \
-  for (UInt i = 0; i < M; ++i)                                                 \
-    for (UInt j = 0; j < N; ++j)                                               \
-      for (UInt k = 0; k < P; ++k)                                             \
-        for (UInt l = 0; l < Q; ++l)                                           \
-          for (UInt m = 0; m < R; ++m)
+    for (UInt i = 0; i < M; ++i)                                               \
+        for (UInt j = 0; j < N; ++j)                                           \
+            for (UInt k = 0; k < P; ++k)                                       \
+                for (UInt l = 0; l < Q; ++l)                                   \
+                    for (UInt m = 0; m < R; ++m)
 
 /**
  * Iterates over 6 indices.
  */
 #define ITER_6(M, N, P, Q, R, S)                                               \
-  for (UInt i = 0; i < M; ++i)                                                 \
-    for (UInt j = 0; j < N; ++j)                                               \
-      for (UInt k = 0; k < P; ++k)                                             \
-        for (UInt l = 0; l < Q; ++l)                                           \
-          for (UInt m = 0; m < R; ++m)                                         \
-            for (UInt n = 0; n < S; ++n)
+    for (UInt i = 0; i < M; ++i)                                               \
+        for (UInt j = 0; j < N; ++j)                                           \
+            for (UInt k = 0; k < P; ++k)                                       \
+                for (UInt l = 0; l < Q; ++l)                                   \
+                    for (UInt m = 0; m < R; ++m)                               \
+                        for (UInt n = 0; n < S; ++n)
 
 /**
  * Function object that takes a single argument, a pair (or at least
@@ -357,10 +371,12 @@ private:                                                                       \
  * provided by implementations of STL.
  */
 template <class Pair>
-struct select1st : public std::unary_function<Pair, typename Pair::first_type> {
-  inline const typename Pair::first_type &operator()(const Pair &x) const {
-    return x.first;
-  }
+struct select1st : public std::unary_function<Pair, typename Pair::first_type>
+{
+    inline const typename Pair::first_type &operator()(const Pair &x) const
+    {
+        return x.first;
+    }
 };
 
 /**
@@ -370,11 +386,12 @@ struct select1st : public std::unary_function<Pair, typename Pair::first_type> {
  * provided by implementations of STL.
  */
 template <class Pair>
-struct select2nd
-    : public std::unary_function<Pair, typename Pair::second_type> {
-  inline const typename Pair::second_type &operator()(const Pair &x) const {
-    return x.second;
-  }
+struct select2nd : public std::unary_function<Pair, typename Pair::second_type>
+{
+    inline const typename Pair::second_type &operator()(const Pair &x) const
+    {
+        return x.second;
+    }
 };
 
 }; // namespace nust

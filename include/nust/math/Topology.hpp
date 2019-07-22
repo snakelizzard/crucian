@@ -31,7 +31,8 @@
 
 #include <nust/types/Types.hpp>
 
-namespace nust {
+namespace nust
+{
 
 /**
  * Translate an index into coordinates, using the given coordinate system.
@@ -122,33 +123,39 @@ UInt indexFromCoordinates(const std::vector<UInt> &coordinates,
  * the loop returns a point in the neighborhood. Each point is expressed
  * as a single index.
  */
-class Neighborhood {
+class Neighborhood
+{
 public:
-  Neighborhood(UInt centerIndex, UInt radius,
-               const std::vector<UInt> &dimensions);
+    Neighborhood(UInt centerIndex, UInt radius,
+                 const std::vector<UInt> &dimensions);
 
-  class Iterator {
-  public:
-    Iterator(const Neighborhood &neighborhood, bool end);
-    bool operator!=(const Iterator &other) const;
-    UInt operator*() const;
-    const Iterator &operator++();
+    class Iterator
+    {
+    public:
+        Iterator(const Neighborhood &neighborhood, bool end);
 
-  private:
-    void advance_();
+        bool operator!=(const Iterator &other) const;
 
-    const Neighborhood &neighborhood_;
-    std::vector<Int> offset_;
-    bool finished_;
-  };
+        UInt operator*() const;
 
-  Iterator begin() const;
-  Iterator end() const;
+        const Iterator &operator++();
+
+    private:
+        void advance_();
+
+        const Neighborhood &neighborhood_;
+        std::vector<Int> offset_;
+        bool finished_;
+    };
+
+    Iterator begin() const;
+
+    Iterator end() const;
 
 private:
-  const std::vector<UInt> centerPosition_;
-  const std::vector<UInt> &dimensions_;
-  const UInt radius_;
+    const std::vector<UInt> centerPosition_;
+    const std::vector<UInt> &dimensions_;
+    const UInt radius_;
 };
 
 /**
@@ -172,33 +179,39 @@ private:
  * the loop returns a point in the neighborhood. Each point is expressed
  * as a single index.
  */
-class WrappingNeighborhood {
+class WrappingNeighborhood
+{
 public:
-  WrappingNeighborhood(UInt centerIndex, UInt radius,
-                       const std::vector<UInt> &dimensions);
+    WrappingNeighborhood(UInt centerIndex, UInt radius,
+                         const std::vector<UInt> &dimensions);
 
-  class Iterator {
-  public:
-    Iterator(const WrappingNeighborhood &neighborhood, bool end);
-    bool operator!=(const Iterator &other) const;
-    UInt operator*() const;
-    const Iterator &operator++();
+    class Iterator
+    {
+    public:
+        Iterator(const WrappingNeighborhood &neighborhood, bool end);
 
-  private:
-    void advance_();
+        bool operator!=(const Iterator &other) const;
 
-    const WrappingNeighborhood &neighborhood_;
-    std::vector<Int> offset_;
-    bool finished_;
-  };
+        UInt operator*() const;
 
-  Iterator begin() const;
-  Iterator end() const;
+        const Iterator &operator++();
+
+    private:
+        void advance_();
+
+        const WrappingNeighborhood &neighborhood_;
+        std::vector<Int> offset_;
+        bool finished_;
+    };
+
+    Iterator begin() const;
+
+    Iterator end() const;
 
 private:
-  const std::vector<UInt> centerPosition_;
-  const std::vector<UInt> &dimensions_;
-  const UInt radius_;
+    const std::vector<UInt> centerPosition_;
+    const std::vector<UInt> &dimensions_;
+    const UInt radius_;
 };
 
 } // end namespace nust

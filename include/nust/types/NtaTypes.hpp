@@ -35,16 +35,16 @@
 #include <stdint.h>
 
 #if defined(NTA_OS_WINDOWS) && defined(NTA_COMPILER_MSVC) && defined(NDEBUG)
-#pragma warning(                                                               \
-    disable : 4244) // conversion from 'double' to 'nta::Real', possible loss of
-                    // data (LOTS of various type combinations)
+#pragma warning(disable : 4244) // conversion from 'double' to 'nta::Real',
+                                // possible loss of
+// data (LOTS of various type combinations)
 #pragma warning(disable : 4251) // needs to have dll-interface to be used by
                                 // clients of class
 #pragma warning(disable : 4275) // non dll-interface struct used as base for
                                 // dll-interface class
-#pragma warning(                                                               \
-    disable : 4305) // truncation from 'double' to 'nta::Real', possible loss of
-                    // data (LOTS of various type combinations)
+#pragma warning(disable : 4305) // truncation from 'double' to 'nta::Real',
+                                // possible loss of
+// data (LOTS of various type combinations)
 #pragma warning(once : 4838) // narrowing conversions
 #endif
 
@@ -53,76 +53,77 @@
 /**
  * Basic types enumeration
  */
-typedef enum NTA_BasicType {
-  /**
-   * Represents a 8-bit byte.
-   */
-  NTA_BasicType_Byte,
+typedef enum NTA_BasicType
+{
+    /**
+     * Represents a 8-bit byte.
+     */
+    NTA_BasicType_Byte,
 
-  /**
-   * Represents a 16-bit signed integer.
-   */
-  NTA_BasicType_Int16,
+    /**
+     * Represents a 16-bit signed integer.
+     */
+    NTA_BasicType_Int16,
 
-  /**
-   * Represents a 16-bit unsigned integer.
-   */
-  NTA_BasicType_UInt16,
+    /**
+     * Represents a 16-bit unsigned integer.
+     */
+    NTA_BasicType_UInt16,
 
-  /**
-   * Represents a 32-bit signed integer.
-   */
-  NTA_BasicType_Int32,
+    /**
+     * Represents a 32-bit signed integer.
+     */
+    NTA_BasicType_Int32,
 
-  /**
-   * Represents a 32-bit unsigned integer.
-   */
-  NTA_BasicType_UInt32,
+    /**
+     * Represents a 32-bit unsigned integer.
+     */
+    NTA_BasicType_UInt32,
 
-  /**
-   * Represents a 64-bit signed integer.
-   */
-  NTA_BasicType_Int64,
+    /**
+     * Represents a 64-bit signed integer.
+     */
+    NTA_BasicType_Int64,
 
-  /**
-   * Represents a 64-bit unsigned integer.
-   */
-  NTA_BasicType_UInt64,
+    /**
+     * Represents a 64-bit unsigned integer.
+     */
+    NTA_BasicType_UInt64,
 
-  /**
-   * Represents a 32-bit real number(a floating-point number).
-   */
-  NTA_BasicType_Real32,
+    /**
+     * Represents a 32-bit real number(a floating-point number).
+     */
+    NTA_BasicType_Real32,
 
-  /**
-   * Represents a 64-bit real number(a floating-point number).
-   */
-  NTA_BasicType_Real64,
+    /**
+     * Represents a 64-bit real number(a floating-point number).
+     */
+    NTA_BasicType_Real64,
 
-  /**
-   * Represents a opaque handle/pointer, same as `void *`
-   */
-  NTA_BasicType_Handle,
+    /**
+     * Represents a opaque handle/pointer, same as `void *`
+     */
+    NTA_BasicType_Handle,
 
-  /**
-   * Represents a boolean. The size is compiler-defined.
-   *
-   * There is no typedef'd "Bool" or "NTA_Bool". We just need a way to refer
-   * to bools with a NTA_BasicType.
-   */
-  NTA_BasicType_Bool,
+    /**
+     * Represents a boolean. The size is compiler-defined.
+     *
+     * There is no typedef'd "Bool" or "NTA_Bool". We just need a way to refer
+     * to bools with a NTA_BasicType.
+     */
+    NTA_BasicType_Bool,
 
-  /**
-   * @note This is not an actual type, just a marker for validation purposes
-   */
-  NTA_BasicType_Last,
+    /**
+     * @note This is not an actual type, just a marker for validation purposes
+     */
+    NTA_BasicType_Last,
 
 #ifdef NTA_DOUBLE_PRECISION
-  /** TODO: document */
-  NTA_BasicType_Real = NTA_BasicType_Real64,
+    /** TODO: document */
+    NTA_BasicType_Real = NTA_BasicType_Real64,
 #else
-  /** TODO: document */
-  NTA_BasicType_Real = NTA_BasicType_Real32,
+    /** TODO: document */
+    NTA_BasicType_Real = NTA_BasicType_Real32,
 #endif
 
 } NTA_BasicType;
@@ -331,23 +332,24 @@ typedef NTA_UInt32 NTA_UInt;
  *
  * Use it like `LDEBUG(NTA_LogLevel_XXX)`.
  */
-typedef enum NTA_LogLevel {
-  /**
-   * Log level: None.
-   */
-  NTA_LogLevel_None,
-  /**
-   * Log level: Minimal.
-   */
-  NTA_LogLevel_Minimal,
-  /**
-   * Log level: Normal.
-   */
-  NTA_LogLevel_Normal,
-  /**
-   * Log level: Verbose.
-   */
-  NTA_LogLevel_Verbose,
+typedef enum NTA_LogLevel
+{
+    /**
+     * Log level: None.
+     */
+    NTA_LogLevel_None,
+    /**
+     * Log level: Minimal.
+     */
+    NTA_LogLevel_Minimal,
+    /**
+     * Log level: Normal.
+     */
+    NTA_LogLevel_Normal,
+    /**
+     * Log level: Verbose.
+     */
+    NTA_LogLevel_Verbose,
 } NTA_LogLevel;
 
 #endif /* NTA_TYPES_H */

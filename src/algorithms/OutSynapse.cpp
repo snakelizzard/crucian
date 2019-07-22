@@ -26,17 +26,20 @@
 namespace nust
 {
 
-bool OutSynapse::invariants(Cells4 *cells) const {
-  bool ok = true;
-  if (cells) {
-    ok &= _dstCellIdx < cells->nCells();
-    ok &= _dstSegIdx < cells->__nSegmentsOnCell(_dstCellIdx);
-  }
-  return ok;
+bool OutSynapse::invariants(Cells4 *cells) const
+{
+    bool ok = true;
+    if (cells)
+    {
+        ok &= _dstCellIdx < cells->nCells();
+        ok &= _dstSegIdx < cells->__nSegmentsOnCell(_dstCellIdx);
+    }
+    return ok;
 }
 
-bool operator==(const OutSynapse &a, const OutSynapse &b) {
-  return a.equals(b);
+bool operator==(const OutSynapse &a, const OutSynapse &b)
+{
+    return a.equals(b);
 }
 
 } // namespace nust

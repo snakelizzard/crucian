@@ -30,7 +30,8 @@
 #include <iostream>
 #include <sstream>
 
-namespace nust {
+namespace nust
+{
 
 /**
  * @b Description
@@ -43,35 +44,43 @@ namespace nust {
  *
  */
 
-class LogItem {
+class LogItem
+{
 public:
-  typedef enum { debug, info, warn, error } LogLevel;
-  /**
-   * Record information to be logged
-   */
-  LogItem(const char *filename, int line, LogLevel level);
+    typedef enum
+    {
+        debug,
+        info,
+        warn,
+        error
+    } LogLevel;
 
-  /**
-   * Destructor performs the logging
-   */
-  virtual ~LogItem();
+    /**
+     * Record information to be logged
+     */
+    LogItem(const char *filename, int line, LogLevel level);
 
-  /*
-   * Return the underlying stream object. Caller will use it to construct the
-   * log message.
-   */
-  std::ostringstream &stream();
+    /**
+     * Destructor performs the logging
+     */
+    virtual ~LogItem();
 
-  static void setOutputFile(std::ostream &ostream);
+    /*
+     * Return the underlying stream object. Caller will use it to construct the
+     * log message.
+     */
+    std::ostringstream &stream();
+
+    static void setOutputFile(std::ostream &ostream);
 
 protected:
-  const char *filename_; // name of file
-  int lineno_;           // line number in file
-  LogLevel level_;
-  std::ostringstream msg_;
+    const char *filename_; // name of file
+    int lineno_;           // line number in file
+    LogLevel level_;
+    std::ostringstream msg_;
 
 private:
-  static std::ostream *ostream_;
+    static std::ostream *ostream_;
 };
 
 } // namespace nust
