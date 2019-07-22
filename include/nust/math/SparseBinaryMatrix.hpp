@@ -68,7 +68,7 @@ public:
         fromDense(nrows, ncols, begin, end);
     }
 
-    inline SparseBinaryMatrix(size_type ncols) : ncols_(0), ind_(), buffer_()
+    inline explicit SparseBinaryMatrix(size_type ncols) : ncols_(0), ind_(), buffer_()
     {
         nCols(ncols);
         buffer_.resize(nCols());
@@ -437,8 +437,8 @@ public:
             // Other pre-conditions checked in nNonZerosInBox
         } // End pre-conditions
 
-        size_type n_i = static_cast<size_type>(row_inds_end - row_inds_begin);
-        size_type n_j = static_cast<size_type>(col_inds_end - col_inds_begin);
+        auto n_i = static_cast<size_type>(row_inds_end - row_inds_begin);
+        auto n_j = static_cast<size_type>(col_inds_end - col_inds_begin);
         summary.resize(n_i, n_j);
 
         size_type box_i = 0, prev_row = 0;
@@ -523,22 +523,6 @@ public:
             }
         }
     }
-
-    struct lexicographic_order
-        : public std::binary_function<bool, std::pair<size_type, size_type>,
-                                      std::pair<size_type, size_type>>
-    {
-        inline bool operator()(const std::pair<size_type, size_type> &a,
-                               const std::pair<size_type, size_type> &b) const
-        {
-            if (a.first < b.first)
-                return true;
-            else if (a.first == b.first)
-                if (a.second < b.second)
-                    return true;
-            return false;
-        }
-    };
 
     /**
      * Clear this instance and create a new one that has non-zeros only at the
@@ -784,7 +768,7 @@ public:
             sparse_row_invariants_(begin, end, "replaceSparseRow");
         } // End pre-conditions
 
-        size_type n = static_cast<size_type>(end - begin);
+        auto n = static_cast<size_type>(end - begin);
         ind_[row].resize(n);
 
         for (nz_index_type i = 0; i != n; ++i)
@@ -798,7 +782,7 @@ public:
             sparse_row_invariants_(begin, end, "findRowSparse");
         } // End pre-conditions
 
-        size_type nnzr = static_cast<size_type>(end - begin);
+        auto nnzr = static_cast<size_type>(end - begin);
 
         for (size_type row = 0; row != nRows(); ++row)
         {
@@ -945,7 +929,7 @@ public:
                                               size_type distance) const
     {
         size_type nnzr = 0;
-        nz_index_type n = static_cast<nz_index_type>(end - begin);
+        auto n = static_cast<nz_index_type>(end - begin);
         for (nz_index_type i = 0; i != n; ++i)
             if (begin[i] > 0)
                 (const_cast<SparseBinaryMatrix &>(*this)).buffer_[nnzr++] = i;
@@ -1646,7 +1630,7 @@ public:
 
         for (size_type i = 0; i != nRows(); ++i)
         {
-            value_type s = static_cast<value_type>(dot(ind_[i], x));
+            auto s = static_cast<value_type>(dot(ind_[i], x));
             if (s != 0)
                 y[k++] = std::make_pair(i, s);
         }
@@ -1959,6 +1943,6 @@ inline std::istream &operator>>(std::istream &in_stream,
     return in_stream;
 }
 
-}; // end namespace nust
+} // end namespace nust
 
 #endif // NTA_SPARSE_BINARY_MATRIX_HPP

@@ -21,6 +21,11 @@ endif ()
 
 add_definitions(${src_compiler_definitions})
 file(GLOB_RECURSE app_src "include/*.hpp" "src/*.cpp")
+
 add_library(${PROJECT_NAME} SHARED ${app_src})
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14 CXX_EXTENSIONS OFF)
 target_include_directories(${PROJECT_NAME} PUBLIC "include")
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        CXX_STANDARD 14
+        CXX_EXTENSIONS OFF
+        CXX_VISIBILITY_PRESET hidden)

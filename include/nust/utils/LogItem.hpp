@@ -30,6 +30,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <nust/types/Exception.hpp>
+
 namespace nust
 {
 
@@ -63,7 +65,7 @@ public:
     /**
      * Destructor performs the logging
      */
-    virtual ~LogItem();
+    ~LogItem() noexcept(false);
 
     /*
      * Return the underlying stream object. Caller will use it to construct the
@@ -71,13 +73,16 @@ public:
      */
     std::ostringstream &stream();
 
-    static void setOutputFile(std::ostream &ostream);
+    std::ostringstream &throwStream();
+
+    static void setOutputFile(std::ostream &stream);
 
 protected:
     const char *filename_; // name of file
     int lineno_;           // line number in file
     LogLevel level_;
     std::ostringstream msg_;
+    bool willThrow;
 
 private:
     static std::ostream *ostream_;

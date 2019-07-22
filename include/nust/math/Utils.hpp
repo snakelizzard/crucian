@@ -98,7 +98,7 @@ template <typename T> inline void swapBytesInPlace(T *pxIn, Size n)
         T x;
         unsigned char b[sizeof(T)];
     };
-    SwapType *px = reinterpret_cast<SwapType *>(pxIn);
+    auto *px = reinterpret_cast<SwapType *>(pxIn);
     SwapType *pxend = px + n;
     const int stop = sizeof(T) / 2;
     for (; px != pxend; ++px)
@@ -121,7 +121,7 @@ template <typename T> inline void swapBytes(T *pxOut, Size n, const T *pxIn)
     };
     const SwapType *px0 = reinterpret_cast<SwapType *>(pxIn);
     const SwapType *pxend = px0 + n;
-    SwapType *px1 = reinterpret_cast<SwapType *>(pxOut);
+    auto *px1 = reinterpret_cast<SwapType *>(pxOut);
     for (; px0 != pxend; ++px0, ++px1)
     {
         for (int j = 0; j < sizeof(T); ++j)
@@ -258,112 +258,6 @@ extern void SetVariableArray(std::istream &inStream, Byte *beginP, Byte *endP,
 //--------------------------------------------------------------------------------
 // Defines, used as code generators, to make the code more readable
 
-#define NO_DEFAULTS(X)                                                         \
-private:                                                                       \
-    X();                                                                       \
-    X(const X &);                                                              \
-    X &operator=(const X &);
-
-/**
- * Puts Y in current scope
- * Iterates on whole Z, which must have begin() and end()
- */
-#define LOOP(X, Y, Z)                                                          \
-    X::iterator Y;                                                             \
-    X::iterator Y##beginXX = (Z).begin();                                      \
-    X::iterator Y##endXX = (Z).end();                                          \
-    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
-
-/**
- * Puts Y in current scope
- * Z must have begin()
- * Iterates on partial Z, between Z.begin() and Z.begin() + L
- */
-#define PARTIAL_LOOP(X, Y, Z, L)                                               \
-    X::iterator Y;                                                             \
-    X::iterator Y##beginXX = (Z).begin();                                      \
-    X::iterator Y##endXX = (Z).begin() + (L);                                  \
-    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
-
-/**
- * Puts Y in current scope
- * Iterates on whole Z, with a const_iterator
- */
-#define CONST_LOOP(X, Y, Z)                                                    \
-    X::const_iterator Y;                                                       \
-    X::const_iterator Y##beginXX = (Z).begin();                                \
-    X::const_iterator Y##endXX = (Z).end();                                    \
-    for (Y = Y##beginXX; Y != Y##endXX; ++Y)
-
-/**
- * Puts Y in current scope
- * Iterates from Y to Z by steps of 1
- */
-#define ITER(X, Y, Z)                                                          \
-    Size X##minXX = (Y), X##maxXX = (Z);                                       \
-    for (Size X = X##minXX; X < X##maxXX; ++X)
-
-/**
- * Puts Y1 and Y2 in current scope
- * Iterates X1 from Y1 to Z1 and X2 from Y2 to Z2
- * X2 is the inner index
- */
-#define ITER2(X1, X2, Y1, Y2, Z1, Z2)                                          \
-    UInt X1##minXX = (Y1), X1##maxXX = (Z1), X2##minXX = (Y2),                 \
-         X2##maxXX = (Z2);                                                     \
-    for (Size X1 = X1##minXX; X1 < X1##maxXX; ++X1)                            \
-        for (Size X2 = X2##minXX; X2 < X2##maxXX; ++X2)
-
-/**
- * Iterates with a single index, from 0 to M.
- */
-#define ITER_1(M) for (UInt i = 0; i < M; ++i)
-
-/**
- * Iterates over 2 indices, from 0 to M, and 0 to N.
- */
-#define ITER_2(M, N)                                                           \
-    for (UInt i = 0; i < M; ++i)                                               \
-        for (UInt j = 0; j < N; ++j)
-
-/**
- * Iterates over 3 indices, from 0 to M, 0 to N, and 0 to P.
- */
-#define ITER_3(M, N, P)                                                        \
-    for (UInt i = 0; i < M; ++i)                                               \
-        for (UInt j = 0; j < N; ++j)                                           \
-            for (UInt k = 0; k < P; ++k)
-
-/**
- * Iterates over 4 indices, from 0 to M, 0 to N, 0 to P and 0 to Q.
- */
-#define ITER_4(M, N, P, Q)                                                     \
-    for (UInt i = 0; i < M; ++i)                                               \
-        for (UInt j = 0; j < N; ++j)                                           \
-            for (UInt k = 0; k < P; ++k)                                       \
-                for (UInt l = 0; l < Q; ++l)
-
-/**
- * Iterates over 5 indices.
- */
-#define ITER_5(M, N, P, Q, R)                                                  \
-    for (UInt i = 0; i < M; ++i)                                               \
-        for (UInt j = 0; j < N; ++j)                                           \
-            for (UInt k = 0; k < P; ++k)                                       \
-                for (UInt l = 0; l < Q; ++l)                                   \
-                    for (UInt m = 0; m < R; ++m)
-
-/**
- * Iterates over 6 indices.
- */
-#define ITER_6(M, N, P, Q, R, S)                                               \
-    for (UInt i = 0; i < M; ++i)                                               \
-        for (UInt j = 0; j < N; ++j)                                           \
-            for (UInt k = 0; k < P; ++k)                                       \
-                for (UInt l = 0; l < Q; ++l)                                   \
-                    for (UInt m = 0; m < R; ++m)                               \
-                        for (UInt n = 0; n < S; ++n)
-
 /**
  * Function object that takes a single argument, a pair (or at least
  * a class with the same interface as pair), and returns the pair's
@@ -394,6 +288,6 @@ struct select2nd : public std::unary_function<Pair, typename Pair::second_type>
     }
 };
 
-}; // namespace nust
+} // namespace nust
 
 #endif // NTA_UTILS_HPP

@@ -37,6 +37,7 @@
 
 namespace nust
 {
+
 /**
  * @b Responsibility
  *  The Exception class is the standard Numenta exception class.
@@ -46,7 +47,7 @@ namespace nust
  *
  * @b Rationale:
  *  It is important to store the location (filename, line number) where
- *  an exception originated, but no standard excepton class does it.
+ *  an exception originated, but no standard exception class does it.
  *  The stack trace is even better and brings C++ programming to the
  *  ease of use of languages like Java and C#.
  *
@@ -56,7 +57,7 @@ namespace nust
  *  that makes it much simpler by automatically retreiving the __FILE__
  *  and __LINE__ for you and also using a wrapping LogItem that allows
  *  you to construct the exception message conveniently using the <<
- *  streame operator (see nust/utils/Log.hpp for further details).
+ *  stream operator (see nust/utils/Log.hpp for further details).
  *
  * @b Notes:
  *  1. Exception is a subclass of the standard std::runtime_error.
@@ -78,27 +79,9 @@ public:
      * Take the filename, line number and message
      * and store it in private members
      *
-     * @param filename [const std::string &] the name of the source file
-     *        where the exception originated.
-     * @param lineno [UInt32] the line number in the source file where
-     *        the exception originated.
-     *
      * @param message [const std::string &] the description of exception
      */
-    Exception(std::string filename, UInt32 lineno, std::string message,
-              std::string stacktrace = "");
-
-    /**
-     * Destructor
-     *
-     * Doesn't do anything, but must be present
-     * because the base class std::runtime_error
-     * defines a pure virtual destructor and the
-     * default destructor provided by the compiler
-     * doesn't have a empty exception specification
-     *
-     */
-    virtual ~Exception() = default;
+    explicit Exception(std::string message);
 
     /**
      * Get the exception message via what()
@@ -110,27 +93,7 @@ public:
      *
      * @retval [const Byte *] the exception message
      */
-    virtual const char *what() const noexcept;
-
-    /**
-     * Get the source filename
-     *
-     * Returns the full path to the source file, from which
-     * the exception was thrown.
-     *
-     * @retval [const Byte *] the source filename
-     */
-    const char *getFilename() const;
-
-    /**
-     * Get the line number in the source file
-     *
-     * Returns the (0-based) line number in the source file,
-     * from which the exception was thrown.
-     *
-     * @retval [UInt32] the line number in the source file
-     */
-    UInt32 getLineNumber() const;
+    const char *what() const noexcept override;
 
     /**
      * Get the error message
@@ -139,23 +102,10 @@ public:
      */
     virtual const char *getMessage() const;
 
-    /**
-     * Get the stack trace
-     *
-     * Returns the stack trace from the point the exception
-     * was thrown.
-     *
-     * @retval [const Byte *] the stack trace
-     */
-    virtual const char *getStackTrace() const;
-
 protected:
-    std::string filename_;
-    UInt32 lineno_;
     std::string message_;
-    std::string stackTrace_;
+};
 
-}; // end class Exception
-} // end namespace nust
+} // namespace nust
 
 #endif // NTA_EXCEPTION_HPP

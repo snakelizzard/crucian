@@ -122,8 +122,8 @@ class SegmentUpdate;
  * of 6.25%, past which we use memset() instead of selective
  * zeroing.
  */
-const UInt _MAX_CELLS = 1 << 18; // power of 2 allows efficient array indexing
-const UInt _MAX_SEGS = 1 << 7;   // power of 2 allows efficient array indexing
+const UInt _MAX_CELLS = 1u << 18u; // power of 2 allows efficient array indexing
+const UInt _MAX_SEGS = 1u << 7u;   // power of 2 allows efficient array indexing
 typedef unsigned char UChar;     // custom type, since NTA_Byte = Byte is signed
 
 template <typename It> class CBasicActivity
@@ -275,7 +275,7 @@ private:
     CBasicActivity<It> _seg;
 };
 
-class Cells4
+class NUST_API Cells4
 {
 public:
     typedef Segment::InSynapses InSynapses;
@@ -405,7 +405,7 @@ public:
     /**
      * Default constructor needed when lifting from persistence.
      */
-    Cells4(UInt nColumns = 0, UInt nCellsPerCol = 0,
+    explicit Cells4(UInt nColumns = 0, UInt nCellsPerCol = 0,
            UInt activationThreshold = 1, UInt minThreshold = 1,
            UInt newSynapseCount = 1, UInt segUpdateValidDuration = 1,
            Real permInitial = .5, Real permConnected = .8f, Real permMax = 1,
@@ -974,7 +974,7 @@ public:
      * each cell
      *
      */
-    void processSegmentUpdates(Real *input, const CState &predictedState);
+    void processSegmentUpdates(const Real *input, const CState &predictedState);
 
     //----------------------------------------------------------------------
     /**
@@ -1105,13 +1105,13 @@ public:
     /**
      * Save the state to the given file
      */
-    void saveToFile(std::string filePath) const;
+    void saveToFile(const std::string& filePath) const;
 
     //----------------------------------------------------------------------
     /**
      * Load the state from the given file
      */
-    void loadFromFile(std::string filePath);
+    void loadFromFile(const std::string& filePath);
 
     //----------------------------------------------------------------------
     void save(std::ostream &outStream) const;
@@ -1135,7 +1135,7 @@ public:
     //----------------------------------------------------------------------
 
     // Set the Cell class segment order
-    void setCellSegmentOrder(bool matchPythonOrder);
+    static void setCellSegmentOrder(bool matchPythonOrder);
 
     //----------------------------------------------------------------------
     /**
@@ -1164,9 +1164,9 @@ public:
      */
     void printStates();
 
-    void printState(UInt *state);
+    void printState(const UInt *state);
 
-    void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
+    static void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
 
     void dumpSegmentUpdates();
 
@@ -1190,7 +1190,7 @@ public:
     //-----------------------------------------------------------------------
     // Statistics
     //-----------------------------------------------------------------------
-    void stats() const { return; }
+    void stats() const { }
 };
 
 //-----------------------------------------------------------------------

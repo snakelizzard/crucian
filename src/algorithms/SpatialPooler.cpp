@@ -1,3 +1,5 @@
+#include <utility>
+
 /* ---------------------------------------------------------------------
  * Numenta Platform for Intelligent Computing (NuPIC)
  * Copyright (C) 2013, Numenta, Inc.  Unless you have an agreement
@@ -79,7 +81,7 @@ class CoordinateConverterND
 {
 
 public:
-    CoordinateConverterND(std::vector<UInt> &dimensions)
+    explicit CoordinateConverterND(std::vector<UInt> &dimensions)
     {
         dimensions_ = dimensions;
         UInt b = 1;
@@ -121,7 +123,7 @@ SpatialPooler::SpatialPooler()
 }
 
 SpatialPooler::SpatialPooler(
-    std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
+    const std::vector<UInt>& inputDimensions, const std::vector<UInt>& columnDimensions,
     UInt potentialRadius, Real potentialPct, bool globalInhibition,
     Real localAreaDensity, UInt numActiveColumnsPerInhArea,
     UInt stimulusThreshold, Real synPermInactiveDec, Real synPermActiveInc,
@@ -129,11 +131,12 @@ SpatialPooler::SpatialPooler(
     Real boostStrength, Int seed, UInt spVerbosity, bool wrapAround)
     : SpatialPooler::SpatialPooler()
 {
-    initialize(inputDimensions, columnDimensions, potentialRadius, potentialPct,
-               globalInhibition, localAreaDensity, numActiveColumnsPerInhArea,
-               stimulusThreshold, synPermInactiveDec, synPermActiveInc,
-               synPermConnected, minPctOverlapDutyCycles, dutyCyclePeriod,
-               boostStrength, seed, spVerbosity, wrapAround);
+    initialize(inputDimensions, columnDimensions,
+               potentialRadius, potentialPct, globalInhibition,
+               localAreaDensity, numActiveColumnsPerInhArea, stimulusThreshold,
+               synPermInactiveDec, synPermActiveInc, synPermConnected,
+               minPctOverlapDutyCycles, dutyCyclePeriod, boostStrength, seed,
+               spVerbosity, wrapAround);
 }
 
 std::vector<UInt> SpatialPooler::getColumnDimensions() const
@@ -405,13 +408,16 @@ const std::vector<Real> &SpatialPooler::getBoostedOverlaps() const
     return boostedOverlaps_;
 }
 
-void SpatialPooler::initialize(
-    std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
-    UInt potentialRadius, Real potentialPct, bool globalInhibition,
-    Real localAreaDensity, UInt numActiveColumnsPerInhArea,
-    UInt stimulusThreshold, Real synPermInactiveDec, Real synPermActiveInc,
-    Real synPermConnected, Real minPctOverlapDutyCycles, UInt dutyCyclePeriod,
-    Real boostStrength, Int seed, UInt spVerbosity, bool wrapAround)
+void SpatialPooler::initialize(const std::vector<UInt> &inputDimensions,
+                               const std::vector<UInt>& columnDimensions,
+                               UInt potentialRadius, Real potentialPct,
+                               bool globalInhibition, Real localAreaDensity,
+                               UInt numActiveColumnsPerInhArea,
+                               UInt stimulusThreshold, Real synPermInactiveDec,
+                               Real synPermActiveInc, Real synPermConnected,
+                               Real minPctOverlapDutyCycles,
+                               UInt dutyCyclePeriod, Real boostStrength,
+                               Int seed, UInt spVerbosity, bool wrapAround)
 {
 
     numInputs_ = 1;
@@ -607,7 +613,8 @@ std::vector<UInt> SpatialPooler::mapPotential_(UInt column, bool wrapAround)
         }
     }
 
-    UInt numPotential = round(columnInputs.size() * potentialPct_);
+    UInt numPotential =
+        static_cast<UInt> (round(columnInputs.size() * potentialPct_));
 
     std::vector<UInt> selectedInputs(numPotential, 0);
     rng_.sample(&columnInputs.front(), columnInputs.size(),
@@ -769,8 +776,6 @@ void SpatialPooler::updateMinDutyCycles_()
     {
         updateMinDutyCyclesLocal_();
     }
-
-    return;
 }
 
 void SpatialPooler::updateMinDutyCyclesGlobal_()
@@ -816,7 +821,7 @@ void SpatialPooler::updateMinDutyCyclesLocal_()
 }
 
 void SpatialPooler::updateDutyCycles_(std::vector<UInt> &overlaps,
-                                      UInt activeArray[])
+                                      const UInt activeArray[])
 {
     std::vector<UInt> newOverlapVal(numColumns_, 0);
     std::vector<UInt> newActiveVal(numColumns_, 0);
@@ -928,7 +933,7 @@ Real SpatialPooler::avgConnectedSpanForColumnND_(UInt column)
     return (Real)totalSpan / inputDimensions_.size();
 }
 
-void SpatialPooler::adaptSynapses_(UInt inputVector[],
+void SpatialPooler::adaptSynapses_(const UInt inputVector[],
                                    std::vector<UInt> &activeColumns)
 {
     std::vector<Real> permChanges(numInputs_, -1 * synPermInactiveDec_);
@@ -1008,8 +1013,8 @@ void SpatialPooler::updateBoostFactorsGlobal_()
     Real targetDensity;
     if (numActiveColumnsPerInhArea_ > 0)
     {
-        UInt inhibitionArea = pow((Real)(2 * inhibitionRadius_ + 1),
-                                  (Real)columnDimensions_.size());
+        UInt inhibitionArea = static_cast<UInt>(pow(
+            (Real)(2 * inhibitionRadius_ + 1), (Real)columnDimensions_.size()));
         inhibitionArea = std::min(inhibitionArea, numColumns_);
         targetDensity = ((Real)numActiveColumnsPerInhArea_) / inhibitionArea;
         targetDensity = std::min(targetDensity, (Real)0.5);
@@ -1100,8 +1105,8 @@ void SpatialPooler::inhibitColumns_(const std::vector<Real> &overlaps,
     Real density = localAreaDensity_;
     if (numActiveColumnsPerInhArea_ > 0)
     {
-        UInt inhibitionArea = pow((Real)(2 * inhibitionRadius_ + 1),
-                                  (Real)columnDimensions_.size());
+        UInt inhibitionArea = static_cast<UInt>(pow(
+            (Real)(2 * inhibitionRadius_ + 1), (Real)columnDimensions_.size()));
         inhibitionArea = std::min(inhibitionArea, numColumns_);
         density = ((Real)numActiveColumnsPerInhArea_) / inhibitionArea;
         density = std::min(density, (Real)0.5);
@@ -1133,12 +1138,7 @@ bool SpatialPooler::isWinner_(Real score,
         return true;
     }
 
-    if (score >= winners[numWinners - 1].second)
-    {
-        return true;
-    }
-
-    return false;
+    return score >= winners[numWinners - 1].second;
 }
 
 void SpatialPooler::addToWinners_(UInt index, Real score,

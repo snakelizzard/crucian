@@ -89,7 +89,7 @@ public:
      */
     static RandomSeedFuncPtr getSeeder();
 
-    Random(UInt64 seed = 0);
+    explicit Random(UInt64 seed = 0);
 
     // support copy constructor and operator= -- these require non-default
     // implementations because of the impl_ pointer.
@@ -169,9 +169,9 @@ public:
     typedef UInt32 argument_type;
     typedef UInt32 result_type;
 
-    result_type max() { return MAX32; }
+    static result_type max() { return MAX32; }
 
-    result_type min() { return 0; }
+    static result_type min() { return 0; }
 
     static const UInt32 MAX32;
     static const UInt64 MAX64;
@@ -185,7 +185,7 @@ public:
 
     // called by the plugin framework so that plugins
     // get the "global" seeder
-    static void initSeeder(const RandomSeedFuncPtr r);
+    static void initSeeder(RandomSeedFuncPtr r);
 
     static void shutdown();
 
@@ -203,8 +203,6 @@ protected:
 
     RandomImpl *impl_;
     UInt64 seed_;
-
-    friend class RandomTest;
 
     friend std::ostream &operator<<(std::ostream &, const Random &);
 

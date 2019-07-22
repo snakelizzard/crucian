@@ -24,8 +24,7 @@
  * LogItem implementation
  */
 
-#include <iostream>  // cerr
-#include <stdexcept> // runtime_error
+#include <iostream> // cerr
 
 #include <nust/types/Exception.hpp>
 #include <nust/utils/LogItem.hpp>
@@ -35,29 +34,30 @@ namespace nust
 
 std::ostream *LogItem::ostream_ = nullptr;
 
-void LogItem::setOutputFile(std::ostream &ostream) { ostream_ = &ostream; }
+void LogItem::setOutputFile(std::ostream &stream) { ostream_ = &stream; }
 
 LogItem::LogItem(const char *filename, int line, LogLevel level)
-    : filename_(filename), lineno_(line), level_(level), msg_("")
+    : filename_(filename), lineno_(line), level_(level), msg_(""),
+      willThrow(false)
 {
 }
 
-LogItem::~LogItem()
+LogItem::~LogItem() noexcept(false)
 {
-    std::string slevel;
+    std::string level;
     switch (level_)
     {
     case debug:
-        slevel = "DEBUG:";
+        level = "DEBUG:";
         break;
     case warn:
-        slevel = "WARN: ";
+        level = "WARN: ";
         break;
     case info:
-        slevel = "INFO: ";
+        level = "INFO: ";
         break;
     case error:
-        slevel = "ERR:";
+        level = "ERR:";
         break;
         //  default:
         //    slevel = "Unknown: ";
@@ -67,14 +67,23 @@ LogItem::~LogItem()
     if (ostream_ == nullptr)
         ostream_ = &(std::cerr);
 
-    (*ostream_) << slevel << "  " << msg_.str();
+    (*ostream_) << level << "  " << msg_.str();
 
     if (level_ == error)
         (*ostream_) << " [" << filename_ << " line " << lineno_ << "]";
 
     (*ostream_) << std::endl;
+
+    if (willThrow)
+        throw Exception(msg_.str());
 }
 
 std::ostringstream &LogItem::stream() { return msg_; }
+
+std::ostringstream &LogItem::throwStream()
+{
+    willThrow = true;
+    return msg_;
+}
 
 } // namespace nust

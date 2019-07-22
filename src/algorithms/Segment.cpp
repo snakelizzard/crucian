@@ -149,7 +149,7 @@ Real Segment::dutyCycle(UInt iteration, bool active, bool readOnly)
         NTA_ASSERT(iteration > 0);
     }
 
-    Real dutyCycle = 0.0;
+    Real dutyCycle;
 
     // For tier 0, compute it from total number of positive activations seen
     if (iteration <= _dutyCycleTiers[1])
@@ -391,12 +391,12 @@ void Segment::freeNSynapses(UInt numToFree,
 
     // We first choose from inactive synapses, in order of increasing permanence
     InSynapses candidates;
-    for (UInt i = 0; i < inactiveSegmentIndices.size(); i++)
+    for (unsigned int inactiveSegmentIndice : inactiveSegmentIndices)
     {
         // Put in *segment indices*, not source cell indices
         candidates.push_back(
-            InSynapse(inactiveSegmentIndices[i],
-                      _synapses[inactiveSegmentIndices[i]].permanence()));
+            InSynapse(inactiveSegmentIndice,
+                      _synapses[inactiveSegmentIndice].permanence()));
     }
 
     // If we need more, choose from active synapses in order of increasing
@@ -404,12 +404,12 @@ void Segment::freeNSynapses(UInt numToFree,
     // so we add a constant permanence value for sorting purposes
     if (candidates.size() < numToFree)
     {
-        for (UInt i = 0; i < activeSegmentIndices.size(); i++)
+        for (unsigned int activeSegmentIndice : activeSegmentIndices)
         {
             // Put in *segment indices*, not source cell indices
             candidates.push_back(InSynapse(
-                activeSegmentIndices[i],
-                _synapses[activeSegmentIndices[i]].permanence() + permMax));
+                activeSegmentIndice,
+                _synapses[activeSegmentIndice].permanence() + permMax));
         }
     }
 

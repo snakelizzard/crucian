@@ -101,7 +101,7 @@ public:
 
     ~CState()
     {
-        if (_fMemoryAllocatedByPython == false && _pData != nullptr)
+        if (!_fMemoryAllocatedByPython && _pData != nullptr)
             delete[] _pData;
     }
 
@@ -148,7 +148,7 @@ public:
     void usePythonMemory(Byte *pData, const UInt nCells)
     {
         // delete a prior allocation
-        if (_fMemoryAllocatedByPython == false && _pData != nullptr)
+        if (!_fMemoryAllocatedByPython && _pData != nullptr)
             delete[] _pData;
 
         // use the supplied memory and remember its size
@@ -159,9 +159,9 @@ public:
 
     bool isSet(const UInt cellIdx) const { return _pData[cellIdx] != 0; }
 
-    void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
+    virtual void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
 
-    void resetAll() { memset(_pData, 0, _nCells); }
+    virtual void resetAll() { memset(_pData, 0, _nCells); }
 
     Byte *arrayPtr() const
     {
@@ -172,7 +172,7 @@ public:
         return _pData;
     }
 
-    void print(std::ostream &outStream) const
+    virtual void print(std::ostream &outStream) const
     {
         outStream << version() << " " << _fMemoryAllocatedByPython << " "
                   << _nCells << std::endl;
@@ -183,7 +183,7 @@ public:
         outStream << std::endl << "end" << std::endl;
     }
 
-    void load(std::istream &inStream)
+    virtual void load(std::istream &inStream)
     {
         UInt version;
         inStream >> version;
@@ -198,7 +198,7 @@ public:
         NTA_CHECK(token == "end");
     }
 
-    UInt version() const { return _version; }
+    virtual UInt version() const { return _version; }
 
 protected:
     UInt _version;
@@ -223,19 +223,19 @@ public:
         _isSorted = true;
     }
 
-    CStateIndexed &operator=(CStateIndexed &o)
+    CStateIndexed &operator=(const CStateIndexed &o)
     {
         NTA_ASSERT(_nCells ==
                    o._nCells); // _nCells should be static, since it is
         // the same size for all CStates
         // Is it faster to reset only the old nonzero indices and set only the
         // new ones?
-        std::vector<UInt>::iterator iterOn;
+        std::vector<UInt>::const_iterator iterOn;
         // reset the old On cells
-        for (iterOn = _cellsOn.begin(); iterOn != _cellsOn.end(); ++iterOn)
+        for (iterOn = _cellsOn.cbegin(); iterOn != _cellsOn.cend(); ++iterOn)
             _pData[*iterOn] = 0;
         // set the new On cells
-        for (iterOn = o._cellsOn.begin(); iterOn != o._cellsOn.end(); ++iterOn)
+        for (iterOn = o._cellsOn.cbegin(); iterOn != o._cellsOn.cend(); ++iterOn)
             _pData[*iterOn] = 1;
         // use the new On tracker
         _cellsOn = o._cellsOn;
@@ -582,7 +582,7 @@ public:
      */
     inline void getSrcCellIndices(std::vector<UInt> &srcCells) const
     {
-        NTA_ASSERT(srcCells.size() == 0);
+        NTA_ASSERT(srcCells.empty());
         for (auto &elem : _synapses)
         {
             srcCells.push_back(elem.srcCellIdx());

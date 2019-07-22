@@ -66,9 +66,10 @@ struct IOControl
 
     bool bit_vector; // output 0/1 vector compactly
 
-    inline IOControl(int a = -1, bool s = true, bool pp = false,
-                     const char *psep = " ", SPARSE_IO_TYPE smio = BINARY,
-                     bool cts = false, bool cfs = false, bool bv = false)
+    inline explicit IOControl(int a = -1, bool s = true, bool pp = false,
+                              const char *psep = " ",
+                              SPARSE_IO_TYPE smio = BINARY, bool cts = false,
+                              bool cfs = false, bool bv = false)
         : abbr(a), output_n_elts(s), pair_paren(pp), pair_sep(psep),
           convert_to_sparse(cts), convert_from_sparse(cfs), sparse_io(smio),
           bit_vector(bv)
@@ -138,26 +139,11 @@ psep_dot(std::basic_ostream<CharT, Traits> &out_stream)
     return out_stream;
 }
 
-struct abbr
-{
-    int n;
-
-    inline abbr(int _n) : n(_n) {}
-};
-
-template <typename CharT, typename Traits>
-inline std::basic_ostream<CharT, Traits> &
-operator<<(std::basic_ostream<CharT, Traits> &out_stream, abbr s)
-{
-    io_control.abbr = s.n;
-    return out_stream;
-}
-
 struct debug
 {
     int n;
 
-    inline debug(int _n = -1) : n(_n) {}
+    inline explicit debug(int _n = -1) : n(_n) {}
 };
 
 template <typename CharT, typename Traits>
@@ -210,7 +196,7 @@ struct sparse_format_class
 {
     SPARSE_IO_TYPE format;
 
-    inline sparse_format_class(SPARSE_IO_TYPE f) : format(f) {}
+    inline explicit sparse_format_class(SPARSE_IO_TYPE f) : format(f) {}
 };
 
 inline sparse_format_class sparse_format(SPARSE_IO_TYPE f)
@@ -257,7 +243,7 @@ template <typename T1> struct is_positive_checker
 {
     T1 &var;
 
-    inline is_positive_checker(T1 &v) : var(v) {}
+    inline explicit is_positive_checker(T1 &v) : var(v) {}
 
     template <typename CharT, typename Traits>
     inline void do_check(std::basic_istream<CharT, Traits> &in_stream)
@@ -295,7 +281,7 @@ template <typename It>
 inline void binary_save(std::ostream &out_stream, It begin, It end)
 {
     typedef typename std::iterator_traits<It>::value_type value_type;
-    size_t size = static_cast<size_t>(end - begin);
+    auto size = static_cast<size_t>(end - begin);
     if (size > 0)
     {
         char *ptr = const_cast<char *>(reinterpret_cast<const char *>(&*begin));
@@ -309,7 +295,7 @@ template <typename It>
 inline void binary_load(std::istream &in_stream, It begin, It end)
 {
     typedef typename std::iterator_traits<It>::value_type value_type;
-    size_t size = static_cast<size_t>(end - begin);
+    auto size = static_cast<size_t>(end - begin);
     if (size > 0)
     {
         char *ptr = const_cast<char *>(reinterpret_cast<const char *>(&*begin));

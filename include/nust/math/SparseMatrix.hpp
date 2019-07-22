@@ -142,8 +142,6 @@ protected:
     value_type *nzb_;          // buffer for values of non-zeros
     IsNearlyZero<DTZ> isZero_; // test for zero/non-zero
 
-    friend struct SparseMatrixAlgorithms;
-
 // Macros
 
 /**
@@ -8830,8 +8828,8 @@ public:
             s += size_type(end - j) * eps_n;
             if (val > 0)
                 s /= val;
-            for (size_type i = 0; i != k; ++i)
-                *(nz_ptrs[i]) /= s;
+            for (size_type ii = 0; ii != k; ++ii)
+                *(nz_ptrs[ii]) /= s;
         }
     }
 
@@ -11660,7 +11658,14 @@ public:
 
     inline void operator/=(const value_type &val) { divide(val); }
 
-}; // end class SparseMatrix
+};
+
+template <typename UI, typename Real_stor, typename I, typename Real_prec,
+          typename DTZ>
+SparseMatrix<UI, Real_stor, I, Real_prec, DTZ>::AscendingNNZ::AscendingNNZ()
+{
+}
+// end class SparseMatrix
 
 template <typename I, typename F, typename I2, typename F2, typename ZeroTest>
 inline std::ostream &operator<<(std::ostream &out_stream,

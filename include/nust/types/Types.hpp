@@ -140,35 +140,35 @@ typedef NTA_Size Size;
  * @}
  */
 
-/**
- * This enum represents the documented logging level of the debug logger.
- *
- * Use it like `LDEBUG(nust::LogLevel_XXX)`.
- */
-enum LogLevel
-{
-    /**
-     * Log level: None.
-     */
-    LogLevel_None = NTA_LogLevel_None,
-    /**
-     * Log level: Minimal.
-     */
-    LogLevel_Minimal,
-    /**
-     * Log level: Normal.
-     */
-    LogLevel_Normal,
-    /**
-     * Log level: Verbose.
-     */
-    LogLevel_Verbose,
-};
-
 } // end namespace nust
 
-#ifdef SWIG
-#undef NTA_INTERNAL
-#endif // SWIG
+// Generic helper definitions for shared library support
+#if defined _WIN32 || defined __CYGWIN__
+#define NUST_DLL_IMPORT __declspec(dllimport)
+  #define NUST_DLL_EXPORT __declspec(dllexport)
+  #define NUST_DLL_LOCAL
+#else
+#if __GNUC__ >= 4
+#define NUST_DLL_IMPORT __attribute__ ((visibility ("default")))
+#define NUST_DLL_EXPORT __attribute__ ((visibility ("default")))
+#define NUST_DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#else
+#define NUST_DLL_IMPORT
+    #define NUST_DLL_EXPORT
+    #define NUST_DLL_LOCAL
+#endif
+#endif
+
+#ifdef NUST_DLL
+#ifdef NUST_DLL_EXPORTS
+#define NUST_API NUST_DLL_EXPORT
+#else
+#define NUST_API NUST_DLL_IMPORT
+#endif // NUST_DLL_EXPORTS
+#define NUST_LOCAL NUST_DLL_LOCAL
+#else // NUST_DLL
+#define NUST_API
+#define NUST_LOCAL
+#endif // NUST_DLL
 
 #endif // NTA_TYPES_HPP

@@ -137,16 +137,6 @@ template <> inline UInt DistanceToZero<UInt>::operator()(const UInt &x) const
 
 //--------------------------------------------------------------------------------
 /**
- * Use this functor if T is guaranteed to be positive only.
- */
-template <typename T>
-struct DistanceToZeroPositive : public std::unary_function<T, T>
-{
-    inline T operator()(const T &x) const { return x; }
-};
-
-//--------------------------------------------------------------------------------
-/**
  * This computes the distance to 1 rather than to 0.
  */
 template <typename T> struct DistanceToOne
@@ -258,38 +248,6 @@ inline int emod(int x, int m)
 }
 
 //--------------------------------------------------------------------------------
-/**
- * A boolean functor that returns true if the element's selected value is found
- * in the (associative) container (needs to support find).
- *
- * Example:
- * =======
- * typedef std::pair<UInt, UInt> IdxVal;
- * std::list<IdxVal> row;
- * std::set<UInt> alreadyGrouped;
- * row.remove_if(SetIncludes<std::set<UInt>, select1st<IdxVal>
- * >(alreadyGrouped));
- *
- * Will remove from row (a list of pairs) the pairs whose first element is
- * already contained in alreadyGrouped.
- */
-template <typename C1, typename Selector, bool f = false> struct IsIncluded
-{
-    IsIncluded(const C1 &container) : sel_(), container_(container) {}
-
-    template <typename T> inline bool operator()(const T &p) const
-    {
-        if (f)
-            return container_.find(sel_(p)) == container_.end();
-        else
-            return container_.find(sel_(p)) != container_.end();
-    }
-
-    Selector sel_;
-    const C1 &container_;
-};
-
-//--------------------------------------------------------------------------------
 // PAIRS AND TRIPLETS
 //--------------------------------------------------------------------------------
 
@@ -315,22 +273,6 @@ struct lexicographic_2
 
 //--------------------------------------------------------------------------------
 /**
- * Order based on the first member of a pair only:
- * (1, 3.5) < (2, 5.6) < (10, 7.1) < (11, 8.5)
- */
-template <typename T1, typename T2>
-struct less_1st
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
-{
-    inline bool operator()(const std::pair<T1, T2> &a,
-                           const std::pair<T1, T2> &b) const
-    {
-        return a.first < b.first;
-    }
-};
-
-//--------------------------------------------------------------------------------
-/**
  * Order based on the second member of a pair only:
  * (10, 3.5) < (1, 5.6) < (2, 7.1) < (11, 8.5)
  */
@@ -347,22 +289,6 @@ struct less_2nd
 
 //--------------------------------------------------------------------------------
 /**
- * Order based on the first member of a pair only:
- * (10, 3.5) > (8, 5.6) > (2, 7.1) > (1, 8.5)
- */
-template <typename T1, typename T2>
-struct greater_1st
-    : public std::binary_function<bool, std::pair<T1, T2>, std::pair<T1, T2>>
-{
-    inline bool operator()(const std::pair<T1, T2> &a,
-                           const std::pair<T1, T2> &b) const
-    {
-        return a.first > b.first;
-    }
-};
-
-//--------------------------------------------------------------------------------
-/**
  * Order based on the second member of a pair only:
  * (10, 3.5) > (1, 5.6) > (2, 7.1) > (11, 8.5)
  */
@@ -374,18 +300,6 @@ struct greater_2nd
                            const std::pair<T1, T2> &b) const
     {
         return a.second > b.second;
-    }
-};
-
-//--------------------------------------------------------------------------------
-template <typename T1, typename T2>
-struct greater_2nd_p : public std::binary_function<bool, std::pair<T1, T2 *>,
-                                                   std::pair<T1, T2 *>>
-{
-    inline bool operator()(const std::pair<T1, T2 *> &a,
-                           const std::pair<T1, T2 *> &b) const
-    {
-        return *(a.second) > *(b.second);
     }
 };
 
@@ -416,7 +330,7 @@ struct greater_2nd_rnd_ties
 {
     RND &rng;
 
-    inline greater_2nd_rnd_ties(RND &_rng) : rng(_rng) {}
+    inline explicit greater_2nd_rnd_ties(RND &_rng) : rng(_rng) {}
 
     inline bool operator()(const std::pair<T1, T2> &a,
                            const std::pair<T1, T2> &b) const
@@ -493,18 +407,6 @@ public:
     /**
      * See just above for definition.
      */
-    struct less_value : public std::binary_function<bool, ijv, ijv>
-    {
-        inline bool operator()(const ijv &a, const ijv &b) const
-        {
-            return a.v() < b.v();
-        }
-    };
-
-    //--------------------------------------------------------------------------------
-    /**
-     * See just above for definition.
-     */
     struct greater_value : public std::binary_function<bool, ijv, ijv>
     {
         inline bool operator()(const ijv &a, const ijv &b) const
@@ -523,13 +425,6 @@ public:
 //--------------------------------------------------------------------------------
 // Unary functions
 //--------------------------------------------------------------------------------
-
-template <typename T> struct Identity : public std::unary_function<T, T>
-{
-    inline T &operator()(T &x) const { return x; }
-
-    inline const T &operator()(const T &x) const { return x; }
-};
 
 template <typename T> struct Negate : public std::unary_function<T, T>
 {
@@ -602,113 +497,6 @@ template <> struct Log<float> : public std::unary_function<float, float>
 template <> struct Log<double> : public std::unary_function<double, double>
 {
     inline double operator()(const double &x) const { return log(x); }
-};
-
-template <typename T> struct Log2 : public std::unary_function<T, T>
-{
-};
-
-template <> struct Log2<float> : public std::unary_function<float, float>
-{
-    inline float operator()(const float &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return (float)(log(x) / log(2.0));
-#else
-        return log2f(x);
-#endif
-    }
-};
-
-template <> struct Log2<double> : public std::unary_function<double, double>
-{
-    inline double operator()(const double &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return log(x) / log(2.0);
-#else
-        return log2(x);
-#endif
-    }
-};
-
-template <typename T> struct Log10 : public std::unary_function<T, T>
-{
-};
-
-template <> struct Log10<float> : public std::unary_function<float, float>
-{
-    inline float operator()(const float &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return (float)(log(x) / log(10.0));
-#else
-        return log10f(x);
-#endif
-    }
-};
-
-template <> struct Log10<double> : public std::unary_function<double, double>
-{
-    inline double operator()(const double &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return log(x) / log(10.0);
-#else
-        return log10(x);
-#endif
-    }
-};
-
-template <typename T> struct Log1p : public std::unary_function<T, T>
-{
-};
-
-template <> struct Log1p<float> : public std::unary_function<float, float>
-{
-    inline float operator()(const float &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return (float)log(1.0 + x);
-#else
-        return log1pf(x);
-#endif
-    }
-};
-
-template <> struct Log1p<double> : public std::unary_function<double, double>
-{
-    inline double operator()(const double &x) const
-    {
-#if defined(NTA_OS_WINDOWS)
-        return log(1.0 + x);
-#else
-        return log1p(x);
-#endif
-    }
-};
-
-/**
- * Numerical approximation of derivative.
- * Error is h^4 y^5/30.
- */
-template <typename Float, typename F>
-struct Derivative : public std::unary_function<Float, Float>
-{
-    Derivative(const F &f) : f_(f) {}
-
-    F f_;
-
-    /**
-     * Approximates the derivative of F at x.
-     */
-    inline const Float operator()(const Float &x) const
-    {
-        const Float h = nust::Epsilon;
-        return (-f_(x + 2 * h) + 8 * f_(x + h) - 8 * f_(x - h) +
-                f_(x - 2 * h)) /
-               (12 * h);
-    }
 };
 
 //--------------------------------------------------------------------------------
@@ -791,50 +579,6 @@ template <typename T> struct Max : public std::binary_function<T, T, T>
     inline T operator()(const T &x, const T &y) const { return x > y ? x : y; }
 };
 
-template <typename T> struct Min : public std::binary_function<T, T, T>
-{
-    inline T operator()(const T &x, const T &y) const { return x < y ? x : y; }
-};
-
-//--------------------------------------------------------------------------------
-/**
- * Gaussian:
- * y = 1/(sigma * sqrt(2*pi)) * exp(-(x-mu)^2/(2*sigma^2)) as a functor.
- */
-template <typename T> struct Gaussian : public std::unary_function<T, T>
-{
-    T k1, k2, mu;
-
-    inline Gaussian(T m, T s) : k1(0.0), k2(0.0), mu(m)
-    {
-        // For some reason, SWIG cannot parse 1 / (x), the parentheses in the
-        // denominator don't agree with it, so we have to initialize those
-        // constants here.
-        k1 = 1.0 / sqrt(2.0 * 3.1415926535);
-        k2 = -1.0 / (2.0 * s * s);
-    }
-
-    inline Gaussian(const Gaussian &o) : k1(o.k1), k2(o.k2), mu(o.mu) {}
-
-    inline Gaussian &operator=(const Gaussian &o)
-    {
-        if (&o != this)
-        {
-            k1 = o.k1;
-            k2 = o.k2;
-            mu = o.mu;
-        }
-
-        return *this;
-    }
-
-    inline T operator()(T x) const
-    {
-        T v = x - mu;
-        return k1 * exp(k2 * v * v);
-    }
-};
-
 //--------------------------------------------------------------------------------
 /**
  * 2D Gaussian
@@ -892,26 +636,6 @@ struct Gaussian2D // : public std::binary_function<T, T, T> (SWIG pb)
 
 //--------------------------------------------------------------------------------
 /**
- * Compose two unary functions.
- */
-template <typename F1, typename F2>
-struct unary_compose : public std::unary_function<typename F1::argument_type,
-                                                  typename F2::result_type>
-{
-    typedef typename F1::argument_type argument_type;
-    typedef typename F2::result_type result_type;
-
-    F1 f1;
-    F2 f2;
-
-    inline result_type operator()(const argument_type &x) const
-    {
-        return f2(f1(x));
-    }
-};
-
-//--------------------------------------------------------------------------------
-/**
  * Compose an order predicate and a binary selector, so that we can write:
  * sort(x.begin(), x.end(), compose<less<float>, select2nd<pair<int, float> >
  * >()); to sort pairs in increasing order of their second element.
@@ -952,7 +676,7 @@ template <typename T> inline bool isSafeForDivision(const T &x)
  */
 template <typename T> struct ClipAbove : public std::unary_function<T, T>
 {
-    inline ClipAbove(const T &val) : val_(val) {}
+    inline explicit ClipAbove(const T &val) : val_(val) {}
 
     inline ClipAbove(const ClipAbove &c) : val_(c.val_) {}
 
@@ -975,7 +699,7 @@ template <typename T> struct ClipAbove : public std::unary_function<T, T>
  */
 template <typename T> struct ClipBelow : public std::unary_function<T, T>
 {
-    inline ClipBelow(const T &val) : val_(val) {}
+    inline explicit ClipBelow(const T &val) : val_(val) {}
 
     inline ClipBelow(const ClipBelow &c) : val_(c.val_) {}
 
@@ -994,6 +718,6 @@ template <typename T> struct ClipBelow : public std::unary_function<T, T>
 
 //--------------------------------------------------------------------------------
 
-}; // namespace nust
+} // namespace nust
 
 #endif // NTA_MATH_HPP
