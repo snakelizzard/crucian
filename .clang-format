@@ -9,7 +9,7 @@
   BreakBeforeBraces: Allman
   IncludeBlocks: Regroup
   IncludeCategories:
-    - Regex:    '<nust/.*>'
+    - Regex:    '<crucian/.*>'
       Priority: 2
     - Regex:    '<.*>'
       Priority: 1

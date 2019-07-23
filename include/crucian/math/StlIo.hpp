@@ -35,10 +35,10 @@
 #include <set>
 #include <vector>
 
-#include <nust/math/ArrayAlgo.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/math/ArrayAlgo.hpp>
+#include <crucian/types/Types.hpp>
 
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -308,14 +308,14 @@ inline void binary_load(std::istream &in_stream, It begin, It end)
 template <typename T>
 inline void binary_save(std::ostream &out_stream, const std::vector<T> &v)
 {
-    nust::binary_save(out_stream, v.begin(), v.end());
+    crucian::binary_save(out_stream, v.begin(), v.end());
 }
 
 //--------------------------------------------------------------------------------
 template <typename T>
 inline void binary_load(std::istream &in_stream, std::vector<T> &v)
 {
-    nust::binary_load(in_stream, v.begin(), v.end());
+    crucian::binary_load(in_stream, v.begin(), v.end());
 }
 
 //--------------------------------------------------------------------------------
@@ -370,7 +370,7 @@ template <typename T> struct vector_loader<T, true>
             {
                 float x = 0;
                 in_stream >> x;
-                if (std::abs(x) < nust::Epsilon)
+                if (std::abs(x) < crucian::Epsilon)
                     v[i] = 1;
                 else
                     v[i] = 0;
@@ -629,5 +629,5 @@ inline void show_all_differences(const std::vector<T> &x,
 }
 
 //--------------------------------------------------------------------------------
-} // end namespace nust
+} // end namespace crucian
 #endif // NTA_STL_IO_HPP

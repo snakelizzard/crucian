@@ -32,12 +32,12 @@
 #include <set>
 #include <vector>
 
-#include <nust/types/Types.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/types/Types.hpp>
+#include <crucian/utils/Log.hpp>
 
 /* This file is used by array_algo.hpp */
 
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -48,10 +48,10 @@ namespace nust
  * Going to a real vector of bits is slower when accessing the individual bits,
  * but this vector of bytes can still be fed to the SSE with good results.
  */
-struct ByteVector : public std::vector<nust::Byte>
+struct ByteVector : public std::vector<crucian::Byte>
 {
     inline explicit ByteVector(size_t n = 0)
-        : std::vector<nust::Byte>(n, static_cast<nust::Byte>(0))
+        : std::vector<crucian::Byte>(n, static_cast<crucian::Byte>(0))
     {
     }
 
@@ -61,7 +61,7 @@ struct ByteVector : public std::vector<nust::Byte>
      * the same as the byte representation of ints and floats.
      */
     template <typename It>
-    inline ByteVector(It begin, size_t n) : std::vector<nust::Byte>(n, 0)
+    inline ByteVector(It begin, size_t n) : std::vector<crucian::Byte>(n, 0)
     {
         for (size_t i = 0; i != this->size(); ++i)
             (*this)[i] = *begin++ != 0;
@@ -128,6 +128,6 @@ struct SparseVector : public Buffer<std::pair<T1, T2>>
 };
 
 //--------------------------------------------------------------------------------
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_MATH_TYPES_HPP

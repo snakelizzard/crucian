@@ -29,13 +29,13 @@
 #include <sstream>
 #include <vector>
 
-#include <nust/algorithms/Segment.hpp>
-#include <nust/math/ArrayAlgo.hpp> // is_in
-#include <nust/math/StlIo.hpp>     // binary_save
-#include <nust/utils/Log.hpp>
-#include <nust/utils/Random.hpp>
+#include <crucian/algorithms/Segment.hpp>
+#include <crucian/math/ArrayAlgo.hpp> // is_in
+#include <crucian/math/StlIo.hpp>     // binary_save
+#include <crucian/utils/Log.hpp>
+#include <crucian/utils/Random.hpp>
 
-namespace nust
+namespace crucian
 {
 
 //----------------------------------------------------------------------
@@ -502,4 +502,4 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate)
     return outStream;
 }
 
-} // namespace nust
+} // namespace crucian

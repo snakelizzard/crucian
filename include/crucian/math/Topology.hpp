@@ -29,9 +29,9 @@
 
 #include <vector>
 
-#include <nust/types/Types.hpp>
+#include <crucian/types/Types.hpp>
 
-namespace nust
+namespace crucian
 {
 
 /**
@@ -214,6 +214,6 @@ private:
     const UInt radius_;
 };
 
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_TOPOLOGY_HPP

@@ -31,9 +31,9 @@
 #include <set>
 #include <vector>
 
-#include <nust/algorithms/InSynapse.hpp>
-#include <nust/math/ArrayAlgo.hpp> // is_sorted
-#include <nust/math/StlIo.hpp>     // binary_save
+#include <crucian/algorithms/InSynapse.hpp>
+#include <crucian/math/ArrayAlgo.hpp> // is_sorted
+#include <crucian/math/StlIo.hpp>     // binary_save
 
 //-----------------------------------------------------------------------
 /**
@@ -79,7 +79,7 @@
 
 //-----------------------------------------------------------------------
 
-namespace nust
+namespace crucian
 {
 
 //-----------------------------------------------------------------------
@@ -931,7 +931,7 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate);
 
 //-----------------------------------------------------------------------
 
-} // end namespace nust
+} // end namespace crucian
 
 //-----------------------------------------------------------------------
 #endif // NTA_SEGMENT_HPP

@@ -35,11 +35,11 @@
 #include <set>
 #include <vector>
 
-#include <nust/math/Utils.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/math/Utils.hpp>
+#include <crucian/types/Types.hpp>
 
 //--------------------------------------------------------------------------------
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -82,33 +82,33 @@ void ASSERT_VALID_RANGE(It begin, It end, const char *message)
  * numbers. numeric_limits<float>::epsilon() == 1.19209e-7
  *   numeric_limits<double>::epsilon() == 2.22045e-16
  */
-constexpr nust::Real Epsilon = nust::Real(1e-6);
+constexpr crucian::Real Epsilon = crucian::Real(1e-6);
 
 //--------------------------------------------------------------------------------
 /**
- * Functions that test for positivity or negativity based on nust::Epsilon.
+ * Functions that test for positivity or negativity based on crucian::Epsilon.
  */
 template <typename T> inline bool strictlyNegative(const T &a)
 {
-    return a < -nust::Epsilon;
+    return a < -crucian::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool strictlyPositive(const T &a)
 {
-    return a > nust::Epsilon;
+    return a > crucian::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool negative(const T &a)
 {
-    return a <= nust::Epsilon;
+    return a <= crucian::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
 template <typename T> inline bool positive(const T &a)
 {
-    return a >= -nust::Epsilon;
+    return a >= -crucian::Epsilon;
 }
 
 //--------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ template <typename T> struct DistanceToOne
 //--------------------------------------------------------------------------------
 /**
  * This functor decides whether a number is almost zero or not, using the
- * platform-wide nust::Epsilon.
+ * platform-wide crucian::Epsilon.
  */
 template <typename D> struct IsNearlyZero
 {
@@ -163,7 +163,7 @@ template <typename D> struct IsNearlyZero
     D dist_;
 
     // In the case where D::result_type is integral
-    // we convert nust::Epsilon to zero!
+    // we convert crucian::Epsilon to zero!
     inline IsNearlyZero() : dist_() {}
 
     inline IsNearlyZero(const IsNearlyZero &other) : dist_(other.dist_) {}
@@ -178,7 +178,7 @@ template <typename D> struct IsNearlyZero
 
     inline bool operator()(const typename D::argument_type &x) const
     {
-        return dist_(x) <= nust::Epsilon;
+        return dist_(x) <= crucian::Epsilon;
     }
 };
 
@@ -218,7 +218,7 @@ template <typename D> struct IsNearlyZero
  *  a "good, ugly" reason to do it this way that he can't remember. - WCS 0206
  */
 template <typename T>
-inline bool nearlyZero(const T &a, const T &epsilon = T(nust::Epsilon))
+inline bool nearlyZero(const T &a, const T &epsilon = T(crucian::Epsilon))
 {
     return a >= -epsilon && a <= epsilon;
 }
@@ -226,7 +226,7 @@ inline bool nearlyZero(const T &a, const T &epsilon = T(nust::Epsilon))
 //--------------------------------------------------------------------------------
 template <typename T>
 inline bool nearlyEqual(const T &a, const T &b,
-                        const T &epsilon = nust::Epsilon)
+                        const T &epsilon = crucian::Epsilon)
 {
     return nearlyZero((b - a), epsilon);
 }
@@ -718,6 +718,6 @@ template <typename T> struct ClipBelow : public std::unary_function<T, T>
 
 //--------------------------------------------------------------------------------
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_MATH_HPP

@@ -29,9 +29,9 @@
 #include <queue>
 #include <sstream>
 
-#include <nust/algorithms/OutSynapse.hpp>
-#include <nust/algorithms/Segment.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/algorithms/OutSynapse.hpp>
+#include <crucian/algorithms/Segment.hpp>
+#include <crucian/types/Types.hpp>
 
 //-----------------------------------------------------------------------
 /**
@@ -65,7 +65,7 @@
  * pointers to numpy array buffers, avoiding a copy step.
  */
 
-namespace nust
+namespace crucian
 {
 
 class Cell;
@@ -284,7 +284,7 @@ public:
     static const UInt VERSION = 2;
 
 private:
-    nust::Random _rng;
+    crucian::Random _rng;
 
     //-----------------------------------------------------------------------
     /**
@@ -1202,7 +1202,7 @@ std::ostream &operator<<(std::ostream &outStream, const Cells4 &cells);
 
 //-----------------------------------------------------------------------
 
-} // end namespace nust
+} // end namespace crucian
 
 //-----------------------------------------------------------------------
 #endif // NTA_Cells4_HPP

@@ -25,10 +25,10 @@
 
 #include <vector>
 
-#include <nust/types/Types.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/types/Types.hpp>
+#include <crucian/utils/Log.hpp>
 
-namespace nust
+namespace crucian
 {
 
 class Cells4;
@@ -197,6 +197,6 @@ inline std::ostream &operator<<(std::ostream &outStream,
 
 #endif
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_SEGMENTUPDATE_HPP

@@ -30,11 +30,11 @@
 #include <algorithm>
 #include <sstream>
 
-#include <nust/math/ArrayAlgo.hpp>
-#include <nust/math/Math.hpp>
-#include <nust/math/StlIo.hpp>
+#include <crucian/math/ArrayAlgo.hpp>
+#include <crucian/math/Math.hpp>
+#include <crucian/math/StlIo.hpp>
 
-namespace nust
+namespace crucian
 {
 
 /**
@@ -44,7 +44,7 @@ namespace nust
  * of the matrix, such as total number of non-zeros.
  *
  */
-template <typename UI1 = nust::UInt32, typename UI2 = nust::UInt32>
+template <typename UI1 = crucian::UInt32, typename UI2 = crucian::UInt32>
 class SparseBinaryMatrix
 {
 public:
@@ -121,7 +121,7 @@ public:
         NTA_ASSERT(nCols());
         NTA_ASSERT(nnz);
 
-        nust::Random rng(seed);
+        crucian::Random rng(seed);
 
         for (size_type i = 0; i != nCols(); ++i)
             buffer_[i] = i;
@@ -640,7 +640,7 @@ public:
         typename Row::iterator it;
         it = std::lower_bound(ind_[row].begin(), ind_[row].end(), col);
 
-        if (nust::nearlyZero(val))
+        if (crucian::nearlyZero(val))
         {
 
             if (it != ind_[row].end() && *it == col)
@@ -729,7 +729,7 @@ public:
         ind_.resize(nRows() + 1);
         Row &row = ind_[ind_.size() - 1];
         for (nz_index_type j = 0; j != nCols(); ++j, ++begin)
-            if (!nust::nearlyZero(*begin))
+            if (!crucian::nearlyZero(*begin))
                 row.push_back(j);
     }
 
@@ -808,7 +808,7 @@ public:
         Row &buffer = const_cast<Row &>(buffer_);
         size_type k = 0;
         for (nz_index_type j = 0; j != nCols(); ++j)
-            if (!nust::nearlyZero(*(begin + j)))
+            if (!crucian::nearlyZero(*(begin + j)))
                 buffer[k++] = j;
 
         return findRowSparse(buffer_.begin(), buffer_.begin() + k);
@@ -1174,14 +1174,14 @@ public:
      * with values only 0 and 1 for any element).
      */
     template <typename InputIterator>
-    inline bool maxAllowedOverlap(nust::Real32 maxDistance, InputIterator x,
+    inline bool maxAllowedOverlap(crucian::Real32 maxDistance, InputIterator x,
                                   InputIterator x_end) const
     {
         {
             NTA_ASSERT(static_cast<size_type>(x_end - x) == nCols());
         }
 
-        nust::Real32 k = 1.0f - maxDistance;
+        crucian::Real32 k = 1.0f - maxDistance;
 
         // Compute the number of 1's in x, same as the sum of x
         size_type c_sum = 0;
@@ -1195,7 +1195,7 @@ public:
 
             // Compute max allowed overlap
             size_type ls = std::max(nNonZerosOnRow(i), c_sum);
-            nust::Real32 max_ov = k * ls;
+            crucian::Real32 max_ov = k * ls;
 
             // Compute overlap between row i and vector x,
             // but exit early, as soon as we determine that
@@ -1275,7 +1275,7 @@ public:
             // << where << "Invalid row size: " << n;
             ind_[row].resize(n);
             inStream.ignore(1);
-            nust::binary_load(inStream, ind_[row].begin(), ind_[row].end());
+            crucian::binary_load(inStream, ind_[row].begin(), ind_[row].end());
         }
     }
 
@@ -1292,7 +1292,7 @@ public:
         for (size_type row = 0; row != nRows(); ++row)
         {
             outStream << ind_[row].size() << " ";
-            nust::binary_save(outStream, ind_[row].begin(), ind_[row].end());
+            crucian::binary_save(outStream, ind_[row].begin(), ind_[row].end());
         }
     }
 
@@ -1943,6 +1943,6 @@ inline std::istream &operator>>(std::istream &in_stream,
     return in_stream;
 }
 
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_SPARSE_BINARY_MATRIX_HPP

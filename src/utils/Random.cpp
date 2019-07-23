@@ -31,10 +31,10 @@
 #include <iostream> // for istream, ostream
 #include <limits>
 
-#include <nust/utils/Log.hpp>
-#include <nust/utils/Random.hpp>
+#include <crucian/utils/Log.hpp>
+#include <crucian/utils/Random.hpp>
 
-namespace nust
+namespace crucian
 {
 
 Random *Random::theInstanceP_ = nullptr;
@@ -417,10 +417,10 @@ bool RandomImpl::operator==(const RandomImpl &o) const
 // the Random singleton has not been initialized.
 NTA_UInt64 GetRandomSeed()
 {
-    Random *r = nust::Random::theInstanceP_;
+    Random *r = crucian::Random::theInstanceP_;
     NTA_CHECK(r != nullptr);
     NTA_UInt64 result = r->getUInt64();
     return result;
 }
 
-} // namespace nust
+} // namespace crucian

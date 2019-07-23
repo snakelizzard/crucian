@@ -24,10 +24,10 @@
  * Topology helpers
  */
 
-#include <nust/math/Topology.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/math/Topology.hpp>
+#include <crucian/utils/Log.hpp>
 
-namespace nust
+namespace crucian
 {
 
 std::vector<UInt> coordinatesFromIndex(UInt index,
@@ -262,4 +262,4 @@ WrappingNeighborhood::Iterator WrappingNeighborhood::end() const
     return {*this, /*end*/ true};
 }
 
-} // namespace nust
+} // namespace crucian

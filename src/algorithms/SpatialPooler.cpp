@@ -31,11 +31,11 @@
 #include <string>
 #include <vector>
 
-#include <nust/algorithms/SpatialPooler.hpp>
-#include <nust/math/Math.hpp>
-#include <nust/math/Topology.hpp>
+#include <crucian/algorithms/SpatialPooler.hpp>
+#include <crucian/math/Math.hpp>
+#include <crucian/math/Topology.hpp>
 
-namespace nust
+namespace crucian
 {
 
 static const Real PERMANENCE_EPSILON = 0.000001;
@@ -1586,4 +1586,4 @@ void SpatialPooler::printState(std::vector<Real> &state)
 
 UInt SpatialPooler::version() const { return version_; }
 
-} // namespace nust
+} // namespace crucian

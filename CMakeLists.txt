@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.3)
-project(nust CXX)
+project(crucian CXX)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 

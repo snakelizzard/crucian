@@ -38,11 +38,11 @@
 #include <intrin.h>
 #endif
 
-#include <nust/math/Math.hpp>
-#include <nust/math/Types.hpp>
-#include <nust/utils/Random.hpp> // For the official Numenta RNG
+#include <crucian/math/Math.hpp>
+#include <crucian/math/Types.hpp>
+#include <crucian/utils/Random.hpp> // For the official Numenta RNG
 
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ static const int SSE_LEVEL = checkSSE();
 template <typename It>
 inline bool nearlyZeroRange(
     It begin, It end,
-    const typename std::iterator_traits<It>::value_type epsilon = nust::Epsilon)
+    const typename std::iterator_traits<It>::value_type epsilon = crucian::Epsilon)
 {
     {
         NTA_ASSERT(begin <= end) << "nearlyZeroRange: Invalid input range";
@@ -165,7 +165,7 @@ template <typename It1, typename It2>
 inline bool
 nearlyEqualRange(It1 begin1, It1 end1, It2 begin2, It2 end2,
                  const typename std::iterator_traits<It1>::value_type epsilon =
-                     nust::Epsilon)
+                     crucian::Epsilon)
 {
     {
         NTA_ASSERT(begin1 <= end1)
@@ -186,7 +186,7 @@ nearlyEqualRange(It1 begin1, It1 end1, It2 begin2, It2 end2,
 template <typename Container1, typename Container2>
 inline bool nearlyEqualVector(
     const Container1 &c1, const Container2 &c2,
-    const typename Container1::value_type &epsilon = nust::Epsilon)
+    const typename Container1::value_type &epsilon = crucian::Epsilon)
 {
     if (c1.size() != c2.size())
         return false;
@@ -738,7 +738,7 @@ struct dict : public std::map<K, V, C, A>
     // Often useful for histograms, where V is an integral type
     inline void increment(const K &key, const V &init = 1)
     {
-        nust::increment(*this, key, init);
+        crucian::increment(*this, key, init);
     }
 
     // Inserts once in the map, or return false if already inserted
@@ -1285,7 +1285,7 @@ inline void in_place_sparse_to_dense_01(int n, std::vector<T> &x)
 template <typename It1, typename It2, typename It3>
 inline void
 from_dense(It1 begin, It1 end, It2 ind, It3 nz,
-           typename std::iterator_traits<It1>::value_type eps = nust::Epsilon)
+           typename std::iterator_traits<It1>::value_type eps = crucian::Epsilon)
 {
     {
         NTA_ASSERT(begin <= end) << "from_dense: Mismatched dense iterators";
@@ -1490,7 +1490,7 @@ inline void remove(const std::set<T> &y, std::vector<T> &x)
             del.push_back(x[i]);
         }
 
-    nust::remove(del, x);
+    crucian::remove(del, x);
 }
 
 //--------------------------------------------------------------------------------
@@ -1786,7 +1786,7 @@ rand_range(It begin, It end,
            const typename std::iterator_traits<It>::value_type &min_,
            const typename std::iterator_traits<It>::value_type &max_)
 {
-    nust::Random rng;
+    crucian::Random rng;
     rand_range(begin, end, min_, max_, rng);
 }
 
@@ -1875,7 +1875,7 @@ inline void rand_range_01(It begin, It end, double pct, RNG &rng)
 template <typename It>
 inline void rand_range_01(It begin, It end, double pct = .5)
 {
-    nust::Random rng;
+    crucian::Random rng;
     rand_range_01(begin, end, pct, rng);
 }
 
@@ -1895,7 +1895,7 @@ inline void rand_range_01(T &a, double pct, RNG &rng)
  */
 template <typename T> inline void rand_range_01(T &a, double pct = .5)
 {
-    nust::Random rng;
+    crucian::Random rng;
     rand_range_01(a.begin(), a.end(), pct, rng);
 }
 
@@ -2000,7 +2000,7 @@ inline void rand_enum_range(It1 begin, It1 end, It2 enum_begin, It2 enum_end,
             << "rand_enum_range: Invalid enum range";
     }
 
-    nust::Random rng;
+    crucian::Random rng;
     rand_enum_range(begin, end, enum_begin, enum_end, replace, rng);
 }
 
@@ -2068,7 +2068,7 @@ random_perm_interval(It begin, It end,
             << "random_perm_interval 2: Invalid input range";
     }
 
-    nust::Random rng;
+    crucian::Random rng;
     random_perm_interval(begin, end, start, step, rng);
 }
 
@@ -2140,7 +2140,7 @@ inline void random_sample(It1 begin1, It1 end1, It2 begin2, It2 end2)
         NTA_ASSERT(begin2 <= end2) << "random_sample 2: Invalid output range";
     }
 
-    nust::Random rng;
+    crucian::Random rng;
     random_sample(begin1, end1, begin2, end2, rng);
 }
 
@@ -2189,7 +2189,7 @@ template <typename T>
 inline void random_sample(std::vector<T> &c, size_t size, size_t start = 0,
                           size_t step = 1)
 {
-    nust::Random rng;
+    crucian::Random rng;
     random_sample(c, size, start, step, rng);
 }
 
@@ -2252,9 +2252,9 @@ inline void random_pair_sample(size_t nrows, size_t ncols, size_t nnzpr,
     a.resize(nrows * nnzpr);
 
 #if defined(NTA_ARCH_32) && defined(NTA_OS_DARWIN)
-    nust::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
+    crucian::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
 #else
-    nust::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
+    crucian::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
 #endif
 
     std::vector<size_t> x(ncols);
@@ -2303,9 +2303,9 @@ inline void gaussian_2d_pair_sample(size_t nrows, size_t ncols, size_t nnzpr,
     a.resize(nrows * nnzpr);
 
 #if defined(NTA_ARCH_32) && defined(NTA_OS_DARWIN)
-    nust::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
+    crucian::Random rng(static_cast<UInt64>(seed == -1 ? arc4random() : seed));
 #else
-    nust::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
+    crucian::Random rng(static_cast<UInt64>(seed == -1 ? rand() : seed));
 #endif
 
     size_t rf_y = ncols / rf_x;
@@ -2530,8 +2530,8 @@ threshold(InIter begin, InIter end, OutIter1 ind, OutIter2 nz,
  * count of 1's.
  */
 template <typename InputIterator, typename OutputIterator>
-inline nust::UInt32
-binarize_with_threshold(nust::Real32 threshold, InputIterator x,
+inline crucian::UInt32
+binarize_with_threshold(crucian::Real32 threshold, InputIterator x,
                         InputIterator x_end, OutputIterator y,
                         OutputIterator y_end)
 {
@@ -2539,7 +2539,7 @@ binarize_with_threshold(nust::Real32 threshold, InputIterator x,
         NTA_ASSERT(x_end - x == y_end - y);
     }
 
-    nust::UInt32 count = 0;
+    crucian::UInt32 count = 0;
 
     for (; x != x_end; ++x, ++y)
         if (*x > threshold)
@@ -2565,29 +2565,29 @@ binarize_with_threshold(nust::Real32 threshold, InputIterator x,
  * necessary, i.e. stops as soon as a 1 is found on the row.
  */
 template <typename InputIterator, typename OutputIterator>
-inline void nonZeroRowsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
+inline void nonZeroRowsIndicator_01(crucian::UInt32 nrows, crucian::UInt32 ncols,
                                     InputIterator x, InputIterator x_end,
                                     OutputIterator y, OutputIterator y_end)
 {
     {
         NTA_ASSERT(0 < nrows);
         NTA_ASSERT(0 < ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(y_end - y) == nrows);
+        NTA_ASSERT(static_cast<crucian::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<crucian::UInt32>(y_end - y) == nrows);
 #ifdef NTA_ASSERTION_ON
-        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+        for (crucian::UInt32 i = 0; i != nrows * ncols; ++i)
             NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
     }
 
-    for (nust::UInt32 r = 0; r != nrows; ++r, ++y)
+    for (crucian::UInt32 r = 0; r != nrows; ++r, ++y)
     {
 
         InputIterator it = x + r * ncols, it_end = it + ncols;
-        nust::UInt32 found = 0;
+        crucian::UInt32 found = 0;
 
         while (it != it_end && found == 0)
-            found = nust::UInt32(*it++);
+            found = crucian::UInt32(*it++);
 
         *y = found;
     }
@@ -2600,29 +2600,29 @@ inline void nonZeroRowsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
  * necessary, i.e. stops as soon as a 1 is found on the row.
  */
 template <typename InputIterator>
-inline nust::UInt32 nNonZeroRows_01(nust::UInt32 nrows, nust::UInt32 ncols,
+inline crucian::UInt32 nNonZeroRows_01(crucian::UInt32 nrows, crucian::UInt32 ncols,
                                     InputIterator x, InputIterator x_end)
 {
     {
         NTA_ASSERT(0 < nrows);
         NTA_ASSERT(0 < ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<crucian::UInt32>(x_end - x) == nrows * ncols);
 #ifdef NTA_ASSERTION_ON
-        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+        for (crucian::UInt32 i = 0; i != nrows * ncols; ++i)
             NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
     }
 
-    nust::UInt32 count = 0;
+    crucian::UInt32 count = 0;
 
-    for (nust::UInt32 r = 0; r != nrows; ++r)
+    for (crucian::UInt32 r = 0; r != nrows; ++r)
     {
 
         InputIterator it = x + r * ncols, it_end = it + ncols;
-        nust::UInt32 found = 0;
+        crucian::UInt32 found = 0;
 
         while (it != it_end && found == 0)
-            found = nust::UInt32(*it++);
+            found = crucian::UInt32(*it++);
 
         count += found;
     }
@@ -2638,32 +2638,32 @@ inline nust::UInt32 nNonZeroRows_01(nust::UInt32 nrows, nust::UInt32 ncols,
  * necessary, i.e. stops as soon as a 1 is found on the col.
  */
 template <typename InputIterator, typename OutputIterator>
-inline void nonZeroColsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
+inline void nonZeroColsIndicator_01(crucian::UInt32 nrows, crucian::UInt32 ncols,
                                     InputIterator x, InputIterator x_end,
                                     OutputIterator y, OutputIterator y_end)
 {
     {
         NTA_ASSERT(0 < nrows);
         NTA_ASSERT(0 < ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(y_end - y) == ncols);
+        NTA_ASSERT(static_cast<crucian::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<crucian::UInt32>(y_end - y) == ncols);
 #ifdef NTA_ASSERTION_ON
-        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+        for (crucian::UInt32 i = 0; i != nrows * ncols; ++i)
             NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
     }
 
-    nust::UInt32 N = nrows * ncols;
+    crucian::UInt32 N = nrows * ncols;
 
-    for (nust::UInt32 c = 0; c != ncols; ++c, ++y)
+    for (crucian::UInt32 c = 0; c != ncols; ++c, ++y)
     {
 
         InputIterator it = x + c, it_end = it + N;
-        nust::UInt32 found = 0;
+        crucian::UInt32 found = 0;
 
         while (it != it_end && found == 0)
         {
-            found = nust::UInt32(*it);
+            found = crucian::UInt32(*it);
             it += ncols;
         }
 
@@ -2679,31 +2679,31 @@ inline void nonZeroColsIndicator_01(nust::UInt32 nrows, nust::UInt32 ncols,
  * a 1 is found on the col.
  */
 template <typename InputIterator>
-inline nust::UInt32 nNonZeroCols_01(nust::UInt32 nrows, nust::UInt32 ncols,
+inline crucian::UInt32 nNonZeroCols_01(crucian::UInt32 nrows, crucian::UInt32 ncols,
                                     InputIterator x, InputIterator x_end)
 {
     {
         NTA_ASSERT(0 < nrows);
         NTA_ASSERT(0 < ncols);
-        NTA_ASSERT(static_cast<nust::UInt32>(x_end - x) == nrows * ncols);
+        NTA_ASSERT(static_cast<crucian::UInt32>(x_end - x) == nrows * ncols);
 #ifdef NTA_ASSERTION_ON
-        for (nust::UInt32 i = 0; i != nrows * ncols; ++i)
+        for (crucian::UInt32 i = 0; i != nrows * ncols; ++i)
             NTA_ASSERT(x[i] == 0 || x[i] == 1);
 #endif
     }
 
-    nust::UInt32 count = 0;
-    nust::UInt32 N = nrows * ncols;
+    crucian::UInt32 count = 0;
+    crucian::UInt32 N = nrows * ncols;
 
-    for (nust::UInt32 c = 0; c != ncols; ++c)
+    for (crucian::UInt32 c = 0; c != ncols; ++c)
     {
 
         InputIterator it = x + c, it_end = it + N;
-        nust::UInt32 found = 0;
+        crucian::UInt32 found = 0;
 
         while (it != it_end && found == 0)
         {
-            found = nust::UInt32(*it);
+            found = crucian::UInt32(*it);
             it += ncols;
         }
 
@@ -2764,7 +2764,7 @@ template <typename value_type1, typename value_type2>
 inline void mask(std::vector<value_type1> &x,
                  const std::vector<value_type2> &mask,
                  bool multiplyYesNo = false,
-                 value_type2 eps = static_cast<value_type2>(nust::Epsilon))
+                 value_type2 eps = static_cast<value_type2>(crucian::Epsilon))
 {
     { // Pre-conditions
         NTA_ASSERT(x.size() == mask.size())
@@ -2802,7 +2802,7 @@ template <typename T> struct Lp0
 
     inline value_type operator()(value_type &a, value_type b) const
     {
-        value_type inc = value_type(b < -nust::Epsilon || b > nust::Epsilon);
+        value_type inc = value_type(b < -crucian::Epsilon || b > crucian::Epsilon);
         a += inc;
         return inc;
     }
@@ -2838,7 +2838,7 @@ template <typename T> struct Lp2
 {
     typedef T value_type;
 
-    nust::Sqrt<value_type> s;
+    crucian::Sqrt<value_type> s;
 
     inline value_type operator()(value_type &a, value_type b) const
     {
@@ -2859,7 +2859,7 @@ template <typename T> struct Lp
 {
     typedef T value_type;
 
-    nust::Pow<value_type> pf;
+    crucian::Pow<value_type> pf;
 
     Lp(value_type p_) : p(p_), inv_p(static_cast<value_type>(1.0))
     {
@@ -2899,7 +2899,7 @@ template <typename T> struct LpMax
 {
     typedef T value_type;
 
-    nust::Max<value_type> m;
+    crucian::Max<value_type> m;
 
     inline value_type operator()(value_type &a, value_type b) const
     {
@@ -3682,7 +3682,7 @@ inline size_t count_if(const C &c, Predicate pred)
 template <typename It>
 inline size_t count_zeros(
     It begin, It end,
-    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon)
+    const typename std::iterator_traits<It>::value_type &eps = crucian::Epsilon)
 {
     {
         NTA_ASSERT(begin <= end) << "count_zeros: Invalid range";
@@ -3699,7 +3699,7 @@ inline size_t count_zeros(
  */
 template <typename C>
 inline size_t count_zeros(const C &c,
-                          const typename C::value_type &eps = nust::Epsilon)
+                          const typename C::value_type &eps = crucian::Epsilon)
 {
     return count_zeros(c.begin, c.end(), eps);
 }
@@ -3711,7 +3711,7 @@ inline size_t count_zeros(const C &c,
 template <typename It>
 inline size_t count_ones(
     It begin, It end,
-    const typename std::iterator_traits<It>::value_type &eps = nust::Epsilon)
+    const typename std::iterator_traits<It>::value_type &eps = crucian::Epsilon)
 {
     {
         NTA_ASSERT(begin <= end) << "count_ones: Invalid range";
@@ -3728,7 +3728,7 @@ inline size_t count_ones(
  */
 template <typename C>
 inline size_t count_ones(const C &c,
-                         const typename C::value_type &eps = nust::Epsilon)
+                         const typename C::value_type &eps = crucian::Epsilon)
 {
     return count_ones(c.begin(), c.end(), eps);
 }
@@ -3747,8 +3747,8 @@ inline size_t count_ones(const C &c,
  *
  * Doesn't work on win32.
  */
-inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
-                             nust::Real32 threshold)
+inline crucian::UInt32 count_gt(crucian::Real32 *begin, crucian::Real32 *end,
+                             crucian::Real32 threshold)
 {
     NTA_ASSERT(begin <= end);
 
@@ -3769,14 +3769,14 @@ inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
         // < 4)
         NTA_UIntPtr x_addr = reinterpret_cast<NTA_UIntPtr>(
             begin); // 8 bytes on 64 bits platforms
-        nust::Real32 *start =
+        crucian::Real32 *start =
             (x_addr % 16 == 0)
                 ? begin
-                : reinterpret_cast<nust::Real32 *>(16 * (x_addr / 16 + 1));
+                : reinterpret_cast<crucian::Real32 *>(16 * (x_addr / 16 + 1));
 
 #if defined(NTA_ARCH_64) && !defined(NTA_OS_WINDOWS)
 
-        nust::Real32 count = 0;
+        crucian::Real32 count = 0;
         int n0 = static_cast<int>(start - begin);
         int n1 = static_cast<int>(4 * ((end - start) / 4));
         int n2 = static_cast<int>(end - start - n1);
@@ -3898,13 +3898,13 @@ inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
 
 #else
         return std::count_if(
-            begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold));
+            begin, end, std::bind2nd(std::greater<crucian::Real32>(), threshold));
 #endif
     }
     else
     {
         return static_cast<UInt32>(std::count_if(
-            begin, end, std::bind2nd(std::greater<nust::Real32>(), threshold)));
+            begin, end, std::bind2nd(std::greater<crucian::Real32>(), threshold)));
     }
 }
 
@@ -3918,21 +3918,21 @@ inline nust::UInt32 count_gt(nust::Real32 *begin, nust::Real32 *end,
  * that are .astype(float32).
  *
  */
-inline nust::UInt32 count_gte(nust::Real32 *begin, nust::Real32 *end,
-                              nust::Real32 threshold)
+inline crucian::UInt32 count_gte(crucian::Real32 *begin, crucian::Real32 *end,
+                              crucian::Real32 threshold)
 {
     NTA_ASSERT(begin <= end);
 
     return static_cast<UInt32>(std::count_if(
         begin, end,
-        std::bind2nd(std::greater_equal<nust::Real32>(), threshold)));
+        std::bind2nd(std::greater_equal<crucian::Real32>(), threshold)));
 }
 
 //--------------------------------------------------------------------------------
 /**
  * Counts the number of non-zeros in a vector.
  */
-inline size_t count_non_zeros(nust::Real32 *begin, nust::Real32 *end)
+inline size_t count_non_zeros(crucian::Real32 *begin, crucian::Real32 *end)
 {
     NTA_ASSERT(begin <= end);
     return count_gt(begin, end, 0);
@@ -3946,8 +3946,8 @@ inline size_t count_non_zeros(nust::Real32 *begin, nust::Real32 *end)
 template <typename T> inline size_t count_non_zeros(const std::vector<T> &x)
 {
     NTA_ASSERT(sizeof(T) == 4);
-    nust::Real32 *begin = static_cast<nust::Real32 *>(&x[0]);
-    nust::Real32 *end = begin + x.size();
+    crucian::Real32 *begin = static_cast<crucian::Real32 *>(&x[0]);
+    crucian::Real32 *end = begin + x.size();
     return count_gt(begin, end, 0);
 }
 
@@ -4039,13 +4039,13 @@ inline void round_01(T &a, const typename T::value_type &threshold = .5)
  * vDSP also handles unaligned vectors correctly, and has good performance
  * also when the vectors are small, not just when they are big.
  */
-inline nust::Real32 sum(nust::Real32 *begin, nust::Real32 *end)
+inline crucian::Real32 sum(crucian::Real32 *begin, crucian::Real32 *end)
 {
     {
         NTA_ASSERT(begin <= end) << "sum: Invalid range";
     }
 
-    nust::Real32 result = 0;
+    crucian::Real32 result = 0;
     for (; begin != end; ++begin)
         result += *begin;
     return result;
@@ -4362,7 +4362,7 @@ template <typename It1> inline void divide_by_max(It1 begin, It1 end)
     typename std::iterator_traits<It1>::value_type max_val =
         *(std::max_element(begin, end));
 
-    if (!nust::nearlyZero(max_val))
+    if (!crucian::nearlyZero(max_val))
         for (It1 it = begin; it != end; ++it)
             *it /= max_val;
 }
@@ -4414,9 +4414,9 @@ inline void inverseNZ(It1 begin1, It1 end1, It2 out, It2 out_end,
  * If 'fIsNearlyZero' returns true, computes uses the output of
  * 'fHandleZero(element value)' as the result for that element.
  *
- * Usage: nust::inverseNZ(input, output,
- *            nust::IsNearlyZero< DistanceToZero<double> >(),
- *            nust::Identity<double>());
+ * Usage: crucian::inverseNZ(input, output,
+ *            crucian::IsNearlyZero< DistanceToZero<double> >(),
+ *            crucian::Identity<double>());
  */
 template <typename T1, typename T2, typename TFuncIsNearlyZero,
           typename TFuncHandleZero>
@@ -4907,7 +4907,7 @@ inline void sample(size_t n, It1 pdf_begin, It1 pdf_end, It2 output)
         NTA_ASSERT(pdf_begin <= pdf_end) << "sample: Invalid range for pdf";
     }
 
-    nust::Random rng;
+    crucian::Random rng;
     sample(n, pdf_begin, pdf_end, output, rng);
 }
 
@@ -5573,7 +5573,7 @@ static SparseVector<size_t, float> partial_argsort_buffer;
 //--------------------------------------------------------------------------------
 // A partial argsort that can use an already allocated buffer to avoid creating
 // a data structure each time it's called. Assumes that the elements to be
-// sorted are nust::Real32, or at least that they have the same size.
+// sorted are crucian::Real32, or at least that they have the same size.
 //
 // A partial sort is much faster than a full sort. The elements after the k
 // first in the result are not sorted, except that they are greater (or lesser)
@@ -5683,12 +5683,12 @@ inline void partial_argsort_rnd_tie_break(size_t k, InIter begin, InIter end,
 // QUANTIZE
 //--------------------------------------------------------------------------------
 template <typename It1>
-inline void update_with_indices_of_non_zeros(nust::UInt32 segment_size,
+inline void update_with_indices_of_non_zeros(crucian::UInt32 segment_size,
                                              It1 input_begin, It1 input_end,
                                              It1 prev_begin, It1 /*prev_end*/,
                                              It1 curr_begin, It1 curr_end)
 {
-    typedef nust::UInt32 size_type;
+    typedef crucian::UInt32 size_type;
 
     size_type input_size = static_cast<size_type>(input_end - input_begin);
 
@@ -5866,7 +5866,7 @@ template <typename I, typename InIter, typename OutIter1, typename OutIter2>
 inline void winnerTakesAll3(I k, I seg_size, InIter begin, InIter end,
                             OutIter1 ind, OutIter2 nz)
 {
-    nust::Random rng;
+    crucian::Random rng;
     winnerTakesAll3(k, seg_size, begin, end, ind, nz, rng);
 }
 
@@ -6023,6 +6023,6 @@ dendritic_activation(S nsegs, S max_dendrite_size,
 
 //--------------------------------------------------------------------------------
 
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_ARRAY_ALGO_HPP

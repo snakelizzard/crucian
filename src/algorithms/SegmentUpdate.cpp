@@ -20,11 +20,11 @@
  * ---------------------------------------------------------------------
  */
 
-#include <nust/algorithms/Cells4.hpp>
-#include <nust/algorithms/SegmentUpdate.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/algorithms/Cells4.hpp>
+#include <crucian/algorithms/SegmentUpdate.hpp>
+#include <crucian/utils/Log.hpp>
 
-namespace nust
+namespace crucian
 {
 
 SegmentUpdate::SegmentUpdate()
@@ -93,4 +93,4 @@ bool SegmentUpdate::operator==(const SegmentUpdate &o) const
     return _synapses == o._synapses;
 }
 
-} // namespace nust
+} // namespace crucian

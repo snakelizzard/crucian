@@ -22,9 +22,9 @@
 
 #include <iomanip>
 
-#include <nust/algorithms/InSynapse.hpp>
+#include <crucian/algorithms/InSynapse.hpp>
 
-namespace nust
+namespace crucian
 {
 
 inline void InSynapse::print(std::ostream &outStream) const
@@ -40,4 +40,4 @@ std::ostream &operator<<(std::ostream &outStream, const InSynapse &s)
     return outStream;
 }
 
-} // namespace nust
+} // namespace crucian

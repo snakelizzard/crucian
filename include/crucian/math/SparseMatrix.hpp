@@ -34,12 +34,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include <nust/math/ArrayAlgo.hpp>
-#include <nust/math/Math.hpp>
-#include <nust/math/StlIo.hpp>
-#include <nust/math/Utils.hpp>
+#include <crucian/math/ArrayAlgo.hpp>
+#include <crucian/math/Math.hpp>
+#include <crucian/math/StlIo.hpp>
+#include <crucian/math/Utils.hpp>
 
-namespace nust
+namespace crucian
 {
 
 struct SparseMatrixAlgorithms;
@@ -62,7 +62,7 @@ struct SparseMatrixAlgorithms;
  *  This class manages its own memory.
  *
  * @b Invariants:
- *  1. Values of non-zeros are > nust::Epsilon.
+ *  1. Values of non-zeros are > crucian::Epsilon.
  *  2. Indices of non-zeros in any row are unique.
  *  3. Indices of non-zeros in any row are sorted in increasing order.
  *
@@ -107,9 +107,9 @@ struct SparseMatrixAlgorithms;
  * product between a row stored in float and a vector in float, and store
  * the final result in float rather than double to save space.
  */
-template <typename UI = nust::UInt32, typename Real_stor = nust::Real32,
-          typename I = nust::Int32, typename Real_prec = nust::Real64,
-          typename DTZ = nust::DistanceToZero<Real_stor>>
+template <typename UI = crucian::UInt32, typename Real_stor = crucian::Real32,
+          typename I = crucian::Int32, typename Real_prec = crucian::Real64,
+          typename DTZ = crucian::DistanceToZero<Real_stor>>
 class SparseMatrix
 {
 public:
@@ -379,7 +379,7 @@ protected:
                 NTA_ASSERT(!isZero_(*nz))
                     << where << "Near zero value: " << *nz << " at (" << row
                     << ", " << *ind << ") "
-                    << "nust::Epsilon= " << nust::Epsilon;
+                    << "crucian::Epsilon= " << crucian::Epsilon;
                 NTA_ASSERT(row < nRows())
                     << where << "Invalid row index: " << row
                     << " nRows= " << nRows();
@@ -725,7 +725,7 @@ protected:
      * storage. Also allows to do more tests, in case the arguments would be out
      * of range. Better to not use them unless you really know what you are
      * doing and are sure that you are not violating the assumptions
-     * SparseMatrix relies on (non-zeros are > nust::Epsilon, unique, and sorted
+     * SparseMatrix relies on (non-zeros are > crucian::Epsilon, unique, and sorted
      * always).
      */
     inline size_type *ind_begin_(size_type row) const
@@ -1369,7 +1369,7 @@ public:
             NTA_ASSERT(nnzr <= nCols());
         }
 
-        nust::Random rng(seed);
+        crucian::Random rng(seed);
 
         size_type nrows = nRows(), ncols = nCols();
 
@@ -2844,9 +2844,9 @@ public:
                   << ' ' << nrows_ << ' ' << nrows_max_ << ' ' << ncols_ << ' '
                   << nnz << ' ';
 
-        nust::binary_save(outStream, nnzr_, nnzr_ + nrows_max_);
-        nust::binary_save(outStream, ind_mem_, ind_mem_ + nnz);
-        nust::binary_save(outStream, nz_mem_, nz_mem_ + nnz);
+        crucian::binary_save(outStream, nnzr_, nnzr_ + nrows_max_);
+        crucian::binary_save(outStream, ind_mem_, ind_mem_ + nnz);
+        crucian::binary_save(outStream, nz_mem_, nz_mem_ + nnz);
     }
 
     // RESIZE/RESHAPE/ADD/REMOVE
@@ -4595,7 +4595,7 @@ public:
                 NTA_ASSERT(!isZero_(*nz))
                     << "SparseMatrix::getAllNonZeros (ijv): "
                     << "Zero at " << row << ", " << *ind << ": " << *nz
-                    << " epsilon= " << nust::Epsilon;
+                    << " epsilon= " << crucian::Epsilon;
                 ijv_iterator->v(*nz);
                 ++ijv_iterator;
             }
@@ -4625,7 +4625,7 @@ public:
                         NTA_ASSERT(!isZero_(*nz))
                             << "SparseMatrix::getAllNonZeros (rect): "
                             << "Zero at " << row << ", " << *ind << ": " << *nz
-                            << " epsilon= " << nust::Epsilon;
+                            << " epsilon= " << crucian::Epsilon;
                         ijv_iterator->v(*nz);
                         ++ijv_iterator;
                     }
@@ -4652,7 +4652,7 @@ public:
                 NTA_ASSERT(!isZero_(*nz))
                     << "SparseMatrix::getAllNonZeros (3 lists): "
                     << "Zero at " << row << ", " << *ind << ": " << *nz
-                    << " epsilon= " << nust::Epsilon;
+                    << " epsilon= " << crucian::Epsilon;
                 *nz_val = *nz;
                 ++nz_i;
                 ++nz_j;
@@ -4710,7 +4710,7 @@ public:
                 for (InputIterator2 it_v = v_begin; it_v != v_end; ++it_v)
                     NTA_ASSERT(!isZero_(*it_v))
                         << where << "Passed in zero: " << *it_v
-                        << " epsilon= " << nust::Epsilon;
+                        << " epsilon= " << crucian::Epsilon;
 
                 if (i_begin != i_end)
                 {
@@ -4849,7 +4849,7 @@ public:
                 NTA_ASSERT(!isZero_(*nz))
                     << "SparseMatrix::getNonZerosInBox: "
                     << "Zero at " << row << ", " << *col << ": " << *nz
-                    << " epsilon= " << nust::Epsilon;
+                    << " epsilon= " << crucian::Epsilon;
                 *nz_v++ = *nz++;
             }
         }
@@ -6305,7 +6305,7 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows
      *
-     * TODO test speed of nust::apply/std::transform
+     * TODO test speed of crucian::apply/std::transform
      * TODO threshold and apply in the same loop by assining to new position
      * with an offset
      */
@@ -7357,7 +7357,7 @@ public:
      *  @li If row < 0 || row >= nrows
      */
     inline void thresholdRow(size_type row,
-                             const value_type &threshold = nust::Epsilon)
+                             const value_type &threshold = crucian::Epsilon)
     {
         { // Pre-conditions
             assert_valid_row_(row, "thresholdRow");
@@ -7394,7 +7394,7 @@ public:
      *  @li If col < 0 || col >= ncols
      */
     inline void thresholdCol(size_type col,
-                             const value_type &threshold = nust::Epsilon)
+                             const value_type &threshold = crucian::Epsilon)
     {
         { // Pre-conditions
             assert_valid_col_(col, "thresholdCol");
@@ -7415,7 +7415,7 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    inline void threshold(const value_type &threshold = nust::Epsilon)
+    inline void threshold(const value_type &threshold = crucian::Epsilon)
     {
         filter(std::bind(std::greater_equal<value_type>(),
                          std::placeholders::_1, threshold));
@@ -8589,7 +8589,7 @@ public:
         if (isZero_(sum))
             return sum;
 
-        elementRowNZApply(row, std::bind(nust::Multiplies<value_type>(),
+        elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
                                          std::placeholders::_1, val / sum));
 
         if (exact)
@@ -8630,7 +8630,7 @@ public:
         if (isZero_(sum))
             return sum;
 
-        elementColNZApply(col, std::bind(nust::Multiplies<value_type>(),
+        elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
                                          std::placeholders::_1, val / sum));
 
         if (exact)
@@ -8699,7 +8699,7 @@ public:
         ITERATE_ON_ALL_ROWS
         {
             ITERATE_ON_ROW { *nz *= nzb_[*ind]; }
-            thresholdRow(row, nust::Epsilon);
+            thresholdRow(row, crucian::Epsilon);
         }
 
         if (exact)
@@ -8735,7 +8735,7 @@ public:
         ITERATE_ON_ALL_ROWS
         {
             ITERATE_ON_ROW { *nz *= k; }
-            thresholdRow(row, nust::Epsilon);
+            thresholdRow(row, crucian::Epsilon);
         }
 
         if (exact)
@@ -8771,7 +8771,7 @@ public:
         ITERATE_ON_ALL_ROWS
         {
             ITERATE_ON_ROW { *nz *= k; }
-            thresholdRow(row, nust::Epsilon);
+            thresholdRow(row, crucian::Epsilon);
         }
     }
 
@@ -11124,7 +11124,7 @@ public:
     {
         this->applyOuter(
             row_begin, row_end, col_begin, col_end,
-            std::bind(nust::Plus<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
     }
 
     /**
@@ -11155,7 +11155,7 @@ public:
                                const Other &other)
     {
         this->applyOuter(row_begin, row_end, col_begin, col_end,
-                         nust::Plus<value_type>(), other);
+                         crucian::Plus<value_type>(), other);
     }
 
     // SORT
@@ -11247,7 +11247,7 @@ public:
     inline void replaceNZ(const value_type &val = 1.0)
     {
         elementNZApply(
-            std::bind(nust::Assign<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Assign<value_type>(), std::placeholders::_1, val));
     }
 
     /**
@@ -11285,7 +11285,7 @@ public:
      */
     inline value_type diagNZLogSum() const
     {
-        nust::Log<value_type> nta_log;
+        crucian::Log<value_type> nta_log;
         value_type res = 0.0;
         ITERATE_ON_ALL_ROWS
         {
@@ -11307,7 +11307,7 @@ public:
                 << "SparseMatrix::logRowSums: Invalid size for output vector";
         }
 
-        nust::Log<value_type> log_f;
+        crucian::Log<value_type> log_f;
 
         ITERATE_ON_ALL_ROWS
         {
@@ -11328,9 +11328,9 @@ public:
                 << "SparseMatrix::logColSums: Invalid size for output vector";
         }
 
-        nust::Log<value_type> log_f;
+        crucian::Log<value_type> log_f;
 
-        nust::zero(out, out_end);
+        crucian::zero(out, out_end);
 
         ITERATE_ON_ALL_ROWS
         {
@@ -11342,106 +11342,106 @@ public:
 
     inline void rowNegate(size_type idx)
     {
-        elementRowNZApply(idx, nust::Negate<value_type>());
+        elementRowNZApply(idx, crucian::Negate<value_type>());
     }
 
     inline void colNegate(size_type idx)
     {
-        elementColNZApply(idx, nust::Negate<value_type>());
+        elementColNZApply(idx, crucian::Negate<value_type>());
     }
 
-    inline void negate() { elementNZApply(nust::Negate<value_type>()); }
+    inline void negate() { elementNZApply(crucian::Negate<value_type>()); }
 
     inline void rowAbs(size_type idx)
     {
-        elementRowNZApply(idx, nust::Abs<value_type>());
+        elementRowNZApply(idx, crucian::Abs<value_type>());
     }
 
     inline void colAbs(size_type idx)
     {
-        elementColNZApply(idx, nust::Abs<value_type>());
+        elementColNZApply(idx, crucian::Abs<value_type>());
     }
 
-    inline void abs() { elementNZApply(nust::Abs<value_type>()); }
+    inline void abs() { elementNZApply(crucian::Abs<value_type>()); }
 
     inline void elementRowSquare(size_type idx)
     {
-        elementRowNZApply(idx, nust::Square<value_type>());
+        elementRowNZApply(idx, crucian::Square<value_type>());
     }
 
     inline void elementColSquare(size_type idx)
     {
-        elementColNZApply(idx, nust::Square<value_type>());
+        elementColNZApply(idx, crucian::Square<value_type>());
     }
 
-    inline void elementSquare() { elementNZApply(nust::Square<value_type>()); }
+    inline void elementSquare() { elementNZApply(crucian::Square<value_type>()); }
 
     inline void elementRowCube(size_type idx)
     {
-        elementRowNZApply(idx, nust::Cube<value_type>());
+        elementRowNZApply(idx, crucian::Cube<value_type>());
     }
 
     inline void elementColCube(size_type idx)
     {
-        elementColNZApply(idx, nust::Cube<value_type>());
+        elementColNZApply(idx, crucian::Cube<value_type>());
     }
 
-    inline void elementCube() { elementNZApply(nust::Cube<value_type>()); }
+    inline void elementCube() { elementNZApply(crucian::Cube<value_type>()); }
 
     inline void elementRowNZInverse(size_type idx)
     {
-        elementRowNZApply(idx, nust::Inverse<value_type>());
+        elementRowNZApply(idx, crucian::Inverse<value_type>());
     }
 
     inline void elementColNZInverse(size_type idx)
     {
-        elementColNZApply(idx, nust::Inverse<value_type>());
+        elementColNZApply(idx, crucian::Inverse<value_type>());
     }
 
     inline void elementNZInverse()
     {
-        elementNZApply(nust::Inverse<value_type>());
+        elementNZApply(crucian::Inverse<value_type>());
     }
 
     inline void elementRowSqrt(size_type idx)
     {
-        elementRowNZApply(idx, nust::Sqrt<value_type>());
+        elementRowNZApply(idx, crucian::Sqrt<value_type>());
     }
 
     inline void elementColSqrt(size_type idx)
     {
-        elementColNZApply(idx, nust::Sqrt<value_type>());
+        elementColNZApply(idx, crucian::Sqrt<value_type>());
     }
 
-    inline void elementSqrt() { elementNZApply(nust::Sqrt<value_type>()); }
+    inline void elementSqrt() { elementNZApply(crucian::Sqrt<value_type>()); }
 
     inline void elementRowNZLog(size_type idx)
     {
-        elementRowNZApply(idx, nust::Log<value_type>());
+        elementRowNZApply(idx, crucian::Log<value_type>());
     }
 
     inline void elementColNZLog(size_type idx)
     {
-        elementColNZApply(idx, nust::Log<value_type>());
+        elementColNZApply(idx, crucian::Log<value_type>());
     }
 
-    inline void elementNZLog() { elementNZApply(nust::Log<value_type>()); }
+    inline void elementNZLog() { elementNZApply(crucian::Log<value_type>()); }
 
     inline void elementRowNZExp(size_type idx)
     {
-        elementRowNZApply(idx, nust::Exp<value_type>());
+        elementRowNZApply(idx, crucian::Exp<value_type>());
     }
 
     inline void elementColNZExp(size_type idx)
     {
-        elementColNZApply(idx, nust::Exp<value_type>());
+        elementColNZApply(idx, crucian::Exp<value_type>());
     }
 
-    inline void elementNZExp() { elementNZApply(nust::Exp<value_type>()); }
+    inline void elementNZExp() { elementNZApply(crucian::Exp<value_type>()); }
 
     inline void elementRowMultiply(size_type row, const value_type &val)
     {
-        elementRowNZApply(row, std::bind(nust::Multiplies<value_type>(),
+        elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
                                          std::placeholders::_1, val));
     }
 
@@ -11467,7 +11467,7 @@ public:
 
     inline void elementColMultiply(size_type col, const value_type &val)
     {
-        elementColNZApply(col, std::bind(nust::Multiplies<value_type>(),
+        elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
                                          std::placeholders::_1, val));
     }
 
@@ -11493,19 +11493,19 @@ public:
 
     inline void multiply(const value_type &val)
     {
-        elementNZApply(std::bind(nust::Multiplies<value_type>(),
+        elementNZApply(std::bind(crucian::Multiplies<value_type>(),
                                  std::placeholders::_1, val));
     }
 
     inline void elementRowDivide(size_type idx, const value_type &val)
     {
-        elementRowNZApply(idx, std::bind(nust::Divides<value_type>(),
+        elementRowNZApply(idx, std::bind(crucian::Divides<value_type>(),
                                          std::placeholders::_1, val));
     }
 
     inline void elementColDivide(size_type idx, const value_type &val)
     {
-        elementColNZApply(idx, std::bind(nust::Divides<value_type>(),
+        elementColNZApply(idx, std::bind(crucian::Divides<value_type>(),
                                          std::placeholders::_1, val));
     }
 
@@ -11516,43 +11516,43 @@ public:
         } // End pre-conditions
 
         elementNZApply(
-            std::bind(nust::Divides<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Divides<value_type>(), std::placeholders::_1, val));
     }
 
     inline void elementRowNZPow(size_type idx, const value_type &val)
     {
-        elementRowNZApply(idx, std::bind(nust::Pow<value_type>(),
+        elementRowNZApply(idx, std::bind(crucian::Pow<value_type>(),
                                          std::placeholders::_1, val));
     }
 
     inline void elementColNZPow(size_type idx, const value_type &val)
     {
-        elementColNZApply(idx, std::bind(nust::Pow<value_type>(),
+        elementColNZApply(idx, std::bind(crucian::Pow<value_type>(),
                                          std::placeholders::_1, val));
     }
 
     inline void elementNZPow(const value_type &val)
     {
         elementNZApply(
-            std::bind(nust::Pow<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Pow<value_type>(), std::placeholders::_1, val));
     }
 
     inline void elementRowNZLogk(size_type idx, const value_type &val)
     {
-        elementRowNZApply(idx, std::bind(nust::Logk<value_type>(),
+        elementRowNZApply(idx, std::bind(crucian::Logk<value_type>(),
                                          std::placeholders::_1, val));
     }
 
     inline void elementColNZLogk(size_type idx, const value_type &val)
     {
-        elementColNZApply(idx, std::bind(nust::Logk<value_type>(),
+        elementColNZApply(idx, std::bind(crucian::Logk<value_type>(),
                                          std::placeholders::_1, val));
     }
 
     inline void elementNZLogk(const value_type &val)
     {
         elementNZApply(
-            std::bind(nust::Logk<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Logk<value_type>(), std::placeholders::_1, val));
     }
 
     template <typename InputIterator>
@@ -11593,44 +11593,44 @@ public:
 
     inline void rowAdd(size_type idx, const value_type &val)
     {
-        elementRowApply(idx, std::bind(nust::Plus<value_type>(),
+        elementRowApply(idx, std::bind(crucian::Plus<value_type>(),
                                        std::placeholders::_1, val));
     }
 
     inline void colAdd(size_type idx, const value_type &val)
     {
-        elementColApply(idx, std::bind(nust::Plus<value_type>(),
+        elementColApply(idx, std::bind(crucian::Plus<value_type>(),
                                        std::placeholders::_1, val));
     }
 
     inline void add(const value_type &val)
     {
         elementApply(
-            std::bind(nust::Plus<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
     }
 
     inline void elementNZAdd(const value_type &val)
     {
         elementNZApply(
-            std::bind(nust::Plus<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
     }
 
     inline void rowSubtract(size_type idx, const value_type &val)
     {
-        elementRowApply(idx, std::bind(nust::Minus<value_type>(),
+        elementRowApply(idx, std::bind(crucian::Minus<value_type>(),
                                        std::placeholders::_1, val));
     }
 
     inline void colSubtract(size_type idx, const value_type &val)
     {
-        elementColApply(idx, std::bind(nust::Minus<value_type>(),
+        elementColApply(idx, std::bind(crucian::Minus<value_type>(),
                                        std::placeholders::_1, val));
     }
 
     inline void subtract(const value_type &val)
     {
         elementApply(
-            std::bind(nust::Minus<value_type>(), std::placeholders::_1, val));
+            std::bind(crucian::Minus<value_type>(), std::placeholders::_1, val));
     }
 
     inline void elementNZMultiply(const SparseMatrix &other)
@@ -11640,12 +11640,12 @@ public:
 
     inline void elementNZDivide(const SparseMatrix &other)
     {
-        elementNZApply(other, nust::Divides<value_type>());
+        elementNZApply(other, crucian::Divides<value_type>());
     }
 
     inline void subtract(const SparseMatrix &other)
     {
-        elementApply(other, nust::Minus<value_type>());
+        elementApply(other, crucian::Minus<value_type>());
     }
 
     // OPERATORS
@@ -11707,6 +11707,6 @@ inline bool operator!=(const SparseMatrix<I, F, I2, F2, ZeroTest> &A,
     return !A.equals(B);
 }
 
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_SPARSE_MATRIX_HPP

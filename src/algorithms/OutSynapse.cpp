@@ -20,10 +20,10 @@
  * ---------------------------------------------------------------------
  */
 
-#include <nust/algorithms/Cells4.hpp>
-#include <nust/algorithms/OutSynapse.hpp>
+#include <crucian/algorithms/Cells4.hpp>
+#include <crucian/algorithms/OutSynapse.hpp>
 
-namespace nust
+namespace crucian
 {
 
 bool OutSynapse::invariants(Cells4 *cells) const
@@ -42,4 +42,4 @@ bool operator==(const OutSynapse &a, const OutSynapse &b)
     return a.equals(b);
 }
 
-} // namespace nust
+} // namespace crucian

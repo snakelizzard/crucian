@@ -25,11 +25,11 @@
  * structures.
  */
 
-#include <nust/math/StlIo.hpp>
+#include <crucian/math/StlIo.hpp>
 
-namespace nust
+namespace crucian
 {
 
 IOControl io_control;
 
-} // end namespace nust
+} // end namespace crucian

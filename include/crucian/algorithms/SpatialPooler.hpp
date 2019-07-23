@@ -32,11 +32,11 @@
 #include <string>
 #include <vector>
 
-#include <nust/math/SparseBinaryMatrix.hpp>
-#include <nust/math/SparseMatrix.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/math/SparseBinaryMatrix.hpp>
+#include <crucian/math/SparseMatrix.hpp>
+#include <crucian/types/Types.hpp>
 
-namespace nust
+namespace crucian
 {
 
 /**
@@ -1313,6 +1313,6 @@ protected:
     Random rng_;
 };
 
-} // end namespace nust
+} // end namespace crucian
 
 #endif // NTA_spatial_pooler_HPP

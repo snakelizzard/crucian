@@ -27,11 +27,11 @@
 #ifndef NTA_TYPES_HPP
 #define NTA_TYPES_HPP
 
-#include <nust/types/NtaTypes.hpp>
+#include <crucian/types/NtaTypes.hpp>
 
 //----------------------------------------------------------------------
 
-namespace nust
+namespace crucian
 {
 /**
  * @name Basic types
@@ -111,7 +111,7 @@ typedef NTA_UIntPtr UIntPtr;
 /**
  * Represents a real number(a floating-point number).
  *
- * Same as nust::Real64 if `NTA_DOUBLE_PRECISION` is defined, nust::Real32
+ * Same as crucian::Real64 if `NTA_DOUBLE_PRECISION` is defined, crucian::Real32
  * otherwise.
  */
 typedef NTA_Real Real;
@@ -119,14 +119,14 @@ typedef NTA_Real Real;
 /**
  * Represents a signed integer.
  *
- * Same as nust::Int64 if `NTA_BIG_INTEGER` is defined, nust::Int32 otherwise.
+ * Same as crucian::Int64 if `NTA_BIG_INTEGER` is defined, crucian::Int32 otherwise.
  */
 typedef NTA_Int Int;
 
 /**
  * Represents a unsigned integer.
  *
- * Same as nust::UInt64 if `NTA_BIG_INTEGER` is defined, nust::UInt32
+ * Same as crucian::UInt64 if `NTA_BIG_INTEGER` is defined, crucian::UInt32
  * otherwise.
  */
 typedef NTA_UInt UInt;
@@ -140,7 +140,7 @@ typedef NTA_Size Size;
  * @}
  */
 
-} // end namespace nust
+} // end namespace crucian
 
 // Generic helper definitions for shared library support
 #if defined _WIN32 || defined __CYGWIN__

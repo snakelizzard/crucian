@@ -33,12 +33,12 @@
 #include <utility>
 #include <vector>
 
-#include <nust/types/Types.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/types/Types.hpp>
+#include <crucian/utils/Log.hpp>
 
 typedef NTA_UInt64 (*RandomSeedFuncPtr)();
 
-namespace nust
+namespace crucian
 {
 /**
  * @b Responsibility
@@ -224,6 +224,6 @@ std::istream &operator>>(std::istream &, Random &);
 // function provided by the application.
 NTA_UInt64 GetRandomSeed();
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_RANDOM_HPP

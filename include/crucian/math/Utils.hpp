@@ -42,10 +42,10 @@
 #include <string>
 #include <vector>
 
-#include <nust/types/Types.hpp>
-#include <nust/utils/Log.hpp>
+#include <crucian/types/Types.hpp>
+#include <crucian/utils/Log.hpp>
 
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -288,6 +288,6 @@ struct select2nd : public std::unary_function<Pair, typename Pair::second_type>
     }
 };
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_UTILS_HPP

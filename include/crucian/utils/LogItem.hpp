@@ -30,9 +30,9 @@
 #include <iostream>
 #include <sstream>
 
-#include <nust/types/Exception.hpp>
+#include <crucian/types/Exception.hpp>
 
-namespace nust
+namespace crucian
 {
 
 /**
@@ -88,6 +88,6 @@ private:
     static std::ostream *ostream_;
 };
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_LOG_ITEM_HPP

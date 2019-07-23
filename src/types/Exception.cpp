@@ -1,6 +1,6 @@
-#include <nust/types/Exception.hpp>
+#include <crucian/types/Exception.hpp>
 
-namespace nust
+namespace crucian
 {
 
 Exception::Exception(std::string message)
@@ -22,4 +22,4 @@ const char *Exception::what() const noexcept
 
 const char *Exception::getMessage() const { return message_.c_str(); }
 
-} // namespace nust
+} // namespace crucian

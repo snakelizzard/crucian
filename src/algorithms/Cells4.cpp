@@ -31,15 +31,15 @@
 #include <sstream>
 #include <vector>
 
-#include <nust/algorithms/Cell.hpp>
-#include <nust/algorithms/Cells4.hpp>
-#include <nust/algorithms/SegmentUpdate.hpp>
-#include <nust/math/ArrayAlgo.hpp> // is_in
-#include <nust/math/StlIo.hpp>     // binary_save
-#include <nust/utils/Log.hpp>
-#include <nust/utils/Random.hpp>
+#include <crucian/algorithms/Cell.hpp>
+#include <crucian/algorithms/Cells4.hpp>
+#include <crucian/algorithms/SegmentUpdate.hpp>
+#include <crucian/math/ArrayAlgo.hpp> // is_in
+#include <crucian/math/StlIo.hpp>     // binary_save
+#include <crucian/utils/Log.hpp>
+#include <crucian/utils/Random.hpp>
 
-namespace nust
+namespace crucian
 {
 
 Cells4::Cells4(UInt nColumns, UInt nCellsPerCol, UInt activationThreshold,
@@ -218,13 +218,13 @@ void Cells4::addOutSynapses(UInt dstCellIdx, UInt dstSegIdx, It newSynapse,
     }
 }
 
-template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
-                                     std::set<nust::UInt>::const_iterator,
-                                     std::set<nust::UInt>::const_iterator);
+template void Cells4::addOutSynapses(crucian::UInt, crucian::UInt,
+                                     std::set<crucian::UInt>::const_iterator,
+                                     std::set<crucian::UInt>::const_iterator);
 
-template void Cells4::addOutSynapses(nust::UInt, nust::UInt,
-                                     std::vector<nust::UInt>::const_iterator,
-                                     std::vector<nust::UInt>::const_iterator);
+template void Cells4::addOutSynapses(crucian::UInt, crucian::UInt,
+                                     std::vector<crucian::UInt>::const_iterator,
+                                     std::vector<crucian::UInt>::const_iterator);
 
 //--------------------------------------------------------------------------------
 /**
@@ -3244,4 +3244,4 @@ void Cells4::computeForwardPropagation(CState &state)
 
 #endif // SOME_STATES_NOT_INDEXED
 
-} // namespace nust
+} // namespace crucian

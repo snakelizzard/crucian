@@ -26,10 +26,10 @@
 
 #include <iostream> // cerr
 
-#include <nust/types/Exception.hpp>
-#include <nust/utils/LogItem.hpp>
+#include <crucian/types/Exception.hpp>
+#include <crucian/utils/LogItem.hpp>
 
-namespace nust
+namespace crucian
 {
 
 std::ostream *LogItem::ostream_ = nullptr;
@@ -86,4 +86,4 @@ std::ostringstream &LogItem::throwStream()
     return msg_;
 }
 
-} // namespace nust
+} // namespace crucian

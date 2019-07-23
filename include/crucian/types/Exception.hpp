@@ -31,11 +31,11 @@
 #include <string>
 #include <utility>
 
-#include <nust/types/Types.hpp>
+#include <crucian/types/Types.hpp>
 
 //----------------------------------------------------------------------
 
-namespace nust
+namespace crucian
 {
 
 /**
@@ -106,6 +106,6 @@ protected:
     std::string message_;
 };
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_EXCEPTION_HPP

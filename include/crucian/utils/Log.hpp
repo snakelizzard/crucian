@@ -28,16 +28,16 @@
 #ifndef NTA_LOG2_HPP
 #define NTA_LOG2_HPP
 
-#include <nust/utils/LogItem.hpp>
+#include <crucian/utils/LogItem.hpp>
 
 // For informational messages that report status but do not indicate that
 // anything is wrong
-#define NTA_INFO nust::LogItem(__FILE__, __LINE__, nust::LogItem::info).stream()
+#define NTA_INFO crucian::LogItem(__FILE__, __LINE__, crucian::LogItem::info).stream()
 
 // To throw an exception and make sure the exception message is logged
 // appropriately
 #define NTA_THROW                                                              \
-    nust::LogItem(__FILE__, __LINE__, nust::LogItem::error).throwStream()
+    crucian::LogItem(__FILE__, __LINE__, crucian::LogItem::error).throwStream()
 
 // The difference between CHECK and ASSERT is that ASSERT is for
 // performance critical code and can be disabled in a release
@@ -69,7 +69,7 @@
     {                                                                          \
     }                                                                          \
     else if (!(condition))                                                     \
-    nust::LogItem(__FILE__, __LINE__, nust::LogItem::debug).stream()
+    crucian::LogItem(__FILE__, __LINE__, crucian::LogItem::debug).stream()
 
 #endif // NTA_ASSERTIONS_ON
 

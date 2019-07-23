@@ -25,10 +25,10 @@
 
 #include <vector>
 
-#include <nust/algorithms/Segment.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/algorithms/Segment.hpp>
+#include <crucian/types/Types.hpp>
 
-namespace nust
+namespace crucian
 {
 
 class Cells4;
@@ -267,6 +267,6 @@ public:
     void load(std::istream &inStream);
 };
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_CELL_HPP

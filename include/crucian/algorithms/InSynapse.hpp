@@ -26,10 +26,10 @@
 #include <fstream>
 #include <ostream>
 
-#include <nust/math/Math.hpp>
-#include <nust/types/Types.hpp>
+#include <crucian/math/Math.hpp>
+#include <crucian/types/Types.hpp>
 
-namespace nust
+namespace crucian
 {
 
 //--------------------------------------------------------------------------------
@@ -92,6 +92,6 @@ std::ostream &operator<<(std::ostream &outStream, const InSynapse &s);
 
 #endif
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_INSYNAPSE_HPP

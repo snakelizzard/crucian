@@ -23,10 +23,10 @@
 #ifndef NTA_OUTSYNAPSE_HPP
 #define NTA_OUTSYNAPSE_HPP
 
-#include <nust/types/Types.hpp>
-#include <nust/utils/Log.hpp> // NTA_ASSERT
+#include <crucian/types/Types.hpp>
+#include <crucian/utils/Log.hpp> // NTA_ASSERT
 
-namespace nust
+namespace crucian
 {
 
 class Cells4;
@@ -99,6 +99,6 @@ public:
 //--------------------------------------------------------------------------------
 bool operator==(const OutSynapse &a, const OutSynapse &b);
 
-} // namespace nust
+} // namespace crucian
 
 #endif // NTA_OUTSYNAPSE_HPP

@@ -20,9 +20,9 @@
  * ---------------------------------------------------------------------
  */
 
-#include <nust/algorithms/Cell.hpp>
+#include <crucian/algorithms/Cell.hpp>
 
-namespace nust
+namespace crucian
 {
 
 Cell::Cell() : _segments(0), _freeSegments(0) {}
@@ -157,4 +157,4 @@ bool Cell::operator==(const Cell &other) const
     return _segments == other._segments;
 }
 
-} // namespace nust
+} // namespace crucian
