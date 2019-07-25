@@ -3125,116 +3125,116 @@ public:
             /* Too noisy
          else if (n_del == 0) {
 
-         NTA_WARN
-         << "SparseMatrix::deleteRows(): "
-         << "Nothing to delete";
+            NTA_WARN
+                << "SparseMatrix::deleteRows(): "
+                << "Nothing to delete";
 
-         } else if (n_del < 0) {
+        } else if (n_del < 0) {
 
-         NTA_WARN
-         << "SparseMatrix::deleteRows(): "
-         << "Invalid pointers - Won't do anything";
-         }
-      */
-        } // End pre-conditions
-
-        if (isCompact())
-            decompact();
-
-        const size_type nrows = nRows();
-        size_type i_new = 0;
-
-        for (size_type i_old = 0; i_old != nrows; ++i_old)
-        {
-            if (del_it != del_end && i_old == *del_it)
-            {
-                nnzr_[i_old] = 0;
-                delete[] ind_[i_old];
-                delete[] nz_[i_old];
-                ++del_it;
-            }
-            else
-            {
-                nnzr_[i_new] = nnzr_[i_old];
-                ind_[i_new] = ind_[i_old];
-                nz_[i_new] = nz_[i_old];
-                ++i_new;
-            }
+            NTA_WARN
+                << "SparseMatrix::deleteRows(): "
+                << "Invalid pointers - Won't do anything";
         }
+        */
+    } // End pre-conditions
 
-        nrows_ = i_new;
+    if (isCompact())
+        decompact();
 
-        for (; i_new != nrows_max_; ++i_new)
+    const size_type nrows = nRows();
+    size_type i_new = 0;
+
+    for (size_type i_old = 0; i_old != nrows; ++i_old)
+    {
+        if (del_it != del_end && i_old == *del_it)
         {
-            nnzr_[i_new] = 0;
-            ind_[i_new] = 0;
-            nz_[i_new] = 0;
+            nnzr_[i_old] = 0;
+            delete[] ind_[i_old];
+            delete[] nz_[i_old];
+            ++del_it;
+        }
+        else
+        {
+            nnzr_[i_new] = nnzr_[i_old];
+            ind_[i_new] = ind_[i_old];
+            nz_[i_new] = nz_[i_old];
+            ++i_new;
         }
     }
 
-    /**
+    nrows_ = i_new;
+
+    for (; i_new != nrows_max_; ++i_new)
+    {
+        nnzr_[i_new] = 0;
+        ind_[i_new] = 0;
+        nz_[i_new] = 0;
+    }
+}
+
+/**
      * Deletes all the rows whose indices are specified in the container.
      */
-    template <typename Container> inline void deleteRows(const Container &c)
-    {
-        deleteRows(c.begin(), c.end());
-    }
+template <typename Container> inline void deleteRows(const Container &c)
+{
+    deleteRows(c.begin(), c.end());
+}
 
-    /**
+/**
      * Deletes column at specified index. The resulting matrix has one less
      * column.
      */
-    void deleteCol(size_type del_col)
-    {
-        { // Pre-conditions
-            assert_valid_col_(del_col, "deleteCol");
-        } // End pre-conditions
+void deleteCol(size_type del_col)
+{
+    { // Pre-conditions
+        assert_valid_col_(del_col, "deleteCol");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+
+        if (isRowZero(row))
+            continue;
+
+        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+        value_type *nz = nz_begin_(row);
+        size_type *lb = std::lower_bound(ind, ind_end, del_col);
+
+        if (lb != ind_end && *lb == del_col)
         {
 
-            if (isRowZero(row))
-                continue;
-
-            size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-            value_type *nz = nz_begin_(row);
-            size_type *lb = std::lower_bound(ind, ind_end, del_col);
-
-            if (lb != ind_end && *lb == del_col)
+            nz += lb - ind + 1;
+            ind = lb + 1;
+            while (ind != ind_end)
             {
-
-                nz += lb - ind + 1;
-                ind = lb + 1;
-                while (ind != ind_end)
-                {
-                    *(ind - 1) = *ind - 1;
-                    *(nz - 1) = *nz;
-                    ++ind;
-                    ++nz;
-                }
-
-                --nnzr_[row];
+                *(ind - 1) = *ind - 1;
+                *(nz - 1) = *nz;
+                ++ind;
+                ++nz;
             }
-            else if (lb != ind_end)
-            {
 
-                ind = lb;
-                while (ind != ind_end)
-                {
-                    --*ind;
-                    ++ind;
-                }
+            --nnzr_[row];
+        }
+        else if (lb != ind_end)
+        {
+
+            ind = lb;
+            while (ind != ind_end)
+            {
+                --*ind;
+                ++ind;
             }
         }
-
-        // This is wrong if del_col is larger
-        // than the actual number of row, but that condition
-        // is caught by the pre-conditions when compiling
-        // with assertions on.
-        --ncols_;
     }
 
-    /**
+    // This is wrong if del_col is larger
+    // than the actual number of row, but that condition
+    // is caught by the pre-conditions when compiling
+    // with assertions on.
+    --ncols_;
+}
+
+/**
      * Deletes specified columns.
      * The indices of the columns are passed in a range [del..del_end).
      * The range can be contiguous (std::vector) or not (std::list, std::map).
@@ -3256,118 +3256,118 @@ public:
      *  @li If column indices are not passed in strictly increasing order.
      *  @li If del_end - del < 0 || del_end - del > ncols.
      */
-    template <typename InputIterator>
-    inline void deleteCols(InputIterator del_it, InputIterator del_end)
-    {
-        ptrdiff_t n_del = del_end - del_it;
+template <typename InputIterator>
+inline void deleteCols(InputIterator del_it, InputIterator del_end)
+{
+    ptrdiff_t n_del = del_end - del_it;
 
-        if (n_del <= 0 || nCols() == 0)
-            return;
+    if (n_del <= 0 || nCols() == 0)
+        return;
 
-        { // Pre-conditions
-            if (n_del > 0)
-            {
+    { // Pre-conditions
+        if (n_del > 0)
+        {
 
-                NTA_ASSERT(n_del <= (ptrdiff_t)nCols())
-                    << "SparseMatrix::deleteCols(): "
-                    << " Passed more indices of columns to delete"
-                    << " than there are columns";
+            NTA_ASSERT(n_del <= (ptrdiff_t)nCols())
+                << "SparseMatrix::deleteCols(): "
+                << " Passed more indices of columns to delete"
+                << " than there are columns";
 
 #ifdef NTA_ASSERTIONS_ON // to avoid compilation of loop
 
-                InputIterator d = del_it, d_next = del_it + 1;
-                while (d < del_end - 1)
-                {
-                    NTA_ASSERT(0 <= *d && *d < nCols())
-                        << "SparseMatrix::deleteCols(): "
-                        << "Invalid column index: " << *d
-                        << " - Col indices should be between 0 and " << nCols();
-                    NTA_ASSERT(*d < *d_next)
-                        << "SparseMatrix::deleteCols(): "
-                        << "Invalid column indices " << *d << " and " << *d_next
-                        << " - Col indices need to be passed "
-                        << "in strictly increasing order";
-                    ++d;
-                    ++d_next;
-                }
-
+            InputIterator d = del_it, d_next = del_it + 1;
+            while (d < del_end - 1)
+            {
                 NTA_ASSERT(0 <= *d && *d < nCols())
                     << "SparseMatrix::deleteCols(): "
                     << "Invalid column index: " << *d
                     << " - Col indices should be between 0 and " << nCols();
-#endif
+                NTA_ASSERT(*d < *d_next)
+                    << "SparseMatrix::deleteCols(): "
+                    << "Invalid column indices " << *d << " and " << *d_next
+                    << " - Col indices need to be passed "
+                    << "in strictly increasing order";
+                ++d;
+                ++d_next;
             }
-            /* Too noisy
+
+            NTA_ASSERT(0 <= *d && *d < nCols())
+                << "SparseMatrix::deleteCols(): "
+                << "Invalid column index: " << *d
+                << " - Col indices should be between 0 and " << nCols();
+#endif
+        }
+        /* Too noisy
          else if (n_del == 0) {
 
-         NTA_WARN
-         << "SparseMatrix::deleteCols(): "
-         << "Nothing to delete";
+        NTA_WARN
+            << "SparseMatrix::deleteCols(): "
+            << "Nothing to delete";
 
-         } else if (n_del < 0) {
+    } else if (n_del < 0) {
 
-         NTA_WARN
-         << "SparseMatrix::deleteCols(): "
-         << "Invalid pointers - Won't do anything";
-         }
-      */
-        } // End pre-conditions
+        NTA_WARN
+            << "SparseMatrix::deleteCols(): "
+            << "Invalid pointers - Won't do anything";
+    }
+    */
+} // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+ITERATE_ON_ALL_ROWS
+{
+
+    size_type j = 0;
+    InputIterator d = del_it;
+    size_type *ind = ind_[row], *ind_old = ind,
+              *ind_end = ind + nnzr_[row];
+    value_type *nz = nz_[row], *nz_old = nz;
+
+    while (ind_old != ind_end && d != del_end)
+    {
+        if (*d == *ind_old)
         {
-
-            size_type j = 0;
-            InputIterator d = del_it;
-            size_type *ind = ind_[row], *ind_old = ind,
-                      *ind_end = ind + nnzr_[row];
-            value_type *nz = nz_[row], *nz_old = nz;
-
-            while (ind_old != ind_end && d != del_end)
-            {
-                if (*d == *ind_old)
-                {
-                    ++d;
-                    ++j;
-                    ++ind_old;
-                    ++nz_old;
-                }
-                else if (*d < *ind_old)
-                {
-                    ++d;
-                    ++j;
-                }
-                else
-                {
-                    *ind++ = *ind_old++ - j;
-                    *nz++ = *nz_old++;
-                }
-            }
-
-            while (ind_old != ind_end)
-            {
-                *ind++ = *ind_old++ - j;
-                *nz++ = *nz_old++;
-            }
-
-            nnzr_[row] = size_type(ind - ind_[row]);
+            ++d;
+            ++j;
+            ++ind_old;
+            ++nz_old;
         }
-
-        // This is wrong if there are indices to delete larger
-        // than the actual number of row, but that condition
-        // is caught by the pre-conditions when compiling
-        // with assertions on.
-        ncols_ -= size_type(n_del);
+        else if (*d < *ind_old)
+        {
+            ++d;
+            ++j;
+        }
+        else
+        {
+            *ind++ = *ind_old++ - j;
+            *nz++ = *nz_old++;
+        }
     }
 
-    /**
+    while (ind_old != ind_end)
+    {
+        *ind++ = *ind_old++ - j;
+        *nz++ = *nz_old++;
+    }
+
+    nnzr_[row] = size_type(ind - ind_[row]);
+}
+
+// This is wrong if there are indices to delete larger
+// than the actual number of row, but that condition
+// is caught by the pre-conditions when compiling
+// with assertions on.
+ncols_ -= size_type(n_del);
+}
+
+/**
      * Deletes all columns whose indices are specified in the container.
      */
-    template <typename Container> inline void deleteCols(const Container &c)
-    {
-        deleteCols(c.begin(), c.end());
-    }
+template <typename Container> inline void deleteCols(const Container &c)
+{
+    deleteCols(c.begin(), c.end());
+}
 
-    /**
+/**
      * Adds a row of non-zeros to this SparseMatrix, from two iterators, one on
      * a container of indices, the other on a container of values corresponding
      * to those indices.
@@ -3394,58 +3394,58 @@ public:
      *  @li Duplicates in indices
      *  @li Zero passed in
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline size_type addRow(InputIterator1 ind_it, InputIterator1 ind_end,
-                            InputIterator2 nz_it, bool zero_permissive = false)
+template <typename InputIterator1, typename InputIterator2>
+inline size_type addRow(InputIterator1 ind_it, InputIterator1 ind_end,
+                        InputIterator2 nz_it, bool zero_permissive = false)
+{
+    { // Pre-conditions
+        if (!zero_permissive)
+            assert_valid_ivp_range_(nCols(), ind_it, ind_end, nz_it,
+                                    "addRow");
+    } // End pre-conditions
+
+    const size_type row_num = nRows();
+    const size_type nnzr = (size_type)(ind_end - ind_it);
+
+    if (isCompact())
+        decompact();
+
+    if (row_num > nrows_max_ - 1)
+        reserve_(row_num);
+
+    nnzr_[row_num] = nnzr;
+
+    if (nnzr > 0)
     {
-        { // Pre-conditions
-            if (!zero_permissive)
-                assert_valid_ivp_range_(nCols(), ind_it, ind_end, nz_it,
-                                        "addRow");
-        } // End pre-conditions
 
-        const size_type row_num = nRows();
-        const size_type nnzr = (size_type)(ind_end - ind_it);
+        ind_[row_num] = new size_type[nnzr];
+        nz_[row_num] = new value_type[nnzr];
 
-        if (isCompact())
-            decompact();
+        size_type *ind_ptr = ind_[row_num];
+        value_type *nz_ptr = nz_[row_num];
 
-        if (row_num > nrows_max_ - 1)
-            reserve_(row_num);
-
-        nnzr_[row_num] = nnzr;
-
-        if (nnzr > 0)
+        while (ind_it != ind_end)
         {
-
-            ind_[row_num] = new size_type[nnzr];
-            nz_[row_num] = new value_type[nnzr];
-
-            size_type *ind_ptr = ind_[row_num];
-            value_type *nz_ptr = nz_[row_num];
-
-            while (ind_it != ind_end)
-            {
-                *ind_ptr = *ind_it;
-                *nz_ptr = *nz_it;
-                ++ind_ptr;
-                ++nz_ptr;
-                ++ind_it;
-                ++nz_it;
-            }
+            *ind_ptr = *ind_it;
+            *nz_ptr = *nz_it;
+            ++ind_ptr;
+            ++nz_ptr;
+            ++ind_it;
+            ++nz_it;
         }
-        else
-        {
+    }
+    else
+    {
 
-            ind_[row_num] = nullptr;
-            nz_[row_num] = nullptr;
-        }
-
-        ++nrows_;
-        return row_num;
+        ind_[row_num] = nullptr;
+        nz_[row_num] = nullptr;
     }
 
-    /**
+    ++nrows_;
+    return row_num;
+}
+
+/**
      * Adds a row to this SparseMatrix, from an iterator into a dense container.
      * The iterator needs to span ncols values.
      *
@@ -3458,30 +3458,30 @@ public:
      *
      * TODO add flag for case where row is already "clean"
      */
-    template <typename InputIterator>
-    inline size_type addRow(InputIterator x_begin)
+template <typename InputIterator>
+inline size_type addRow(InputIterator x_begin)
+{
+    size_type *indb_it = indb_;
+    value_type val, *nzb_it = nzb_;
+    InputIterator x_it = x_begin, x_end = x_begin + nCols();
+
+    while (x_it != x_end)
     {
-        size_type *indb_it = indb_;
-        value_type val, *nzb_it = nzb_;
-        InputIterator x_it = x_begin, x_end = x_begin + nCols();
-
-        while (x_it != x_end)
+        val = *x_it;
+        if (!isZero_(val))
         {
-            val = *x_it;
-            if (!isZero_(val))
-            {
-                *indb_it = size_type(x_it - x_begin);
-                *nzb_it = val;
-                ++indb_it;
-                ++nzb_it;
-            }
-            ++x_it;
+            *indb_it = size_type(x_it - x_begin);
+            *nzb_it = val;
+            ++indb_it;
+            ++nzb_it;
         }
-
-        return addRow(indb_, indb_it, nzb_);
+        ++x_it;
     }
 
-    /**
+    return addRow(indb_, indb_it, nzb_);
+}
+
+/**
      * Adds a column to this SparseMatrix, from two input iterators, one for the
      * indices of the non-zeros, and one for the value of the non-zeros.
      *
@@ -3498,42 +3498,42 @@ public:
      * TODO add flag for case where row is already "clean"
      * TODO return new number of columns, as in addRow
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void addCol(InputIterator1 ind_it, InputIterator1 ind_end,
-                       InputIterator2 nz_it)
+template <typename InputIterator1, typename InputIterator2>
+inline void addCol(InputIterator1 ind_it, InputIterator1 ind_end,
+                   InputIterator2 nz_it)
+{
+    { // Pre-conditions
+        assert_valid_ivp_range_(nRows(), ind_it, ind_end, nz_it, "addCol");
+    } // End pre-conditions
+
+    if (isCompact())
+        decompact();
+
+    while (ind_it != ind_end)
     {
-        { // Pre-conditions
-            assert_valid_ivp_range_(nRows(), ind_it, ind_end, nz_it, "addCol");
-        } // End pre-conditions
-
-        if (isCompact())
-            decompact();
-
-        while (ind_it != ind_end)
-        {
-            size_type row = *ind_it;
-            size_type old_nnzr = nnzr_[row];
-            size_type new_nnzr = old_nnzr + 1;
-            auto new_ind = new size_type[new_nnzr];
-            auto new_nz = new value_type[new_nnzr];
-            std::copy(ind_[row], ind_[row] + old_nnzr, new_ind);
-            std::copy(nz_[row], nz_[row] + old_nnzr, new_nz);
-            delete[] ind_[row];
-            ind_[row] = new_ind;
-            delete[] nz_[row];
-            nz_[row] = new_nz;
-            ind_[row][old_nnzr] = nCols();
-            nz_[row][old_nnzr] = *nz_it;
-            ++nnzr_[row];
-            ++ind_it;
-            ++nz_it;
-        }
-
-        ++ncols_;
-        reAllocateBuffers_(ncols_);
+        size_type row = *ind_it;
+        size_type old_nnzr = nnzr_[row];
+        size_type new_nnzr = old_nnzr + 1;
+        auto new_ind = new size_type[new_nnzr];
+        auto new_nz = new value_type[new_nnzr];
+        std::copy(ind_[row], ind_[row] + old_nnzr, new_ind);
+        std::copy(nz_[row], nz_[row] + old_nnzr, new_nz);
+        delete[] ind_[row];
+        ind_[row] = new_ind;
+        delete[] nz_[row];
+        nz_[row] = new_nz;
+        ind_[row][old_nnzr] = nCols();
+        nz_[row][old_nnzr] = *nz_it;
+        ++nnzr_[row];
+        ++ind_it;
+        ++nz_it;
     }
 
-    /**
+    ++ncols_;
+    reAllocateBuffers_(ncols_);
+}
+
+/**
      * Adds a column to this SparseMatrix, from an input iterator on a dense
      * array of values.
      *
@@ -3546,75 +3546,75 @@ public:
      *
      * TODO add flag for case where row is already "clean"
      */
-    template <typename InputIterator> inline void addCol(InputIterator x_begin)
+template <typename InputIterator> inline void addCol(InputIterator x_begin)
+{
+    if (isCompact())
+        decompact();
+
+    bool new_non_zeros = false;
+
+    ITERATE_ON_ALL_ROWS
     {
-        if (isCompact())
-            decompact();
-
-        bool new_non_zeros = false;
-
-        ITERATE_ON_ALL_ROWS
+        value_type val = *x_begin;
+        if (!isZero_(val))
         {
-            value_type val = *x_begin;
-            if (!isZero_(val))
-            {
-                new_non_zeros = true;
-                size_type old_nnzr = nnzr_[row];
-                size_type new_nnzr = old_nnzr + 1;
-                auto new_ind = new size_type[new_nnzr];
-                auto new_nz = new value_type[new_nnzr];
-                std::copy(ind_[row], ind_[row] + old_nnzr, new_ind);
-                std::copy(nz_[row], nz_[row] + old_nnzr, new_nz);
-                delete[] ind_[row];
-                ind_[row] = new_ind;
-                delete[] nz_[row];
-                nz_[row] = new_nz;
-                ind_[row][old_nnzr] = nCols();
-                nz_[row][old_nnzr] = val;
-                ++nnzr_[row];
-            }
-            ++x_begin;
+            new_non_zeros = true;
+            size_type old_nnzr = nnzr_[row];
+            size_type new_nnzr = old_nnzr + 1;
+            auto new_ind = new size_type[new_nnzr];
+            auto new_nz = new value_type[new_nnzr];
+            std::copy(ind_[row], ind_[row] + old_nnzr, new_ind);
+            std::copy(nz_[row], nz_[row] + old_nnzr, new_nz);
+            delete[] ind_[row];
+            ind_[row] = new_ind;
+            delete[] nz_[row];
+            nz_[row] = new_nz;
+            ind_[row][old_nnzr] = nCols();
+            nz_[row][old_nnzr] = val;
+            ++nnzr_[row];
         }
-
-        if (new_non_zeros)
-        {
-            ++ncols_;
-            reAllocateBuffers_(ncols_);
-        }
+        ++x_begin;
     }
 
-    /**
+    if (new_non_zeros)
+    {
+        ++ncols_;
+        reAllocateBuffers_(ncols_);
+    }
+}
+
+/**
      * Appends the rows of another sparse matrix to this one.
      * The number of row in the resulting matrix is the sum of the number of
      * rows in this matrix before append, and the other matrix. If the other
      * matrix has more columns, this matrix is resized.
      */
-    inline void append(const self_type &other, bool zero_permissive = false)
-    {
-        if (other.nCols() > this->nCols())
-            this->resize(nRows(), other.nCols());
+inline void append(const self_type &other, bool zero_permissive = false)
+{
+    if (other.nCols() > this->nCols())
+        this->resize(nRows(), other.nCols());
 
-        for (size_type row = 0; row != other.nRows(); ++row)
-            this->addRow(other.ind_begin_(row), other.ind_end_(row),
-                         other.nz_begin_(row), zero_permissive);
-    }
+    for (size_type row = 0; row != other.nRows(); ++row)
+        this->addRow(other.ind_begin_(row), other.ind_end_(row),
+                     other.nz_begin_(row), zero_permissive);
+}
 
-    /**
+/**
      * Duplicates given row. The duplicated row is a new row at the end of the
      * matrix.
      */
-    inline void duplicateRow(size_type row)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "duplicateRow");
-        } // End pre-conditions
+inline void duplicateRow(size_type row)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "duplicateRow");
+    } // End pre-conditions
 
-        addRow(ind_begin_(row), ind_end_(row), nz_begin_(row));
-    }
+    addRow(ind_begin_(row), ind_end_(row), nz_begin_(row));
+}
 
-    // SET/GET
+// SET/GET
 
-    /**
+/**
      * Sets the value at (i, j) to 0.
      * Doesn't reallocate memory, and doesn't decompact the internal
      * storage of the non-zeros.
@@ -3626,23 +3626,23 @@ public:
      *  @li If i < 0 or i >= nrows
      *  @li If j < 0 or j >= ncols
      */
-    inline void setZero(size_type row, size_type col, bool resizeYesNo = false)
-    {
-        { // Pre-conditions
-            if (!resizeYesNo)
-                assert_valid_row_col_(row, col, "setZero");
-        } // End pre-conditions
+inline void setZero(size_type row, size_type col, bool resizeYesNo = false)
+{
+    { // Pre-conditions
+        if (!resizeYesNo)
+            assert_valid_row_col_(row, col, "setZero");
+    } // End pre-conditions
 
-        if (resizeYesNo)
-            resize(std::max(row + 1, nRows()), std::max(row + 1, nCols()));
+    if (resizeYesNo)
+        resize(std::max(row + 1, nRows()), std::max(row + 1, nCols()));
 
-        size_type *it = pos_(row, col);
+    size_type *it = pos_(row, col);
 
-        if (it != ind_end_(row) && *it == col)
-            erase_(row, it);
-    }
+    if (it != ind_end_(row) && *it == col)
+        erase_(row, it);
+}
 
-    /**
+/**
      * Sets diagonal to zero.
      * For a rectangular matrix, this is the pseudo-diagonal on the square
      * sub-matrix of side min(nRows, nCols).
@@ -3650,37 +3650,37 @@ public:
      * @b Complexity:
      *  @li O(min(nrows, ncols) * (log(nnzr) + 2*nnzr))
      */
-    inline void setDiagonalToZero()
-    {
-        size_type m = std::min(nRows(), nCols());
+inline void setDiagonalToZero()
+{
+    size_type m = std::min(nRows(), nCols());
 
-        for (size_type i = 0; i != m; ++i)
-            setZero(i, i);
-    }
+    for (size_type i = 0; i != m; ++i)
+        setZero(i, i);
+}
 
-    /**
+/**
      * Sets the diagonal or pseudo-diagonal to given value.
      */
-    inline void setDiagonalToVal(const value_type &val)
-    {
-        size_type m = std::min(nRows(), nCols());
+inline void setDiagonalToVal(const value_type &val)
+{
+    size_type m = std::min(nRows(), nCols());
 
-        for (size_type i = 0; i != m; ++i)
-            set(i, i, val);
-    }
+    for (size_type i = 0; i != m; ++i)
+        set(i, i, val);
+}
 
-    /**
+/**
      * Sets diagonal to a give vector.
      */
-    template <typename InIter> inline void setDiagonal(InIter begin)
-    {
-        size_type m = std::min(nRows(), nCols());
+template <typename InIter> inline void setDiagonal(InIter begin)
+{
+    size_type m = std::min(nRows(), nCols());
 
-        for (size_type i = 0; i != m; ++i)
-            set(i, i, *begin++);
-    }
+    for (size_type i = 0; i != m; ++i)
+        set(i, i, *begin++);
+}
 
-    /**
+/**
      * Sets the value at (i, j) to val, when val != 0.
      * Decompacts the internal storage of this sparse matrix if needed.
      * Resizes this sparse matrix if resizeYesNo == true, but that will only
@@ -3701,38 +3701,38 @@ public:
      *  @li If j < 0 or j >= ncols (assert)
      *  @li If val == 0 (assert)
      */
-    inline void setNonZero(size_type i, size_type j, const value_type &val,
-                           bool resizeYesNo = false)
+inline void setNonZero(size_type i, size_type j, const value_type &val,
+                       bool resizeYesNo = false)
+{
+    { // Pre-conditions
+        if (!resizeYesNo)
+            assert_valid_row_col_(i, j, "setNonZero");
+        assert_not_zero_value_(val, "setNonZero");
+    } // End pre-conditions
+
+    if (resizeYesNo)
+        resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
+
+    size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
+    size_type *it = pos_(i, j);
+
+    if (it != ind_end && *it == j)
     {
-        { // Pre-conditions
-            if (!resizeYesNo)
-                assert_valid_row_col_(i, j, "setNonZero");
-            assert_not_zero_value_(val, "setNonZero");
-        } // End pre-conditions
 
-        if (resizeYesNo)
-            resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
-
-        size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
-        size_type *it = pos_(i, j);
-
-        if (it != ind_end && *it == j)
-        {
-
-            // We have found a non-zero at j, and
-            // we can modifty it in place, without changing
-            // the memory allocation. We don't need to
-            // decompact the representation.
-            nz_[i][it - ind] = val;
-        }
-        else
-        {
-
-            insertNewNonZero_(i, j, it, val);
-        }
+        // We have found a non-zero at j, and
+        // we can modifty it in place, without changing
+        // the memory allocation. We don't need to
+        // decompact the representation.
+        nz_[i][it - ind] = val;
     }
+    else
+    {
 
-    /**
+        insertNewNonZero_(i, j, it, val);
+    }
+}
+
+/**
      * Sets the value at (i, j) to val.
      * If resizeYesNo is true, will increase the size of this matrix
      * appropriately,
@@ -3752,171 +3752,171 @@ public:
      *  @li If i < 0 or i >= nrows
      *  @li If j < 0 or j >= ncols
      */
-    inline void set(size_type i, size_type j, const value_type &val,
-                    bool resizeYesNo = false)
-    {
-        { // Pre-conditions
-            if (!resizeYesNo)
-                assert_valid_row_col_(i, j, "set");
-        } // End pre-conditions
+inline void set(size_type i, size_type j, const value_type &val,
+                bool resizeYesNo = false)
+{
+    { // Pre-conditions
+        if (!resizeYesNo)
+            assert_valid_row_col_(i, j, "set");
+    } // End pre-conditions
 
-        if (resizeYesNo)
-            resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
+    if (resizeYesNo)
+        resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
 
-        if (isZero_(val))
-            setZero(i, j);
-        else
-            setNonZero(i, j, val);
-    }
+    if (isZero_(val))
+        setZero(i, j);
+    else
+        setNonZero(i, j, val);
+}
 
-    /**
+/**
      * Sets all the elements in given box to zero.
      */
-    inline void setBoxToZero(size_type row_begin, size_type row_end,
-                             size_type col_begin, size_type col_end)
-    {
-        { // Pre-conditions
-            assert_valid_row_range_(row_begin, row_end, "setBoxToZero");
-            assert_valid_col_range_(col_begin, col_end, "setBoxToZero");
-        } // End pre-conditions
+inline void setBoxToZero(size_type row_begin, size_type row_end,
+                         size_type col_begin, size_type col_end)
+{
+    { // Pre-conditions
+        assert_valid_row_range_(row_begin, row_end, "setBoxToZero");
+        assert_valid_col_range_(col_begin, col_end, "setBoxToZero");
+    } // End pre-conditions
 
-        for (size_type row = row_begin; row != row_end; ++row)
+    for (size_type row = row_begin; row != row_end; ++row)
+    {
+        size_type *ind = NULL, *ind_end = NULL;
+        difference_type offset =
+            pos_(row, col_begin, col_end, ind, ind_end);
+        if (ind != ind_end_(row))
         {
-            size_type *ind = NULL, *ind_end = NULL;
-            difference_type offset =
-                pos_(row, col_begin, col_end, ind, ind_end);
-            if (ind != ind_end_(row))
-            {
-                value_type *nz = nz_begin_(row) + offset;
-                std::copy(ind_end, ind_end_(row), ind);
-                std::copy(nz + (ind_end - ind), nz_end_(row), nz);
-                nnzr_[row] -= ind_end - ind;
-            }
+            value_type *nz = nz_begin_(row) + offset;
+            std::copy(ind_end, ind_end_(row), ind);
+            std::copy(nz + (ind_end - ind), nz_end_(row), nz);
+            nnzr_[row] -= ind_end - ind;
         }
     }
+}
 
-    /**
+/**
      * Sets all the elements in given box to given value.
      */
-    inline void setBox(size_type row_begin, size_type row_end,
-                       size_type col_begin, size_type col_end,
-                       const value_type &val)
+inline void setBox(size_type row_begin, size_type row_end,
+                   size_type col_begin, size_type col_end,
+                   const value_type &val)
+{
+    { // Pre-conditions
+        assert_valid_row_range_(row_begin, row_end, "setBox");
+        assert_valid_col_range_(col_begin, col_end, "setBox");
+    } // End pre-conditions
+
+    if (isZero_(val))
+        setBoxToZero(row_begin, row_end, col_begin, col_end);
+
+    size_type box_ncols = col_end - col_begin;
+
+    for (size_type row = row_begin; row != row_end; ++row)
     {
-        { // Pre-conditions
-            assert_valid_row_range_(row_begin, row_end, "setBox");
-            assert_valid_col_range_(col_begin, col_end, "setBox");
-        } // End pre-conditions
 
-        if (isZero_(val))
-            setBoxToZero(row_begin, row_end, col_begin, col_end);
+        size_type *ind_begin = NULL, *ind_end = NULL;
+        difference_type offset =
+            pos_(row, col_begin, col_end, ind_begin, ind_end);
+        value_type *nz_begin = nz_begin_(row) + offset;
 
-        size_type box_ncols = col_end - col_begin;
-
-        for (size_type row = row_begin; row != row_end; ++row)
+        if ((size_type)(ind_end - ind_begin) == box_ncols)
         {
 
-            size_type *ind_begin = NULL, *ind_end = NULL;
-            difference_type offset =
-                pos_(row, col_begin, col_end, ind_begin, ind_end);
-            value_type *nz_begin = nz_begin_(row) + offset;
+            std::fill(nz_begin, nz_begin + box_ncols, val);
+        }
+        else
+        {
 
-            if ((size_type)(ind_end - ind_begin) == box_ncols)
+            decompact();
+
+            std::copy(ind_begin_(row), ind_begin, indb_);
+            std::copy(nz_begin_(row), nz_begin, nzb_);
+            size_type *indb = indb_ + offset;
+            value_type *nzb = nzb_ + offset;
+            for (size_type col = col_begin; col != col_end; ++col)
             {
-
-                std::fill(nz_begin, nz_begin + box_ncols, val);
+                *indb++ = col;
+                *nzb++ = val;
             }
-            else
-            {
+            std::copy(ind_end, ind_end_(row), indb);
+            std::copy(nz_begin + (ind_end - ind_begin), nz_end_(row), nzb);
 
-                decompact();
+            size_type new_nnzr =
+                (size_type)(indb - indb_ + ind_end_(row) - ind_end);
 
-                std::copy(ind_begin_(row), ind_begin, indb_);
-                std::copy(nz_begin_(row), nz_begin, nzb_);
-                size_type *indb = indb_ + offset;
-                value_type *nzb = nzb_ + offset;
-                for (size_type col = col_begin; col != col_end; ++col)
-                {
-                    *indb++ = col;
-                    *nzb++ = val;
-                }
-                std::copy(ind_end, ind_end_(row), indb);
-                std::copy(nz_begin + (ind_end - ind_begin), nz_end_(row), nzb);
-
-                size_type new_nnzr =
-                    (size_type)(indb - indb_ + ind_end_(row) - ind_end);
-
-                delete[] ind_[row];
-                delete[] nz_[row];
-                ind_[row] = new size_type[new_nnzr];
-                nz_[row] = new value_type[new_nnzr];
-                std::copy(indb_, indb_ + new_nnzr, ind_[row]);
-                std::copy(nzb_, nzb_ + new_nnzr, nz_[row]);
-                nnzr_[row] = new_nnzr;
-            }
+            delete[] ind_[row];
+            delete[] nz_[row];
+            ind_[row] = new size_type[new_nnzr];
+            nz_[row] = new value_type[new_nnzr];
+            std::copy(indb_, indb_ + new_nnzr, ind_[row]);
+            std::copy(nzb_, nzb_ + new_nnzr, nz_[row]);
+            nnzr_[row] = new_nnzr;
         }
     }
+}
 
-    /**
+/**
      * Increments (i,j) by delta.
      * Optionally resize the matrix if (i,j) out of current bounds.
      */
-    inline void increment(size_type i, size_type j, value_type delta = 1,
-                          bool resizeYesNo = false)
+inline void increment(size_type i, size_type j, value_type delta = 1,
+                      bool resizeYesNo = false)
+{
+    { // Pre-conditions
+        if (!resizeYesNo)
+            assert_valid_row_col_(i, j, "increment");
+    } // End pre-conditions
+
+    if (isZero_(delta))
+        return;
+
+    if (resizeYesNo)
+        resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
+
+    size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
+    size_type *it = pos_(i, j);
+
+    if (it != ind_end && *it == j)
     {
-        { // Pre-conditions
-            if (!resizeYesNo)
-                assert_valid_row_col_(i, j, "increment");
-        } // End pre-conditions
-
-        if (isZero_(delta))
-            return;
-
-        if (resizeYesNo)
-            resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
-
-        size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
-        size_type *it = pos_(i, j);
-
-        if (it != ind_end && *it == j)
-        {
-            nz_[i][it - ind] += delta;
-        }
-        else
-        {
-            insertNewNonZero_(i, j, it, delta);
-        }
+        nz_[i][it - ind] += delta;
     }
+    else
+    {
+        insertNewNonZero_(i, j, it, delta);
+    }
+}
 
-    /**
+/**
      * Increments (i,j) with delta != 0.
      */
-    inline void incrementWNZ(size_type i, size_type j, value_type delta = 1,
-                             bool resizeYesNo = false)
+inline void incrementWNZ(size_type i, size_type j, value_type delta = 1,
+                         bool resizeYesNo = false)
+{
+    { // Pre-conditions
+        if (!resizeYesNo)
+            assert_valid_row_col_(i, j, "increment");
+        NTA_ASSERT(!isZero_(delta))
+            << "SparseMatrix incrementWNZ: Expects non-zero delta only";
+    } // End pre-conditions
+
+    if (resizeYesNo)
+        resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
+
+    size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
+    size_type *it = pos_(i, j);
+
+    if (it != ind_end && *it == j)
     {
-        { // Pre-conditions
-            if (!resizeYesNo)
-                assert_valid_row_col_(i, j, "increment");
-            NTA_ASSERT(!isZero_(delta))
-                << "SparseMatrix incrementWNZ: Expects non-zero delta only";
-        } // End pre-conditions
-
-        if (resizeYesNo)
-            resize(std::max(i + 1, nRows()), std::max(j + 1, nCols()));
-
-        size_type *ind = ind_begin_(i), *ind_end = ind_end_(i);
-        size_type *it = pos_(i, j);
-
-        if (it != ind_end && *it == j)
-        {
-            nz_[i][it - ind] += delta;
-        }
-        else
-        {
-            insertNewNonZero_(i, j, it, delta);
-        }
+        nz_[i][it - ind] += delta;
     }
+    else
+    {
+        insertNewNonZero_(i, j, it, delta);
+    }
+}
 
-    /**
+/**
      * Increment on the outer product of two sorted lists of indices.
      *
      * For example, calling on
@@ -3934,39 +3934,39 @@ public:
      *  @li Rows and columns must be sorted
      *  @li delta must not be 0
      */
-    template <typename InputIterator>
-    inline void incrementOnOuterWNZ(InputIterator i_begin, InputIterator i_end,
-                                    InputIterator j_begin, InputIterator j_end,
-                                    value_type delta = 1)
-    {
-        { // Pre-conditions
-            assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
-                                             "incrementOnOuterWNZ");
-            assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
-                                             "incrementOnOuterWNZ");
-            NTA_ASSERT(!isZero_(delta)) << "SparseMatrix incrementOnOuterWNZ: "
-                                           "Expects non-zero delta only";
-        } // End pre-conditions
+template <typename InputIterator>
+inline void incrementOnOuterWNZ(InputIterator i_begin, InputIterator i_end,
+                                InputIterator j_begin, InputIterator j_end,
+                                value_type delta = 1)
+{
+    { // Pre-conditions
+        assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
+                                         "incrementOnOuterWNZ");
+        assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
+                                         "incrementOnOuterWNZ");
+        NTA_ASSERT(!isZero_(delta)) << "SparseMatrix incrementOnOuterWNZ: "
+                                       "Expects non-zero delta only";
+    } // End pre-conditions
 
-        for (InputIterator i = i_begin; i != i_end; ++i)
+    for (InputIterator i = i_begin; i != i_end; ++i)
+    {
+        for (InputIterator j = j_begin; j != j_end; ++j)
         {
-            for (InputIterator j = j_begin; j != j_end; ++j)
+            size_type *ind = ind_begin_(*i), *ind_end = ind_end_(*i);
+            size_type *it = std::lower_bound(ind, ind_end, *j);
+            if (it != ind_end && *it == *j)
             {
-                size_type *ind = ind_begin_(*i), *ind_end = ind_end_(*i);
-                size_type *it = std::lower_bound(ind, ind_end, *j);
-                if (it != ind_end && *it == *j)
-                {
-                    nz_[*i][it - ind] += delta;
-                }
-                else
-                {
-                    insertNewNonZero_(*i, *j, it, delta);
-                }
+                nz_[*i][it - ind] += delta;
+            }
+            else
+            {
+                insertNewNonZero_(*i, *j, it, delta);
             }
         }
     }
+}
 
-    /**
+/**
      * Increment nonzeros greater than 'delta' on the outer product of two
      * sorted lists of indices.
      *
@@ -3997,34 +3997,34 @@ public:
      *  @li Rows and columns must be sorted
      *  @li delta must not be 0
      */
-    template <typename InputIterator>
-    inline void
-    incrementOnOuterWNZWThreshold(InputIterator i_begin, InputIterator i_end,
-                                  InputIterator j_begin, InputIterator j_end,
-                                  value_type threshold, value_type delta = 1)
-    {
-        { // Pre-conditions
-            assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
-                                             "incrementOnOuterWNZ");
-            assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
-                                             "incrementOnOuterWNZ");
-            NTA_ASSERT(!isZero_(delta)) << "SparseMatrix incrementOnOuterWNZ: "
-                                           "Expects non-zero delta only";
-        } // End pre-conditions
+template <typename InputIterator>
+inline void
+incrementOnOuterWNZWThreshold(InputIterator i_begin, InputIterator i_end,
+                              InputIterator j_begin, InputIterator j_end,
+                              value_type threshold, value_type delta = 1)
+{
+    { // Pre-conditions
+        assert_valid_sorted_index_range_(nRows(), i_begin, i_end,
+                                         "incrementOnOuterWNZ");
+        assert_valid_sorted_index_range_(nCols(), j_begin, j_end,
+                                         "incrementOnOuterWNZ");
+        NTA_ASSERT(!isZero_(delta)) << "SparseMatrix incrementOnOuterWNZ: "
+                                       "Expects non-zero delta only";
+    } // End pre-conditions
 
-        for (InputIterator i = i_begin; i != i_end; ++i)
+    for (InputIterator i = i_begin; i != i_end; ++i)
+    {
+        for (InputIterator j = j_begin; j != j_end; ++j)
         {
-            for (InputIterator j = j_begin; j != j_end; ++j)
-            {
-                size_type *ind = ind_begin_(*i), *ind_end = ind_end_(*i);
-                for (size_type *it = ind; it != ind_end; ++it)
-                    if (*it == *j && nz_[*i][it - ind] > threshold)
-                        nz_[*i][it - ind] += delta;
-            }
+            size_type *ind = ind_begin_(*i), *ind_end = ind_end_(*i);
+            for (size_type *it = ind; it != ind_end; ++it)
+                if (*it == *j && nz_[*i][it - ind] > threshold)
+                    nz_[*i][it - ind] += delta;
         }
     }
+}
 
-    /**
+/**
      * Increment nonzeros on the outer product of the ranges passed in.
      *
      * For example, calling on
@@ -4051,41 +4051,41 @@ public:
      * @param delta
      * Amount to add to each selected nonzero
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void
-    incrementNonZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
-                             InputIterator2 col_begin, InputIterator2 col_end,
-                             value_type delta)
+template <typename InputIterator1, typename InputIterator2>
+inline void
+incrementNonZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
+                         InputIterator2 col_begin, InputIterator2 col_end,
+                         value_type delta)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "incrementNonZerosOnOuter");
+        assert_valid_col_it_range_(col_begin, col_end,
+                                   "incrementNonZerosOnOuter");
+    } // End pre-conditions
+
+    std::fill(indb_, indb_ + nCols(), 0);
+    for (InputIterator2 col = col_begin; col != col_end; ++col)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "incrementNonZerosOnOuter");
-            assert_valid_col_it_range_(col_begin, col_end,
-                                       "incrementNonZerosOnOuter");
-        } // End pre-conditions
+        indb_[*col] = 1;
+    }
 
-        std::fill(indb_, indb_ + nCols(), 0);
-        for (InputIterator2 col = col_begin; col != col_end; ++col)
+    for (InputIterator1 row = row_begin; row != row_end; ++row)
+    {
+        size_type *ind_begin = ind_begin_(*row);
+        size_type *ind_end = ind_end_(*row);
+
+        for (size_type *ind = ind_begin; ind != ind_end; ++ind)
         {
-            indb_[*col] = 1;
-        }
-
-        for (InputIterator1 row = row_begin; row != row_end; ++row)
-        {
-            size_type *ind_begin = ind_begin_(*row);
-            size_type *ind_end = ind_end_(*row);
-
-            for (size_type *ind = ind_begin; ind != ind_end; ++ind)
+            if (indb_[*ind] == 1)
             {
-                if (indb_[*ind] == 1)
-                {
-                    nz_[*row][ind - ind_begin] += delta;
-                }
+                nz_[*row][ind - ind_begin] += delta;
             }
         }
     }
+}
 
-    /**
+/**
      * Increment nonzeros in the specified rows, ignoring the specified cols.
      *
      * For example, calling on
@@ -4107,42 +4107,42 @@ public:
      * @param delta
      * Amount to add to each selected nonzero
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void incrementNonZerosOnRowsExcludingCols(InputIterator1 row_begin,
-                                                     InputIterator1 row_end,
-                                                     InputIterator2 col_begin,
-                                                     InputIterator2 col_end,
-                                                     value_type delta)
+template <typename InputIterator1, typename InputIterator2>
+inline void incrementNonZerosOnRowsExcludingCols(InputIterator1 row_begin,
+                                                 InputIterator1 row_end,
+                                                 InputIterator2 col_begin,
+                                                 InputIterator2 col_end,
+                                                 value_type delta)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "incrementNonZerosOnRowsExcludingCols");
+        assert_valid_col_it_range_(col_begin, col_end,
+                                   "incrementNonZerosOnRowsExcludingCols");
+    } // End pre-conditions
+
+    std::fill(indb_, indb_ + nCols(), 0);
+    for (InputIterator2 col = col_begin; col != col_end; ++col)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "incrementNonZerosOnRowsExcludingCols");
-            assert_valid_col_it_range_(col_begin, col_end,
-                                       "incrementNonZerosOnRowsExcludingCols");
-        } // End pre-conditions
+        indb_[*col] = 1;
+    }
 
-        std::fill(indb_, indb_ + nCols(), 0);
-        for (InputIterator2 col = col_begin; col != col_end; ++col)
+    for (InputIterator1 row = row_begin; row != row_end; ++row)
+    {
+        size_type *ind_begin = ind_begin_(*row);
+        size_type *ind_end = ind_end_(*row);
+
+        for (size_type *ind = ind_begin; ind != ind_end; ++ind)
         {
-            indb_[*col] = 1;
-        }
-
-        for (InputIterator1 row = row_begin; row != row_end; ++row)
-        {
-            size_type *ind_begin = ind_begin_(*row);
-            size_type *ind_end = ind_end_(*row);
-
-            for (size_type *ind = ind_begin; ind != ind_end; ++ind)
+            if (indb_[*ind] != 1)
             {
-                if (indb_[*ind] != 1)
-                {
-                    nz_[*row][ind - ind_begin] += delta;
-                }
+                nz_[*row][ind - ind_begin] += delta;
             }
         }
     }
+}
 
-    /**
+/**
      * For each specified row, clip every nonzero value to be within range [a,
      * b].
      *
@@ -4169,23 +4169,23 @@ public:
      *  @li Rows must be sorted
      *  @li a <= b
      */
-    template <typename InputIterator>
-    inline void clipRowsBelowAndAbove(InputIterator row_begin,
-                                      InputIterator row_end, value_type a,
-                                      value_type b)
+template <typename InputIterator>
+inline void clipRowsBelowAndAbove(InputIterator row_begin,
+                                  InputIterator row_end, value_type a,
+                                  value_type b)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "clipRowsBelowAndAbove");
+    } // End pre-conditions
+
+    for (InputIterator row = row_begin; row != row_end; ++row)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "clipRowsBelowAndAbove");
-        } // End pre-conditions
-
-        for (InputIterator row = row_begin; row != row_end; ++row)
-        {
-            clipRowBelowAndAbove(*row, a, b);
-        }
+        clipRowBelowAndAbove(*row, a, b);
     }
+}
 
-    /**
+/**
      * Set all zeros on the outer product of the ranges passed in.
      *
      * For example, calling on
@@ -4211,106 +4211,106 @@ public:
      * @b Requirements
      *  @li Columns must be sorted
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void setZerosOnOuter(InputIterator1 row_begin,
-                                InputIterator1 row_end,
-                                InputIterator2 col_begin,
-                                InputIterator2 col_end, value_type value)
+template <typename InputIterator1, typename InputIterator2>
+inline void setZerosOnOuter(InputIterator1 row_begin,
+                            InputIterator1 row_end,
+                            InputIterator2 col_begin,
+                            InputIterator2 col_end, value_type value)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end, "setZerosOnOuter");
+        assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
+                                         "setZerosOnOuter");
+    } // End pre-conditions
+
+    for (InputIterator1 row = row_begin; row != row_end; ++row)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end, "setZerosOnOuter");
-            assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
-                                             "setZerosOnOuter");
-        } // End pre-conditions
 
-        for (InputIterator1 row = row_begin; row != row_end; ++row)
+        size_type *ind_begin = ind_begin_(*row);
+        size_type *ind_end = ind_end_(*row);
+
+        InputIterator2 selected_col = col_begin;
+        size_type *it = ind_begin;
+
+        size_type nextNonzeroCol =
+            it != ind_end ? *it : std::numeric_limits<size_type>::max();
+        size_type nextSelectedCol =
+            selected_col != col_end ? *selected_col
+                                    : std::numeric_limits<size_type>::max();
+
+        size_type *indb_it = indb_;
+        value_type *nzb_it = nzb_;
+        for (; it != ind_end || selected_col != col_end;
+             ++indb_it, ++nzb_it)
         {
-
-            size_type *ind_begin = ind_begin_(*row);
-            size_type *ind_end = ind_end_(*row);
-
-            InputIterator2 selected_col = col_begin;
-            size_type *it = ind_begin;
-
-            size_type nextNonzeroCol =
-                it != ind_end ? *it : std::numeric_limits<size_type>::max();
-            size_type nextSelectedCol =
-                selected_col != col_end ? *selected_col
-                                        : std::numeric_limits<size_type>::max();
-
-            size_type *indb_it = indb_;
-            value_type *nzb_it = nzb_;
-            for (; it != ind_end || selected_col != col_end;
-                 ++indb_it, ++nzb_it)
+            if (nextNonzeroCol < nextSelectedCol)
             {
-                if (nextNonzeroCol < nextSelectedCol)
-                {
-                    // Before the next selected column, we found a nonzero
-                    // column. Copy it.
-                    *indb_it = *it;
-                    *nzb_it = nz_[*row][it - ind_begin];
+                // Before the next selected column, we found a nonzero
+                // column. Copy it.
+                *indb_it = *it;
+                *nzb_it = nz_[*row][it - ind_begin];
 
-                    ++it;
-                    nextNonzeroCol =
-                        it != ind_end ? *it
-                                      : std::numeric_limits<size_type>::max();
-                }
-                else if (nextNonzeroCol == nextSelectedCol)
-                {
-                    // The next selected column is nonzero.
-                    // Copy it.
-                    *indb_it = *it;
-                    *nzb_it = nz_[*row][it - ind_begin];
-
-                    ++it;
-                    ++selected_col;
-                    nextNonzeroCol =
-                        it != ind_end ? *it
-                                      : std::numeric_limits<size_type>::max();
-                    nextSelectedCol =
-                        selected_col != col_end
-                            ? *selected_col
-                            : std::numeric_limits<size_type>::max();
-                }
-                else
-                {
-                    // The next selected column is a zero.
-                    // Insert a nonzero.
-                    *indb_it = *selected_col;
-                    *nzb_it = value;
-
-                    ++selected_col;
-                    nextSelectedCol =
-                        selected_col != col_end
-                            ? *selected_col
-                            : std::numeric_limits<size_type>::max();
-                }
+                ++it;
+                nextNonzeroCol =
+                    it != ind_end ? *it
+                                  : std::numeric_limits<size_type>::max();
             }
-
-            const size_type nnzr = indb_it - indb_;
-
-            if (nnzr > nnzr_[*row])
+            else if (nextNonzeroCol == nextSelectedCol)
             {
-                // It changed. Commit the changes.
+                // The next selected column is nonzero.
+                // Copy it.
+                *indb_it = *it;
+                *nzb_it = nz_[*row][it - ind_begin];
 
-                if (isCompact())
-                {
-                    decompact();
-                }
-                delete[] ind_[*row];
-                delete[] nz_[*row];
+                ++it;
+                ++selected_col;
+                nextNonzeroCol =
+                    it != ind_end ? *it
+                                  : std::numeric_limits<size_type>::max();
+                nextSelectedCol =
+                    selected_col != col_end
+                        ? *selected_col
+                        : std::numeric_limits<size_type>::max();
+            }
+            else
+            {
+                // The next selected column is a zero.
+                // Insert a nonzero.
+                *indb_it = *selected_col;
+                *nzb_it = value;
 
-                ind_[*row] = new size_type[nnzr];
-                nz_[*row] = new value_type[nnzr];
-
-                nnzr_[*row] = nnzr;
-                std::copy(indb_, indb_ + nnzr, ind_[*row]);
-                std::copy(nzb_, nzb_ + nnzr, nz_[*row]);
+                ++selected_col;
+                nextSelectedCol =
+                    selected_col != col_end
+                        ? *selected_col
+                        : std::numeric_limits<size_type>::max();
             }
         }
-    }
 
-    /**
+        const size_type nnzr = indb_it - indb_;
+
+        if (nnzr > nnzr_[*row])
+        {
+            // It changed. Commit the changes.
+
+            if (isCompact())
+            {
+                decompact();
+            }
+            delete[] ind_[*row];
+            delete[] nz_[*row];
+
+            ind_[*row] = new size_type[nnzr];
+            nz_[*row] = new value_type[nnzr];
+
+            nnzr_[*row] = nnzr;
+            std::copy(indb_, indb_ + nnzr, ind_[*row]);
+            std::copy(nzb_, nzb_ + nnzr, nz_[*row]);
+        }
+    }
+}
+
+/**
      * Convert 'numNewNonZerosPerRow' zeros per row to 'value', choosing
      * randomly, restricting changes to the outer product of the ranges passed
      * in.
@@ -4344,36 +4344,36 @@ public:
      * @b Requirements
      *  @li Columns must be sorted
      */
-    template <typename InputIterator1, typename InputIterator2, typename Random>
-    inline void
-    setRandomZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
-                          InputIterator2 col_begin, InputIterator2 col_end,
-                          difference_type numNewNonZerosPerRow,
-                          value_type value, Random &rng)
-    {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "setRandomZerosOnOuter");
-            assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
-                                             "setRandomZerosOnOuter");
-        } // End pre-conditions
+template <typename InputIterator1, typename InputIterator2, typename Random>
+inline void
+setRandomZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
+                      InputIterator2 col_begin, InputIterator2 col_end,
+                      difference_type numNewNonZerosPerRow,
+                      value_type value, Random &rng)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "setRandomZerosOnOuter");
+        assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
+                                         "setRandomZerosOnOuter");
+    } // End pre-conditions
 
-        for (InputIterator1 row = row_begin; row != row_end; ++row)
+    for (InputIterator1 row = row_begin; row != row_end; ++row)
+    {
+        size_type numZeros =
+            nZerosInRowOnColumns_(*row, col_begin, col_end);
+        difference_type numNewNonZeros =
+            std::min(numNewNonZerosPerRow, (difference_type)numZeros);
+        if (numNewNonZeros > 0)
         {
-            size_type numZeros =
-                nZerosInRowOnColumns_(*row, col_begin, col_end);
-            difference_type numNewNonZeros =
-                std::min(numNewNonZerosPerRow, (difference_type)numZeros);
-            if (numNewNonZeros > 0)
-            {
-                insertRandomNonZerosIntoColumns_(*row, col_begin, col_end,
-                                                 numNewNonZeros, numZeros,
-                                                 value, rng);
-            }
+            insertRandomNonZerosIntoColumns_(*row, col_begin, col_end,
+                                             numNewNonZeros, numZeros,
+                                             value, rng);
         }
     }
+}
 
-    /**
+/**
      * Convert some zeros per row to 'value', choosing randomly,
      * restricting changes to the outer product of the ranges passed in.
      *
@@ -4406,47 +4406,47 @@ public:
      * @b Requirements
      *  @li Columns must be sorted
      */
-    template <typename InputIterator1, typename InputIterator2,
-              typename InputIterator3, typename Random>
-    inline void
-    setRandomZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
-                          InputIterator2 col_begin, InputIterator2 col_end,
-                          InputIterator3 numNew_begin,
-                          InputIterator3 numNew_end, value_type value,
-                          Random &rng)
+template <typename InputIterator1, typename InputIterator2,
+          typename InputIterator3, typename Random>
+inline void
+setRandomZerosOnOuter(InputIterator1 row_begin, InputIterator1 row_end,
+                      InputIterator2 col_begin, InputIterator2 col_end,
+                      InputIterator3 numNew_begin,
+                      InputIterator3 numNew_end, value_type value,
+                      Random &rng)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "setRandomZerosOnOuter");
+        assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
+                                         "setRandomZerosOnOuter");
+
+        NTA_ASSERT(std::distance(row_begin, row_end) ==
+                   std::distance(numNew_begin, numNew_end));
+    } // End pre-conditions
+
+    InputIterator1 row;
+    InputIterator3 numNew;
+    for (row = row_begin, numNew = numNew_begin; row != row_end;
+         ++row, ++numNew)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "setRandomZerosOnOuter");
-            assert_valid_sorted_index_range_(nCols(), col_begin, col_end,
-                                             "setRandomZerosOnOuter");
-
-            NTA_ASSERT(std::distance(row_begin, row_end) ==
-                       std::distance(numNew_begin, numNew_end));
-        } // End pre-conditions
-
-        InputIterator1 row;
-        InputIterator3 numNew;
-        for (row = row_begin, numNew = numNew_begin; row != row_end;
-             ++row, ++numNew)
+        if (*numNew > 0)
         {
-            if (*numNew > 0)
+            size_type numZeros =
+                nZerosInRowOnColumns_(*row, col_begin, col_end);
+            difference_type numNewNonZeros =
+                std::min(*numNew, (difference_type)numZeros);
+            if (numNewNonZeros > 0)
             {
-                size_type numZeros =
-                    nZerosInRowOnColumns_(*row, col_begin, col_end);
-                difference_type numNewNonZeros =
-                    std::min(*numNew, (difference_type)numZeros);
-                if (numNewNonZeros > 0)
-                {
-                    insertRandomNonZerosIntoColumns_(*row, col_begin, col_end,
-                                                     numNewNonZeros, numZeros,
-                                                     value, rng);
-                }
+                insertRandomNonZerosIntoColumns_(*row, col_begin, col_end,
+                                                 numNewNonZeros, numZeros,
+                                                 value, rng);
             }
         }
     }
+}
 
-    /**
+/**
      * Maybe add nonzeros to each row. If the selected columns have fewer than
      * 'numDesiredNonzeros' nonzeros, randomly add nonzeros to make up the
      * difference, restricting changes to the outer product of the ranges passed
@@ -4481,41 +4481,41 @@ public:
      * @b Requirements
      *  @li Columns must be sorted
      */
-    template <typename InputIterator1, typename InputIterator2, typename Random>
-    inline void increaseRowNonZeroCountsOnOuterTo(
-        InputIterator1 row_begin, InputIterator1 row_end,
-        InputIterator2 col_begin, InputIterator2 col_end,
-        difference_type numDesiredNonzeros, value_type initialValue,
-        Random &rng)
-    {
-        { // Pre-conditions
-            assert_valid_row_it_range_(row_begin, row_end,
-                                       "increaseRowNonZeroCountsOnOuterTo");
-            assert_valid_sorted_index_range_(
-                nCols(), col_begin, col_end,
-                "increaseRowNonZeroCountsOnOuterTo");
-        } // End pre-conditions
+template <typename InputIterator1, typename InputIterator2, typename Random>
+inline void increaseRowNonZeroCountsOnOuterTo(
+    InputIterator1 row_begin, InputIterator1 row_end,
+    InputIterator2 col_begin, InputIterator2 col_end,
+    difference_type numDesiredNonzeros, value_type initialValue,
+    Random &rng)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(row_begin, row_end,
+                                   "increaseRowNonZeroCountsOnOuterTo");
+        assert_valid_sorted_index_range_(
+            nCols(), col_begin, col_end,
+            "increaseRowNonZeroCountsOnOuterTo");
+    } // End pre-conditions
 
-        for (InputIterator1 row = row_begin; row != row_end; ++row)
+    for (InputIterator1 row = row_begin; row != row_end; ++row)
+    {
+        size_type numZeros =
+            nZerosInRowOnColumns_(*row, col_begin, col_end);
+        difference_type numNonZeros = (col_end - col_begin) - numZeros;
+        size_type numDesiredNewNonZeros = (size_type)std::max(
+            (difference_type)0,
+            (difference_type)(numDesiredNonzeros - numNonZeros));
+        size_type numActualNewNonZeros =
+            std::min(numDesiredNewNonZeros, numZeros);
+        if (numActualNewNonZeros > 0)
         {
-            size_type numZeros =
-                nZerosInRowOnColumns_(*row, col_begin, col_end);
-            difference_type numNonZeros = (col_end - col_begin) - numZeros;
-            size_type numDesiredNewNonZeros = (size_type)std::max(
-                (difference_type)0,
-                (difference_type)(numDesiredNonzeros - numNonZeros));
-            size_type numActualNewNonZeros =
-                std::min(numDesiredNewNonZeros, numZeros);
-            if (numActualNewNonZeros > 0)
-            {
-                insertRandomNonZerosIntoColumns_(
-                    *row, col_begin, col_end, (size_type)numActualNewNonZeros,
-                    numZeros, initialValue, rng);
-            }
+            insertRandomNonZerosIntoColumns_(
+                *row, col_begin, col_end, (size_type)numActualNewNonZeros,
+                numZeros, initialValue, rng);
         }
     }
+}
 
-    /**
+/**
      * Returns the value of the element at row index i and column index j.
      *
      * @param row [0 <= size_type < nrows] the row index
@@ -4529,139 +4529,139 @@ public:
      *  @li If row < 0 or row >= nrows
      *  @li If col < 0 or col >= ncols
      */
-    inline value_type get(size_type row, size_type col) const
-    {
-        { // Pre-conditions
-            assert_valid_row_col_(row, col, "get");
-        } // End pre-conditions
+inline value_type get(size_type row, size_type col) const
+{
+    { // Pre-conditions
+        assert_valid_row_col_(row, col, "get");
+    } // End pre-conditions
 
-        difference_type offset = col_(row, col);
+    difference_type offset = col_(row, col);
 
-        if (offset >= 0)
-            return nz_[row][offset];
+    if (offset >= 0)
+        return nz_[row][offset];
 
-        return value_type(0);
-    }
+    return value_type(0);
+}
 
-    /**
+/**
      * Not documented. Don't use, unless you really, really know what you are
      * doing
      */
-    inline const_row_nz_index_iterator row_nz_index_begin(size_type row) const
-    {
-        return ind_begin_(row);
-    }
+inline const_row_nz_index_iterator row_nz_index_begin(size_type row) const
+{
+    return ind_begin_(row);
+}
 
-    /**
+/**
      * Not documented. Don't use, unless you really, really know what you are
      * doing
      */
-    inline const_row_nz_index_iterator row_nz_index_end(size_type row) const
-    {
-        return ind_end_(row);
-    }
+inline const_row_nz_index_iterator row_nz_index_end(size_type row) const
+{
+    return ind_end_(row);
+}
 
-    /**
+/**
      * Not documented. Don't use, unless you really, really know what you are
      * doing
      */
-    inline const_row_nz_value_iterator row_nz_value_begin(size_type row) const
-    {
-        return nz_begin_(row);
-    }
+inline const_row_nz_value_iterator row_nz_value_begin(size_type row) const
+{
+    return nz_begin_(row);
+}
 
-    /**
+/**
      * Not documented. Don't use, unless you really, really know what you are
      * doing
      */
-    inline const_row_nz_value_iterator row_nz_value_end(size_type row) const
-    {
-        return nz_end_(row);
-    }
+inline const_row_nz_value_iterator row_nz_value_end(size_type row) const
+{
+    return nz_end_(row);
+}
 
-    /**
+/**
      * Returns all the non-zeros in this sparse matrix, with their indices,
      * as ijv instances.
      */
-    template <typename OutputIterator>
-    inline void getAllNonZeros(OutputIterator ijv_iterator) const
+template <typename OutputIterator>
+inline void getAllNonZeros(OutputIterator ijv_iterator) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                ijv_iterator->i(row);
-                ijv_iterator->j(*ind);
-                NTA_ASSERT(!isZero_(*nz))
-                    << "SparseMatrix::getAllNonZeros (ijv): "
-                    << "Zero at " << row << ", " << *ind << ": " << *nz
-                    << " epsilon= " << crucian::Epsilon;
-                ijv_iterator->v(*nz);
-                ++ijv_iterator;
-            }
+            ijv_iterator->i(row);
+            ijv_iterator->j(*ind);
+            NTA_ASSERT(!isZero_(*nz))
+                << "SparseMatrix::getAllNonZeros (ijv): "
+                << "Zero at " << row << ", " << *ind << ": " << *nz
+                << " epsilon= " << crucian::Epsilon;
+            ijv_iterator->v(*nz);
+            ++ijv_iterator;
         }
     }
+}
 
-    /**
+/**
      * Returns all non-zeros inside the rectangular area specified.
      * The rectangular area has shape [row_begin, row_end) X [col_begin,
      * col_end).
      */
-    template <typename OutputIterator>
-    inline void getAllNonZeros(size_type row_begin, size_type row_end,
-                               size_type col_begin, size_type col_end,
-                               OutputIterator ijv_iterator) const
+template <typename OutputIterator>
+inline void getAllNonZeros(size_type row_begin, size_type row_end,
+                           size_type col_begin, size_type col_end,
+                           OutputIterator ijv_iterator) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        if (row >= row_begin && row < row_end)
         {
-            if (row >= row_begin && row < row_end)
+            ITERATE_ON_ROW
             {
-                ITERATE_ON_ROW
+                if (*ind >= col_begin && *ind < col_end)
                 {
-                    if (*ind >= col_begin && *ind < col_end)
-                    {
-                        ijv_iterator->i(row);
-                        ijv_iterator->j(*ind);
-                        NTA_ASSERT(!isZero_(*nz))
-                            << "SparseMatrix::getAllNonZeros (rect): "
-                            << "Zero at " << row << ", " << *ind << ": " << *nz
-                            << " epsilon= " << crucian::Epsilon;
-                        ijv_iterator->v(*nz);
-                        ++ijv_iterator;
-                    }
+                    ijv_iterator->i(row);
+                    ijv_iterator->j(*ind);
+                    NTA_ASSERT(!isZero_(*nz))
+                        << "SparseMatrix::getAllNonZeros (rect): "
+                        << "Zero at " << row << ", " << *ind << ": " << *nz
+                        << " epsilon= " << crucian::Epsilon;
+                    ijv_iterator->v(*nz);
+                    ++ijv_iterator;
                 }
             }
         }
     }
+}
 
-    /**
+/**
      * Returns all the non-zeros in this matrix to three ranges, one for the row
      * indices of the non-zeros, one for the col indices, and one for the value
      * of the non-zeros.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void getAllNonZeros(OutputIterator1 nz_i, OutputIterator1 nz_j,
-                               OutputIterator2 nz_val) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline void getAllNonZeros(OutputIterator1 nz_i, OutputIterator1 nz_j,
+                           OutputIterator2 nz_val) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                *nz_i = row;
-                *nz_j = *ind;
-                NTA_ASSERT(!isZero_(*nz))
-                    << "SparseMatrix::getAllNonZeros (3 lists): "
-                    << "Zero at " << row << ", " << *ind << ": " << *nz
-                    << " epsilon= " << crucian::Epsilon;
-                *nz_val = *nz;
-                ++nz_i;
-                ++nz_j;
-                ++nz_val;
-            }
+            *nz_i = row;
+            *nz_j = *ind;
+            NTA_ASSERT(!isZero_(*nz))
+                << "SparseMatrix::getAllNonZeros (3 lists): "
+                << "Zero at " << row << ", " << *ind << ": " << *nz
+                << " epsilon= " << crucian::Epsilon;
+            *nz_val = *nz;
+            ++nz_i;
+            ++nz_j;
+            ++nz_val;
         }
     }
+}
 
-    /**
+/**
      * Clears this matrix and sets all the non-zeros from the passed in list.
      * In contrast to set(i,j,v), we don't systemacially weed-out the values
      * too close to zero, because this function can be used internally by other
@@ -4677,273 +4677,273 @@ public:
      * or if the non-zeros are not in order, or if there are duplicate locations
      * for non-zeros.
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void setAllNonZeros(size_type nrows, size_type ncols,
-                               InputIterator1 i_begin, InputIterator1 i_end,
-                               InputIterator1 j_begin, InputIterator1 j_end,
-                               InputIterator2 v_begin, InputIterator2 v_end,
-                               bool clean = true)
-    {
-        { // Pre-conditions
-            const char *where = "SparseMatrix::setAllNonZeros: ";
+template <typename InputIterator1, typename InputIterator2>
+inline void setAllNonZeros(size_type nrows, size_type ncols,
+                           InputIterator1 i_begin, InputIterator1 i_end,
+                           InputIterator1 j_begin, InputIterator1 j_end,
+                           InputIterator2 v_begin, InputIterator2 v_end,
+                           bool clean = true)
+{
+    { // Pre-conditions
+        const char *where = "SparseMatrix::setAllNonZeros: ";
 
-            NTA_ASSERT(i_end - i_begin == j_end - j_begin)
-                << where << "Inconsistent index ranges";
-            NTA_ASSERT(v_end - v_begin == i_end - i_begin)
-                << where << "Inconsistent value range";
+        NTA_ASSERT(i_end - i_begin == j_end - j_begin)
+            << where << "Inconsistent index ranges";
+        NTA_ASSERT(v_end - v_begin == i_end - i_begin)
+            << where << "Inconsistent value range";
 
-            ASSERT_VALID_RANGE(i_begin, i_end, where);
-            for (InputIterator1 ii = i_begin; ii != i_end; ++ii)
-                NTA_ASSERT(*ii < nrows) << where << "Invalid row index: " << *ii
-                                        << " - Should be >= 0 and < " << nrows;
+        ASSERT_VALID_RANGE(i_begin, i_end, where);
+        for (InputIterator1 ii = i_begin; ii != i_end; ++ii)
+            NTA_ASSERT(*ii < nrows) << where << "Invalid row index: " << *ii
+                                    << " - Should be >= 0 and < " << nrows;
 
-            ASSERT_VALID_RANGE(j_begin, j_end, where);
-            for (InputIterator1 jj = j_begin; jj != j_end; ++jj)
-                NTA_ASSERT(*jj < ncols) << where << "Invalid col index: " << *jj
-                                        << " - Should be >= 0 and < " << ncols;
+        ASSERT_VALID_RANGE(j_begin, j_end, where);
+        for (InputIterator1 jj = j_begin; jj != j_end; ++jj)
+            NTA_ASSERT(*jj < ncols) << where << "Invalid col index: " << *jj
+                                    << " - Should be >= 0 and < " << ncols;
 
 #ifdef NTA_ASSERTIONS_ON
 
-            if (clean)
+        if (clean)
+        {
+
+            for (InputIterator2 it_v = v_begin; it_v != v_end; ++it_v)
+                NTA_ASSERT(!isZero_(*it_v))
+                    << where << "Passed in zero: " << *it_v
+                    << " epsilon= " << crucian::Epsilon;
+
+            if (i_begin != i_end)
             {
-
-                for (InputIterator2 it_v = v_begin; it_v != v_end; ++it_v)
-                    NTA_ASSERT(!isZero_(*it_v))
-                        << where << "Passed in zero: " << *it_v
-                        << " epsilon= " << crucian::Epsilon;
-
-                if (i_begin != i_end)
+                InputIterator1 ii = i_begin, jj = j_begin, iip = ii,
+                               jjp = jj;
+                InputIterator2 vv = v_begin, vvp = vv;
+                ++ii;
+                ++jj;
+                for (; ii != i_end; ++ii, ++jj, ++vv)
                 {
-                    InputIterator1 ii = i_begin, jj = j_begin, iip = ii,
-                                   jjp = jj;
-                    InputIterator2 vv = v_begin, vvp = vv;
-                    ++ii;
-                    ++jj;
-                    for (; ii != i_end; ++ii, ++jj, ++vv)
-                    {
-                        NTA_ASSERT(*iip < *ii || *jjp < *jj)
-                            << where
-                            << "Passed in duplicate or out-of-order non-zeros: "
-                            << *vvp << " and " << *vv << ", (" << *iip << ", "
-                            << *jjp << ") and (" << *ii << ", " << *jj << ")";
-                        iip = ii;
-                        jjp = jj;
-                        vvp = vv;
-                    }
+                    NTA_ASSERT(*iip < *ii || *jjp < *jj)
+                        << where
+                        << "Passed in duplicate or out-of-order non-zeros: "
+                        << *vvp << " and " << *vv << ", (" << *iip << ", "
+                        << *jjp << ") and (" << *ii << ", " << *jj << ")";
+                    iip = ii;
+                    jjp = jj;
+                    vvp = vv;
                 }
             }
+        }
 
 #endif
-        } // End pre-conditions
+    } // End pre-conditions
 
-        // Used only if not clean, to hold unique locations of non-zeros
-        typedef std::set<IJV, typename IJV::lexicographic> S;
-        typename S::const_iterator it;
-        S s;
+    // Used only if not clean, to hold unique locations of non-zeros
+    typedef std::set<IJV, typename IJV::lexicographic> S;
+    typename S::const_iterator it;
+    S s;
 
-        InputIterator1 it_i = i_begin, it_j = j_begin;
-        InputIterator2 it_v = v_begin;
+    InputIterator1 it_i = i_begin, it_j = j_begin;
+    InputIterator2 it_v = v_begin;
 
-        deallocate_();
-        allocate_(nrows, ncols);
-        nrows_ = nrows;
-        ncols_ = ncols;
+    deallocate_();
+    allocate_(nrows, ncols);
+    nrows_ = nrows;
+    ncols_ = ncols;
 
-        size_type nnz = 0;
+    size_type nnz = 0;
 
-        if (clean)
-        {
+    if (clean)
+    {
 
-            nnz = (size_type)(i_end - i_begin);
-            for (; it_i != i_end; ++it_i)
-                ++nnzr_[*it_i];
-        }
-        else
-        {
+        nnz = (size_type)(i_end - i_begin);
+        for (; it_i != i_end; ++it_i)
+            ++nnzr_[*it_i];
+    }
+    else
+    {
 
-            for (; it_i != i_end; ++it_i, ++it_j, ++it_v)
-                if (!isZero_(*it_v))
-                {
-                    IJV ijv(*it_i, *it_j, *it_v);
-                    it = s.find(ijv);
-                    if (it == s.end())
-                    {
-                        s.insert(ijv);
-                        ++nnzr_[*it_i];
-                    }
-                }
-
-            nnz = s.size();
-        }
-
-        ind_mem_ = new size_type[nnz];
-        nz_mem_ = new value_type[nnz];
-        size_type *ind_ptr = ind_mem_;
-        value_type *nz_ptr = nz_mem_;
-
-        it_i = i_begin;
-        it_j = j_begin;
-        it_v = v_begin;
-
-        if (clean)
-        {
-
-            for (size_type i = 0; i != nrows; ++i)
+        for (; it_i != i_end; ++it_i, ++it_j, ++it_v)
+            if (!isZero_(*it_v))
             {
-                ind_[i] = ind_ptr;
-                nz_[i] = nz_ptr;
-                for (size_type k = 0; k != nnzr_[i]; ++k)
+                IJV ijv(*it_i, *it_j, *it_v);
+                it = s.find(ijv);
+                if (it == s.end())
                 {
-                    *ind_ptr++ = *it_j;
-                    *nz_ptr++ = *it_v;
-                    ++it_j;
-                    ++it_v;
+                    s.insert(ijv);
+                    ++nnzr_[*it_i];
                 }
             }
-        }
-        else
+
+        nnz = s.size();
+    }
+
+    ind_mem_ = new size_type[nnz];
+    nz_mem_ = new value_type[nnz];
+    size_type *ind_ptr = ind_mem_;
+    value_type *nz_ptr = nz_mem_;
+
+    it_i = i_begin;
+    it_j = j_begin;
+    it_v = v_begin;
+
+    if (clean)
+    {
+
+        for (size_type i = 0; i != nrows; ++i)
         {
-
-            it = s.begin();
-
-            for (size_type i = 0; i != nrows; ++i)
+            ind_[i] = ind_ptr;
+            nz_[i] = nz_ptr;
+            for (size_type k = 0; k != nnzr_[i]; ++k)
             {
-                ind_[i] = ind_ptr;
-                nz_[i] = nz_ptr;
-                for (size_type k = 0; k != nnzr_[i]; ++k, ++it)
-                {
-                    *ind_ptr++ = it->j();
-                    *nz_ptr++ = it->v();
-                }
+                *ind_ptr++ = *it_j;
+                *nz_ptr++ = *it_v;
+                ++it_j;
+                ++it_v;
             }
         }
     }
+    else
+    {
 
-    /**
+        it = s.begin();
+
+        for (size_type i = 0; i != nrows; ++i)
+        {
+            ind_[i] = ind_ptr;
+            nz_[i] = nz_ptr;
+            for (size_type k = 0; k != nnzr_[i]; ++k, ++it)
+            {
+                *ind_ptr++ = it->j();
+                *nz_ptr++ = it->v();
+            }
+        }
+    }
+}
+
+/**
      * Returns the non-zeros in a sub-matrix. The positions of the non-zeros are
      * relative to the (0,0) of this matrix.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void getNonZerosInBox(size_type row_begin, size_type row_end,
-                                 size_type col_begin, size_type col_end,
-                                 OutputIterator1 nz_i, OutputIterator1 nz_j,
-                                 OutputIterator2 nz_v) const
-    {
-        { // Pre-conditions
-            assert_valid_row_range_(row_begin, row_end, "getNonZerosInBox");
-            assert_valid_col_range_(col_begin, col_end, "getNonZerosInBox");
-        } // End pre-conditions
+template <typename OutputIterator1, typename OutputIterator2>
+inline void getNonZerosInBox(size_type row_begin, size_type row_end,
+                             size_type col_begin, size_type col_end,
+                             OutputIterator1 nz_i, OutputIterator1 nz_j,
+                             OutputIterator2 nz_v) const
+{
+    { // Pre-conditions
+        assert_valid_row_range_(row_begin, row_end, "getNonZerosInBox");
+        assert_valid_col_range_(col_begin, col_end, "getNonZerosInBox");
+    } // End pre-conditions
 
-        for (size_type row = row_begin; row != row_end; ++row)
+    for (size_type row = row_begin; row != row_end; ++row)
+    {
+        if (!nonZerosInRowRange(row, col_begin, col_end))
+            continue;
+        size_type *c1 = pos_(row, col_begin);
+        size_type *c2 =
+            col_end == nCols() ? ind_end_(row) : pos_(row, col_end);
+        value_type *nz = nz_begin_(row) + (c1 - ind_begin_(row));
+        for (size_type *col = c1; col != c2; ++col)
         {
-            if (!nonZerosInRowRange(row, col_begin, col_end))
-                continue;
-            size_type *c1 = pos_(row, col_begin);
-            size_type *c2 =
-                col_end == nCols() ? ind_end_(row) : pos_(row, col_end);
-            value_type *nz = nz_begin_(row) + (c1 - ind_begin_(row));
-            for (size_type *col = c1; col != c2; ++col)
-            {
-                *nz_i++ = row;
-                *nz_j++ = *col;
-                NTA_ASSERT(!isZero_(*nz))
-                    << "SparseMatrix::getNonZerosInBox: "
-                    << "Zero at " << row << ", " << *col << ": " << *nz
-                    << " epsilon= " << crucian::Epsilon;
-                *nz_v++ = *nz++;
-            }
+            *nz_i++ = row;
+            *nz_j++ = *col;
+            NTA_ASSERT(!isZero_(*nz))
+                << "SparseMatrix::getNonZerosInBox: "
+                << "Zero at " << row << ", " << *col << ": " << *nz
+                << " epsilon= " << crucian::Epsilon;
+            *nz_v++ = *nz++;
         }
     }
+}
 
-    /**
+/**
      * Sort all values according to predicate. Return values and i,j indices.
      */
-    template <typename OutputIterator, typename StrictWeakOrdering>
-    inline size_type
-    getNonZerosSorted(OutputIterator out_begin, int n = -1,
-                      StrictWeakOrdering o = IJV::greater_value()) const
-    {
-        if (nNonZeros() == 0)
-            return 0;
+template <typename OutputIterator, typename StrictWeakOrdering>
+inline size_type
+getNonZerosSorted(OutputIterator out_begin, int n = -1,
+                  StrictWeakOrdering o = IJV::greater_value()) const
+{
+    if (nNonZeros() == 0)
+        return 0;
 
-        if (n < 0 || (size_type)n > nNonZeros())
-            n = nNonZeros();
+    if (n < 0 || (size_type)n > nNonZeros())
+        n = nNonZeros();
 
-        std::vector<IJV> ijvs(nNonZeros());
-        getAllNonZeros(ijvs.begin());
-        std::partial_sort(ijvs.begin(), ijvs.begin() + n, ijvs.end(), o);
-        std::copy(ijvs.begin(), ijvs.begin() + n, out_begin);
+    std::vector<IJV> ijvs(nNonZeros());
+    getAllNonZeros(ijvs.begin());
+    std::partial_sort(ijvs.begin(), ijvs.begin() + n, ijvs.end(), o);
+    std::copy(ijvs.begin(), ijvs.begin() + n, out_begin);
 
-        return n;
-    }
+    return n;
+}
 
-    /**
+/**
      * Returns the row indices and values of the non-zeros on the diagonal.
      */
-    template <typename OutputIterator>
-    inline size_type getDiagonalToSparse(OutputIterator out) const
+template <typename OutputIterator>
+inline size_type getDiagonalToSparse(OutputIterator out) const
+{
+    size_type count = 0;
+
+    ITERATE_ON_ALL_ROWS
     {
-        size_type count = 0;
-
-        ITERATE_ON_ALL_ROWS
+        difference_type offset = col_(row, row);
+        if (offset >= 0)
         {
-            difference_type offset = col_(row, row);
-            if (offset >= 0)
-            {
-                *out = std::make_pair(row, nz_[row][offset]);
-                ++out;
-                ++count;
-            }
+            *out = std::make_pair(row, nz_[row][offset]);
+            ++out;
+            ++count;
         }
-
-        return count;
     }
 
-    /**
+    return count;
+}
+
+/**
      * Returns the diagonal as a dense vector.
      */
-    template <typename OutputIterator>
-    inline void getDiagonalToDense(OutputIterator out) const
+template <typename OutputIterator>
+inline void getDiagonalToDense(OutputIterator out) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        difference_type offset = col_(row, row);
+        if (offset >= 0)
         {
-            difference_type offset = col_(row, row);
-            if (offset >= 0)
-            {
-                *out = nz_[row][offset];
-            }
-            else
-            {
-                *out = 0;
-            }
-            ++out;
+            *out = nz_[row][offset];
         }
+        else
+        {
+            *out = 0;
+        }
+        ++out;
     }
+}
 
-    /**
+/**
      * Set from 3 ranges, one for the row indices, one for the column indices
      * and one for the values.
      * For example, calling with [0,0,1,1], [0,1,0,1] and a 4-long flat list
      * sets those values at [0,0], [0,1], [1,0], [1,1].
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void setElements(InputIterator1 i_begin, InputIterator1 i_end,
-                            InputIterator1 j_begin, InputIterator2 v_begin)
+template <typename InputIterator1, typename InputIterator2>
+inline void setElements(InputIterator1 i_begin, InputIterator1 i_end,
+                        InputIterator1 j_begin, InputIterator2 v_begin)
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(i_begin, i_end, "setElements");
+    } // End pre-conditions
+
+    while (i_begin != i_end)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(i_begin, i_end, "setElements");
-        } // End pre-conditions
-
-        while (i_begin != i_end)
-        {
-            set(*i_begin, *j_begin, value_type(*v_begin));
-            ++i_begin;
-            ++j_begin;
-            ++v_begin;
-        }
+        set(*i_begin, *j_begin, value_type(*v_begin));
+        ++i_begin;
+        ++j_begin;
+        ++v_begin;
     }
+}
 
-    /**
+/**
      * Get from 2 ranges, one for the row indices, one for the column indices,
      * returning the values in the third range.
      * This returns in v the values of the zeros as well as the non-zeros,
@@ -4951,145 +4951,145 @@ public:
      * For example, calling with [0,0,1,1], [0,1,0,1] returns a flat list
      * of the elements at [0,0], [0,1], [1,0], [1,1].
      */
-    template <typename InputIterator1, typename OutputIterator1>
-    inline void getElements(InputIterator1 i_begin, InputIterator1 i_end,
-                            InputIterator1 j_begin,
-                            OutputIterator1 v_begin) const
+template <typename InputIterator1, typename OutputIterator1>
+inline void getElements(InputIterator1 i_begin, InputIterator1 i_end,
+                        InputIterator1 j_begin,
+                        OutputIterator1 v_begin) const
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(i_begin, i_end, "getElements");
+    } // End pre-conditions
+
+    while (i_begin != i_end)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(i_begin, i_end, "getElements");
-        } // End pre-conditions
-
-        while (i_begin != i_end)
-        {
-            *v_begin = get(*i_begin, *j_begin);
-            ++i_begin;
-            ++j_begin;
-            ++v_begin;
-        }
+        *v_begin = get(*i_begin, *j_begin);
+        ++i_begin;
+        ++j_begin;
+        ++v_begin;
     }
+}
 
-    /**
+/**
      * Set on the outer product of the ranges passed in. The first range
      * contains the indices of the rows, the second the indices of the columns.
      * The values to set are taken from the SparseMatrix passed in.
      */
-    template <typename InputIterator1, typename Other>
-    inline void setOuter(InputIterator1 i_begin, InputIterator1 i_end,
-                         InputIterator1 j_begin, InputIterator1 j_end,
-                         const Other &values)
+template <typename InputIterator1, typename Other>
+inline void setOuter(InputIterator1 i_begin, InputIterator1 i_end,
+                     InputIterator1 j_begin, InputIterator1 j_end,
+                     const Other &values)
+{
+    { // Pre-conditions
+        NTA_ASSERT((size_type)values.nRows() >=
+                   (size_type)(i_end - i_begin))
+            << "SparseMatrix setOuter: "
+            << "Matrix to set has too few rows: " << values.nRows()
+            << " - Should be at least: " << (size_type)(i_end - i_begin);
+        NTA_ASSERT((size_type)values.nCols() >=
+                   (size_type)(j_end - j_begin))
+            << "SparseMatrix setOuter: "
+            << "Matrix to set has too few columns: " << values.nCols()
+            << " - Should be at least: " << (size_type)(j_end - j_begin);
+        assert_valid_row_it_range_(i_begin, i_end, "setOuter");
+        assert_valid_col_it_range_(i_begin, i_end, "setOuter");
+    } // End pre-conditions
+
+    InputIterator1 j_begin_cache = j_begin;
+
+    for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
     {
-        { // Pre-conditions
-            NTA_ASSERT((size_type)values.nRows() >=
-                       (size_type)(i_end - i_begin))
-                << "SparseMatrix setOuter: "
-                << "Matrix to set has too few rows: " << values.nRows()
-                << " - Should be at least: " << (size_type)(i_end - i_begin);
-            NTA_ASSERT((size_type)values.nCols() >=
-                       (size_type)(j_end - j_begin))
-                << "SparseMatrix setOuter: "
-                << "Matrix to set has too few columns: " << values.nCols()
-                << " - Should be at least: " << (size_type)(j_end - j_begin);
-            assert_valid_row_it_range_(i_begin, i_end, "setOuter");
-            assert_valid_col_it_range_(i_begin, i_end, "setOuter");
-        } // End pre-conditions
-
-        InputIterator1 j_begin_cache = j_begin;
-
-        for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
+        j_begin = j_begin_cache;
+        for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
         {
-            j_begin = j_begin_cache;
-            for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
-            {
-                this->set(*i_begin, *j_begin, values.get(ii, jj));
-            }
+            this->set(*i_begin, *j_begin, values.get(ii, jj));
         }
     }
+}
 
-    /**
+/**
      * Get on the outer product of the ranges passed in. The first range
      * contains the row indices, the second range the column indices. For
      * example, calling getOuter with [1,3,5],[1,3,5] returns the 9 values at
      * [1,1], [1,3], [1,5], [3,1], [3,3], [3,5], [5,1], [5,3], [5,5].
      */
-    template <typename InputIterator1, typename InputIterator2, typename Other>
-    inline void getOuter(InputIterator1 i_begin, InputIterator1 i_end,
-                         InputIterator2 j_begin, InputIterator2 j_end,
-                         Other &values) const
+template <typename InputIterator1, typename InputIterator2, typename Other>
+inline void getOuter(InputIterator1 i_begin, InputIterator1 i_end,
+                     InputIterator2 j_begin, InputIterator2 j_end,
+                     Other &values) const
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(i_begin, i_end, "getOuter");
+        assert_valid_col_it_range_(i_begin, i_end, "getOuter");
+    } // End pre-conditions
+
+    InputIterator1 j_begin_cache = j_begin;
+    size_t nrows = (size_t)(i_end - i_begin);
+    size_t ncols = (size_t)(j_end - j_begin);
+
+    values.resize(nrows, ncols); // assumes Other has resize()
+
+    for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
     {
-        { // Pre-conditions
-            assert_valid_row_it_range_(i_begin, i_end, "getOuter");
-            assert_valid_col_it_range_(i_begin, i_end, "getOuter");
-        } // End pre-conditions
-
-        InputIterator1 j_begin_cache = j_begin;
-        size_t nrows = (size_t)(i_end - i_begin);
-        size_t ncols = (size_t)(j_end - j_begin);
-
-        values.resize(nrows, ncols); // assumes Other has resize()
-
-        for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
+        j_begin = j_begin_cache;
+        for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
         {
-            j_begin = j_begin_cache;
-            for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
-            {
-                values.set(ii, jj, this->get(*i_begin, *j_begin));
-            }
+            values.set(ii, jj, this->get(*i_begin, *j_begin));
         }
     }
+}
 
-    /**
+/**
      * A more convenient form of getOuter, useful for example, when we can't
      * subtract the iterators to know the sizes of the ranges.
      */
-    template <typename Container1, typename Container2, typename Other>
-    inline void getOuter(const Container1 &c1, const Container2 &c2,
-                         Other &other) const
+template <typename Container1, typename Container2, typename Other>
+inline void getOuter(const Container1 &c1, const Container2 &c2,
+                     Other &other) const
+{
+    typedef typename Container1::const_iterator iterator1;
+    typedef typename Container2::const_iterator iterator2;
+
+    iterator1 i_begin = c1.begin(), i_end = c1.end();
+    iterator2 j_begin = c2.begin(), j_end = c2.end(),
+              j_begin_cache = j_begin;
+
+    other.resize(c1.size(), c2.size()); // assumes Other has resize()
+
+    for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
     {
-        typedef typename Container1::const_iterator iterator1;
-        typedef typename Container2::const_iterator iterator2;
-
-        iterator1 i_begin = c1.begin(), i_end = c1.end();
-        iterator2 j_begin = c2.begin(), j_end = c2.end(),
-                  j_begin_cache = j_begin;
-
-        other.resize(c1.size(), c2.size()); // assumes Other has resize()
-
-        for (size_type ii = 0; i_begin != i_end; ++ii, ++i_begin)
-        {
-            j_begin = j_begin_cache;
-            for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
-                other.set(ii, jj, this->get(*i_begin, *j_begin));
-        }
+        j_begin = j_begin_cache;
+        for (size_type jj = 0; j_begin != j_end; ++jj, ++j_begin)
+            other.set(ii, jj, this->get(*i_begin, *j_begin));
     }
+}
 
-    /**
+/**
      * Set a slice at dst_first_row, dst_first_col, whose shape and contents
      * are src.
      */
-    template <typename Other>
-    inline void setSlice(size_type dst_first_row, size_type dst_first_col,
-                         const Other &src)
-    {
-        { // Pre-conditions
-          // Not checking number of rows and columns of other,
-          // because Other might not have rows and columns,
-          // or might create them dynamically when set is invoked
-          // other.assert_valid_domain_(dst, "get"); //not always on Other!
-        } // End pre-conditions
+template <typename Other>
+inline void setSlice(size_type dst_first_row, size_type dst_first_col,
+                     const Other &src)
+{
+    { // Pre-conditions
+        // Not checking number of rows and columns of other,
+        // because Other might not have rows and columns,
+        // or might create them dynamically when set is invoked
+        // other.assert_valid_domain_(dst, "get"); //not always on Other!
+    } // End pre-conditions
 
-        size_type nrows = src.nRows(), ncols = src.nCols();
-        for (size_type row = 0; row != nrows; ++row)
+    size_type nrows = src.nRows(), ncols = src.nCols();
+    for (size_type row = 0; row != nrows; ++row)
+    {
+        for (size_type col = 0; col != ncols; ++col)
         {
-            for (size_type col = 0; col != ncols; ++col)
-            {
-                set(row + dst_first_row, col + dst_first_col,
-                    src.get(row, col));
-            }
+            set(row + dst_first_row, col + dst_first_col,
+                src.get(row, col));
         }
     }
+}
 
-    /**
+/**
      * Gets a slice from this to a new SparseMatrix. The relative positions
      * of the non-zero elements are preserved. For example, calling this
      * method with (0,2,0,2) returns a the sub-matrix [0:2] X [0:2], both
@@ -5105,105 +5105,105 @@ public:
      * can access the internals, instead of going through get/set. Use at least
      * row-wise bulk operations.
      */
-    template <typename Other>
-    inline void getSlice(size_type src_first_row, size_type src_row_end,
-                         size_type src_first_col, size_type src_col_end,
-                         Other &other) const
+template <typename Other>
+inline void getSlice(size_type src_first_row, size_type src_row_end,
+                     size_type src_first_col, size_type src_col_end,
+                     Other &other) const
+{
+    { // Pre-conditions
+        assert_valid_row_col_(src_first_row, src_first_col, "getSlice");
+        assert_valid_row_col_(src_row_end - 1, src_col_end - 1, "getSlice");
+        NTA_ASSERT(src_first_row <= src_row_end)
+            << "SparseMatrix getSlice"
+            << ": Invalid row range: [" << src_first_row << ".."
+            << src_row_end << "): "
+            << "- Beginning should be <= end of range";
+        NTA_ASSERT(src_first_col <= src_col_end)
+            << "SparseMatrix getSlice"
+            << ": Invalid column range: [" << src_first_col << ".."
+            << src_col_end << "): "
+            << "- Beginning should be <= end of range";
+    } // End pre-conditions
+
+    // Assumes Other has resize()
+    other.resize(src_row_end - src_first_row, src_col_end - src_first_col);
+
+    for (size_type row = src_first_row; row != src_row_end; ++row)
     {
-        { // Pre-conditions
-            assert_valid_row_col_(src_first_row, src_first_col, "getSlice");
-            assert_valid_row_col_(src_row_end - 1, src_col_end - 1, "getSlice");
-            NTA_ASSERT(src_first_row <= src_row_end)
-                << "SparseMatrix getSlice"
-                << ": Invalid row range: [" << src_first_row << ".."
-                << src_row_end << "): "
-                << "- Beginning should be <= end of range";
-            NTA_ASSERT(src_first_col <= src_col_end)
-                << "SparseMatrix getSlice"
-                << ": Invalid column range: [" << src_first_col << ".."
-                << src_col_end << "): "
-                << "- Beginning should be <= end of range";
-        } // End pre-conditions
-
-        // Assumes Other has resize()
-        other.resize(src_row_end - src_first_row, src_col_end - src_first_col);
-
-        for (size_type row = src_first_row; row != src_row_end; ++row)
+        for (size_type col = src_first_col; col != src_col_end; ++col)
         {
-            for (size_type col = src_first_col; col != src_col_end; ++col)
-            {
-                const value_type v = this->get(row, col);
-                other.set(row - src_first_row, col - src_first_col, v);
-            }
+            const value_type v = this->get(row, col);
+            other.set(row - src_first_row, col - src_first_col, v);
         }
     }
+}
 
-    /**
+/**
      * This is an optimized getSlice that works only for SparseMatrix objects,
      * and bypass the call to set().
      */
-    inline void getSlice2(size_type src_first_row, size_type src_row_end,
-                          size_type src_first_col, size_type src_col_end,
-                          SparseMatrix &other) const
+inline void getSlice2(size_type src_first_row, size_type src_row_end,
+                      size_type src_first_col, size_type src_col_end,
+                      SparseMatrix &other) const
+{
+    { // Pre-conditions
+        assert_valid_row_col_(src_first_row, src_first_col, "getSlice2");
+        assert_valid_row_col_(src_row_end - 1, src_col_end - 1,
+                              "getSlice2");
+        NTA_ASSERT(src_first_row <= src_row_end)
+            << "SparseMatrix getSlice2"
+            << ": Invalid row range: [" << src_first_row << ".."
+            << src_row_end << "): "
+            << "- Beginning should be <= end of range";
+        NTA_ASSERT(src_first_col <= src_col_end)
+            << "SparseMatrix getSlice2"
+            << ": Invalid column range: [" << src_first_col << ".."
+            << src_col_end << "): "
+            << "- Beginning should be <= end of range";
+    } // End pre-conditions
+
+    size_type o_nrows = src_row_end - src_first_row;
+    size_type o_ncols = src_col_end - src_first_col;
+
+    other.resize(o_nrows, o_ncols);
+    other.ind_mem_ = NULL;
+    other.nz_mem_ = NULL;
+    other.nrows_ = o_nrows;
+    other.ncols_ = o_ncols;
+
+    size_type orow = 0;
+
+    for (size_type row = src_first_row; row != src_row_end; ++row, ++orow)
     {
-        { // Pre-conditions
-            assert_valid_row_col_(src_first_row, src_first_col, "getSlice2");
-            assert_valid_row_col_(src_row_end - 1, src_col_end - 1,
-                                  "getSlice2");
-            NTA_ASSERT(src_first_row <= src_row_end)
-                << "SparseMatrix getSlice2"
-                << ": Invalid row range: [" << src_first_row << ".."
-                << src_row_end << "): "
-                << "- Beginning should be <= end of range";
-            NTA_ASSERT(src_first_col <= src_col_end)
-                << "SparseMatrix getSlice2"
-                << ": Invalid column range: [" << src_first_col << ".."
-                << src_col_end << "): "
-                << "- Beginning should be <= end of range";
-        } // End pre-conditions
-
-        size_type o_nrows = src_row_end - src_first_row;
-        size_type o_ncols = src_col_end - src_first_col;
-
-        other.resize(o_nrows, o_ncols);
-        other.ind_mem_ = NULL;
-        other.nz_mem_ = NULL;
-        other.nrows_ = o_nrows;
-        other.ncols_ = o_ncols;
-
-        size_type orow = 0;
-
-        for (size_type row = src_first_row; row != src_row_end; ++row, ++orow)
+        for (size_type col = src_first_col; col != src_col_end; ++col)
         {
-            for (size_type col = src_first_col; col != src_col_end; ++col)
+            size_type *ind = NULL, *ind_end = NULL;
+            difference_type offset =
+                pos_(row, src_first_col, src_col_end, ind, ind_end);
+            value_type *nz = nz_begin_(row) + offset;
+            size_type nnzr = ind_end - ind;
+            if (nnzr > other.nnzr_[orow])
             {
-                size_type *ind = NULL, *ind_end = NULL;
-                difference_type offset =
-                    pos_(row, src_first_col, src_col_end, ind, ind_end);
-                value_type *nz = nz_begin_(row) + offset;
-                size_type nnzr = ind_end - ind;
-                if (nnzr > other.nnzr_[orow])
-                {
-                    if (other.isCompact())
-                        other.decompact();
-                    delete[] other.ind_[orow];
-                    delete[] other.nz_[orow];
-                    other.ind_[orow] = new size_type[nnzr];
-                    other.nz_[orow] = new value_type[nnzr];
-                }
-                other.nnzr_[orow] = nnzr;
-                size_type *o_ind = other.ind_begin_(orow);
-                value_type *o_nz = other.nz_begin_(orow);
-                for (; ind != ind_end; ++ind, ++nz, ++o_ind, ++o_nz)
-                {
-                    *o_ind = *ind - src_first_col;
-                    *o_nz = *nz;
-                }
+                if (other.isCompact())
+                    other.decompact();
+                delete[] other.ind_[orow];
+                delete[] other.nz_[orow];
+                other.ind_[orow] = new size_type[nnzr];
+                other.nz_[orow] = new value_type[nnzr];
+            }
+            other.nnzr_[orow] = nnzr;
+            size_type *o_ind = other.ind_begin_(orow);
+            value_type *o_nz = other.nz_begin_(orow);
+            for (; ind != ind_end; ++ind, ++nz, ++o_ind, ++o_nz)
+            {
+                *o_ind = *ind - src_first_col;
+                *o_nz = *nz;
             }
         }
     }
+}
 
-    /**
+/**
      * Set a whole row to zero. This is fast.
      *
      * @param row [0 <= size_type < nrows] the row to set to zero
@@ -5214,26 +5214,26 @@ public:
      * @b Exceptions:
      *  @li If row < 0 or row >= nrows
      */
-    inline void setRowToZero(size_type row)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "setRowToZero");
-        } // End pre-conditions
+inline void setRowToZero(size_type row)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "setRowToZero");
+    } // End pre-conditions
 
-        nnzr_[row] = 0;
-    }
+    nnzr_[row] = 0;
+}
 
-    inline void setRowToVal(size_type row, value_type val)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "setRowToVal");
-        } // End pre-conditions
+inline void setRowToVal(size_type row, value_type val)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "setRowToVal");
+    } // End pre-conditions
 
-        for (size_type col = 0; col != nCols(); ++col)
-            set(row, col, val);
-    }
+    for (size_type col = 0; col != nCols(); ++col)
+        set(row, col, val);
+}
 
-    /**
+/**
      * Set a whole column to zero.
      *
      * @param col [0 <= size_type < ncols] the index of the column to set to 0
@@ -5244,237 +5244,237 @@ public:
      * @b Exceptions:
      *  @li If col < 0 or col >= ncols
      */
-    inline void setColToZero(size_type col)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "setColToZero");
-        } // End pre-conditions
+inline void setColToZero(size_type col)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "setColToZero");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS setZero(row, col);
-    }
+    ITERATE_ON_ALL_ROWS setZero(row, col);
+}
 
-    inline void setColToVal(size_type col, value_type val)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "setColToVal");
-        } // End pre-conditions
+inline void setColToVal(size_type col, value_type val)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "setColToVal");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS set(row, col, val);
-    }
+    ITERATE_ON_ALL_ROWS set(row, col, val);
+}
 
-    /**
+/**
      * Sets the whole sparse matrix to zero, without changing its number of rows
      * or columns. Deallocates memory.
      */
-    inline void setToZero()
+inline void setToZero()
+{
+    if (isCompact())
+        decompact();
+
+    ITERATE_ON_ALL_ROWS
     {
-        if (isCompact())
-            decompact();
-
-        ITERATE_ON_ALL_ROWS
-        {
-            delete[] ind_[row];
-            delete[] nz_[row];
-            ind_[row] = nullptr;
-            nz_[row] = nullptr;
-            nnzr_[row] = 0;
-        }
+        delete[] ind_[row];
+        delete[] nz_[row];
+        ind_[row] = nullptr;
+        nz_[row] = nullptr;
+        nnzr_[row] = 0;
     }
+}
 
-    /**
+/**
      * Set multiple rows to zero simultaneously.
      */
-    template <typename InputIterator>
-    inline void setRowsToZero(InputIterator it, InputIterator end)
-    {
-        for (; it != end; ++it)
-            nnzr_[*it] = 0;
-    }
+template <typename InputIterator>
+inline void setRowsToZero(InputIterator it, InputIterator end)
+{
+    for (; it != end; ++it)
+        nnzr_[*it] = 0;
+}
 
-    /**
+/**
      * Set multiple columns to 0 simultaneously.
      * This is more efficient than setting
      * those columns to zero one by one.
      */
-    template <typename InputIterator>
-    inline void setColsToZero(InputIterator it, InputIterator end)
+template <typename InputIterator>
+inline void setColsToZero(InputIterator it, InputIterator end)
+{
     {
-        {
-            // check that column indices in strictly increasing order
-        }
-
-        std::unordered_set<size_type> skip(it, end);
-
-        ITERATE_ON_ALL_ROWS
-        {
-            size_type k = 0;
-            size_type *row_ind = ind_[row];
-            value_type *row_nz = nz_[row];
-            ITERATE_ON_ROW
-            {
-                if (skip.find(*ind) == skip.end())
-                {
-                    row_ind[k] = *ind;
-                    row_nz[k] = *nz;
-                    ++k;
-                }
-            }
-            nnzr_[row] = k;
-        }
+        // check that column indices in strictly increasing order
     }
 
-    /**
+    std::unordered_set<size_type> skip(it, end);
+
+    ITERATE_ON_ALL_ROWS
+    {
+        size_type k = 0;
+        size_type *row_ind = ind_[row];
+        value_type *row_nz = nz_[row];
+        ITERATE_ON_ROW
+        {
+            if (skip.find(*ind) == skip.end())
+            {
+                row_ind[k] = *ind;
+                row_nz[k] = *nz;
+                ++k;
+            }
+        }
+        nnzr_[row] = k;
+    }
+}
+
+/**
      * Sets whole matrix to outer product of x and y. The old value of the
      * matrix is lost.
      *
      * this = outer(x,y)
      */
-    inline void setFromOuter(const std::vector<value_type> &x,
-                             const std::vector<value_type> &y,
-                             bool keepMemory = false)
-    {
-        if (!keepMemory)
-        {
-            deallocate_();
-            allocate_(x.size(), y.size());
-            nrows_ = x.size();
-            ncols_ = y.size();
-        }
-        else
-        {
-            NTA_ASSERT(nrows_ == x.size())
-                << "setFromOuter, keeping memory: Wrong number of rows";
-            NTA_ASSERT(ncols_ == y.size())
-                << "setFromOuter, keeping memory: Wrong number of columns";
-            compact();
-        }
-
-        typename std::vector<value_type>::const_iterator it;
-        size_type *indb = indb_;
-        value_type *nzb = nzb_;
-
-        for (it = y.begin(); it != y.end(); ++it)
-            if (!isZero_(*it))
-            {
-                *indb++ = (size_type)(it - y.begin());
-                *nzb++ = *it;
-            }
-
-        size_type nnzr = (size_type)(indb - indb_);
-        size_type *indb_end = indb;
-        size_type k = 0;
-
-        for (it = x.begin(); it != x.end(); ++it)
-        {
-            size_type row = (size_type)(it - x.begin());
-            if (isZero_(*it))
-            {
-                nnzr_[row] = 0;
-                continue;
-            }
-            if (!keepMemory)
-            {
-                ind_[row] = new size_type[nnzr];
-                nz_[row] = new value_type[nnzr];
-            }
-            else
-            {
-                ind_[row] = ind_mem_ + k * nnzr;
-                nz_[row] = nz_mem_ + k * nnzr;
-            }
-            indb = indb_;
-            nzb = nzb_;
-            size_type *ind = ind_[row];
-            value_type *nz = nz_[row];
-            while (indb != indb_end)
-            {
-                value_type val = *it * *nzb;
-                if (!isZero_(val))
-                {
-                    *ind++ = *indb;
-                    *nz++ = val;
-                }
-                ++indb;
-                ++nzb;
-            }
-            nnzr_[row] = (size_type)(ind - ind_[row]);
-            if (nnzr_[row] > 0)
-                ++k;
-        }
-    }
-
-    /**
-     * this = outer(x,y) .* b
-     */
-    inline void
-    setFromElementMultiplyWithOuter(const std::vector<value_type> &x,
-                                    const std::vector<value_type> &y,
-                                    const SparseMatrix &b)
+inline void setFromOuter(const std::vector<value_type> &x,
+                         const std::vector<value_type> &y,
+                         bool keepMemory = false)
+{
+    if (!keepMemory)
     {
         deallocate_();
         allocate_(x.size(), y.size());
         nrows_ = x.size();
         ncols_ = y.size();
-
-        typename std::vector<value_type>::const_iterator it;
-        size_type *indb = indb_;
-        value_type *nzb = nzb_;
-
-        for (it = y.begin(); it != y.end(); ++it)
-            if (!isZero_(*it))
-            {
-                *indb++ = (size_type)(it - y.begin());
-                *nzb++ = *it;
-            }
-
-        size_type nnzr = (size_type)(indb - indb_);
-        size_type *indb_end = indb;
-
-        for (it = x.begin(); it != x.end(); ++it)
-        {
-            size_type row = (size_type)(it - x.begin());
-            if (isZero_(*it) || b.nNonZerosOnRow(row) == 0)
-                continue;
-            ind_[row] = new size_type[nnzr];
-            nz_[row] = new value_type[nnzr];
-            indb = indb_;
-            nzb = nzb_;
-            size_type *ind_a = ind_begin_(row);
-            size_type *ind_b = b.ind_begin_(row);
-            size_type *ind_b_end = b.ind_end_(row);
-            value_type *nz_a = nz_begin_(row);
-            value_type *nz_b = b.nz_begin_(row);
-            while (indb != indb_end && ind_b != ind_b_end)
-            {
-                if (*indb == *ind_b)
-                {
-                    value_type val = *it * *nzb * *nz_b;
-                    if (!isZero_(val))
-                    {
-                        *ind_a++ = *indb;
-                        *nz_a++ = val;
-                    }
-                    ++indb;
-                    ++nzb;
-                    ++ind_b;
-                    ++nz_b;
-                }
-                else if (*indb < *ind_b)
-                {
-                    ++indb;
-                    ++nzb;
-                }
-                else if (*ind_b < *indb)
-                {
-                    ++ind_b;
-                    ++nz_b;
-                }
-            }
-            nnzr_[row] = (size_type)(ind_a - ind_begin_(row));
-        }
+    }
+    else
+    {
+        NTA_ASSERT(nrows_ == x.size())
+            << "setFromOuter, keeping memory: Wrong number of rows";
+        NTA_ASSERT(ncols_ == y.size())
+            << "setFromOuter, keeping memory: Wrong number of columns";
+        compact();
     }
 
-    /**
+    typename std::vector<value_type>::const_iterator it;
+    size_type *indb = indb_;
+    value_type *nzb = nzb_;
+
+    for (it = y.begin(); it != y.end(); ++it)
+        if (!isZero_(*it))
+        {
+            *indb++ = (size_type)(it - y.begin());
+            *nzb++ = *it;
+        }
+
+    size_type nnzr = (size_type)(indb - indb_);
+    size_type *indb_end = indb;
+    size_type k = 0;
+
+    for (it = x.begin(); it != x.end(); ++it)
+    {
+        size_type row = (size_type)(it - x.begin());
+        if (isZero_(*it))
+        {
+            nnzr_[row] = 0;
+            continue;
+        }
+        if (!keepMemory)
+        {
+            ind_[row] = new size_type[nnzr];
+            nz_[row] = new value_type[nnzr];
+        }
+        else
+        {
+            ind_[row] = ind_mem_ + k * nnzr;
+            nz_[row] = nz_mem_ + k * nnzr;
+        }
+        indb = indb_;
+        nzb = nzb_;
+        size_type *ind = ind_[row];
+        value_type *nz = nz_[row];
+        while (indb != indb_end)
+        {
+            value_type val = *it * *nzb;
+            if (!isZero_(val))
+            {
+                *ind++ = *indb;
+                *nz++ = val;
+            }
+            ++indb;
+            ++nzb;
+        }
+        nnzr_[row] = (size_type)(ind - ind_[row]);
+        if (nnzr_[row] > 0)
+            ++k;
+    }
+}
+
+/**
+     * this = outer(x,y) .* b
+     */
+inline void
+setFromElementMultiplyWithOuter(const std::vector<value_type> &x,
+                                const std::vector<value_type> &y,
+                                const SparseMatrix &b)
+{
+    deallocate_();
+    allocate_(x.size(), y.size());
+    nrows_ = x.size();
+    ncols_ = y.size();
+
+    typename std::vector<value_type>::const_iterator it;
+    size_type *indb = indb_;
+    value_type *nzb = nzb_;
+
+    for (it = y.begin(); it != y.end(); ++it)
+        if (!isZero_(*it))
+        {
+            *indb++ = (size_type)(it - y.begin());
+            *nzb++ = *it;
+        }
+
+    size_type nnzr = (size_type)(indb - indb_);
+    size_type *indb_end = indb;
+
+    for (it = x.begin(); it != x.end(); ++it)
+    {
+        size_type row = (size_type)(it - x.begin());
+        if (isZero_(*it) || b.nNonZerosOnRow(row) == 0)
+            continue;
+        ind_[row] = new size_type[nnzr];
+        nz_[row] = new value_type[nnzr];
+        indb = indb_;
+        nzb = nzb_;
+        size_type *ind_a = ind_begin_(row);
+        size_type *ind_b = b.ind_begin_(row);
+        size_type *ind_b_end = b.ind_end_(row);
+        value_type *nz_a = nz_begin_(row);
+        value_type *nz_b = b.nz_begin_(row);
+        while (indb != indb_end && ind_b != ind_b_end)
+        {
+            if (*indb == *ind_b)
+            {
+                value_type val = *it * *nzb * *nz_b;
+                if (!isZero_(val))
+                {
+                    *ind_a++ = *indb;
+                    *nz_a++ = val;
+                }
+                ++indb;
+                ++nzb;
+                ++ind_b;
+                ++nz_b;
+            }
+            else if (*indb < *ind_b)
+            {
+                ++indb;
+                ++nzb;
+            }
+            else if (*ind_b < *indb)
+            {
+                ++ind_b;
+                ++nz_b;
+            }
+        }
+        nnzr_[row] = (size_type)(ind_a - ind_begin_(row));
+    }
+}
+
+/**
      * Compacts a row from a buffer to (nzr_[r], ind_[r], nz_[r]).
      * This will weed out the zeros in the buffer, if any, and keeps
      * the non-zeros sorted in increasing order of indices.
@@ -5485,24 +5485,24 @@ public:
      * @b Exceptions:
      *  @li Not enough memory (error)
      */
-    template <typename InputIterator>
-    inline void setRowFromDense(size_type row, InputIterator begin)
-    {
-        set_row_(row, begin, begin + nCols());
-    }
+template <typename InputIterator>
+inline void setRowFromDense(size_type row, InputIterator begin)
+{
+    set_row_(row, begin, begin + nCols());
+}
 
-    inline void setRowFromDense(size_type row, const std::vector<value_type> &x)
-    {
-        { // Pre-conditions
-            NTA_ASSERT(x.size() == nCols())
-                << "setRowFromDense: Need vector with as many elements as "
-                << "number of colums= " << nCols();
-        } // End pre-conditions
+inline void setRowFromDense(size_type row, const std::vector<value_type> &x)
+{
+    { // Pre-conditions
+        NTA_ASSERT(x.size() == nCols())
+            << "setRowFromDense: Need vector with as many elements as "
+            << "number of colums= " << nCols();
+    } // End pre-conditions
 
-        set_row_(row, x.begin(), x.end());
-    }
+    set_row_(row, x.begin(), x.end());
+}
 
-    /**
+/**
      * Sets a whole row from a sparse (index, value) representation. Expects
      * non-zeros
      * only, with column indices in increasing order, without repeition.
@@ -5526,72 +5526,72 @@ public:
      *
      * TODO faster by assuming that the sparse data received is "right"
      */
-    template <typename InputIterator1, typename InputIterator2>
-    inline void setRowFromSparse(size_type row, InputIterator1 ind_it,
-                                 InputIterator1 ind_end, InputIterator2 nz_it)
+template <typename InputIterator1, typename InputIterator2>
+inline void setRowFromSparse(size_type row, InputIterator1 ind_it,
+                             InputIterator1 ind_end, InputIterator2 nz_it)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "setRowFromSparse");
+        assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
+                                         "setRowFromSparse");
+
+        for (InputIterator2 nz = nz_it; nz != nz_it + (ind_end - ind_it);
+             ++nz)
+            NTA_ASSERT(!isZero_(*nz))
+                << "SparseMatrix setRowFromSparse: Expecing only non-zeros";
+    } // End pre-conditions
+
+    size_type new_nnzr = (size_type)(ind_end - ind_it);
+
+    if (new_nnzr > nnzr_[row])
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "setRowFromSparse");
-            assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
-                                             "setRowFromSparse");
-
-            for (InputIterator2 nz = nz_it; nz != nz_it + (ind_end - ind_it);
-                 ++nz)
-                NTA_ASSERT(!isZero_(*nz))
-                    << "SparseMatrix setRowFromSparse: Expecing only non-zeros";
-        } // End pre-conditions
-
-        size_type new_nnzr = (size_type)(ind_end - ind_it);
-
-        if (new_nnzr > nnzr_[row])
-        {
-            if (isCompact())
-                decompact();
-            delete[] ind_[row];
-            delete[] nz_[row];
-            ind_[row] = new size_type[new_nnzr];
-            nz_[row] = new value_type[new_nnzr];
-        }
-
-        std::copy(ind_it, ind_end, ind_[row]);
-        std::copy(nz_it, nz_it + new_nnzr, nz_[row]);
-        nnzr_[row] = new_nnzr;
+        if (isCompact())
+            decompact();
+        delete[] ind_[row];
+        delete[] nz_[row];
+        ind_[row] = new size_type[new_nnzr];
+        nz_[row] = new value_type[new_nnzr];
     }
 
-    /**
+    std::copy(ind_it, ind_end, ind_[row]);
+    std::copy(nz_it, nz_it + new_nnzr, nz_[row]);
+    nnzr_[row] = new_nnzr;
+}
+
+/**
      * Uses the same init value for all the non-zeros.
      */
-    template <typename InputIterator1>
-    inline void setRowFromSparseWInitVal(size_type row, InputIterator1 ind_it,
-                                         InputIterator1 ind_end,
-                                         value_type init_val)
+template <typename InputIterator1>
+inline void setRowFromSparseWInitVal(size_type row, InputIterator1 ind_it,
+                                     InputIterator1 ind_end,
+                                     value_type init_val)
+{
+    { // Pre-conditions
+        NTA_ASSERT(init_val != 0);
+
+        assert_valid_row_(row, "setRowFromSparseWInitVal");
+        assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
+                                         "setRowFromSparseWInitVal");
+    } // End pre-conditions
+
+    size_type new_nnzr = (size_type)(ind_end - ind_it);
+
+    if (new_nnzr > nnzr_[row])
     {
-        { // Pre-conditions
-            NTA_ASSERT(init_val != 0);
-
-            assert_valid_row_(row, "setRowFromSparseWInitVal");
-            assert_valid_sorted_index_range_(nCols(), ind_it, ind_end,
-                                             "setRowFromSparseWInitVal");
-        } // End pre-conditions
-
-        size_type new_nnzr = (size_type)(ind_end - ind_it);
-
-        if (new_nnzr > nnzr_[row])
-        {
-            if (isCompact())
-                decompact();
-            delete[] ind_[row];
-            delete[] nz_[row];
-            ind_[row] = new size_type[new_nnzr];
-            nz_[row] = new value_type[new_nnzr];
-        }
-
-        std::copy(ind_it, ind_end, ind_[row]);
-        std::fill(nz_[row], nz_[row] + new_nnzr, init_val);
-        nnzr_[row] = new_nnzr;
+        if (isCompact())
+            decompact();
+        delete[] ind_[row];
+        delete[] nz_[row];
+        ind_[row] = new size_type[new_nnzr];
+        nz_[row] = new value_type[new_nnzr];
     }
 
-    /**
+    std::copy(ind_it, ind_end, ind_[row]);
+    std::fill(nz_[row], nz_[row] + new_nnzr, init_val);
+    nnzr_[row] = new_nnzr;
+}
+
+/**
      * Returns r-th row of this sparse matrix, to a contiguous array of memory.
      * If the row does not contain any non-zero, the memory pointed to by it
      * is set to zero.
@@ -5608,33 +5608,33 @@ public:
      *
      * TODO single pass rather than ncols + nnzr?
      */
-    template <typename OutputIterator>
-    inline void getRowToDense(size_type row, OutputIterator it) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "getRowToDense");
-        } // End pre-conditions
+template <typename OutputIterator>
+inline void getRowToDense(size_type row, OutputIterator it) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "getRowToDense");
+    } // End pre-conditions
 
-        std::fill(it, it + nCols(), (value_type)0);
+    std::fill(it, it + nCols(), (value_type)0);
 
-        ITERATE_ON_ROW { *(it + *ind) = *nz; }
-    }
+    ITERATE_ON_ROW { *(it + *ind) = *nz; }
+}
 
-    inline void getRowToDense(size_type row,
-                              std::vector<value_type> &dense) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "getRowToDense");
-        } // End pre-conditions
+inline void getRowToDense(size_type row,
+                          std::vector<value_type> &dense) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "getRowToDense");
+    } // End pre-conditions
 
-        auto it = dense.begin();
+    auto it = dense.begin();
 
-        std::fill(it, it + nCols(), (value_type)0);
+    std::fill(it, it + nCols(), (value_type)0);
 
-        ITERATE_ON_ROW { *(it + *ind) = *nz; }
-    }
+    ITERATE_ON_ROW { *(it + *ind) = *nz; }
+}
 
-    /**
+/**
      * Stores r-th row of this sparse matrix in provided iterators.
      * The first iterator will contain the indices of the non-zeros, the second
      * will contain the values of those non-zeros.
@@ -5653,39 +5653,39 @@ public:
      * @b Exceptions:
      *  @li row < 0 || row >= nrows (check)
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline size_type getRowToSparse(size_type row, OutputIterator1 indIt,
-                                    OutputIterator2 nzIt) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline size_type getRowToSparse(size_type row, OutputIterator1 indIt,
+                                OutputIterator2 nzIt) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "getRowToSparse");
+    } // End pre-conditions
+
+    ITERATE_ON_ROW
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "getRowToSparse");
-        } // End pre-conditions
-
-        ITERATE_ON_ROW
-        {
-            *indIt = *ind;
-            *nzIt = *nz;
-            ++indIt;
-            ++nzIt;
-        }
-
-        return nNonZerosOnRow(row);
+        *indIt = *ind;
+        *nzIt = *nz;
+        ++indIt;
+        ++nzIt;
     }
 
-    template <typename OutputIterator1>
-    inline size_type getRowIndicesToSparse(size_type row,
-                                           OutputIterator1 indIt) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "getRowIndicesToSparse");
-        } // End pre-conditions
+    return nNonZerosOnRow(row);
+}
 
-        ITERATE_ON_ROW *indIt++ = *ind;
+template <typename OutputIterator1>
+inline size_type getRowIndicesToSparse(size_type row,
+                                       OutputIterator1 indIt) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "getRowIndicesToSparse");
+    } // End pre-conditions
 
-        return nNonZerosOnRow(row);
-    }
+    ITERATE_ON_ROW *indIt++ = *ind;
 
-    /**
+    return nNonZerosOnRow(row);
+}
+
+/**
      * Stores r-th row of this sparse matrix in provided iterator on pairs.
      *
      * @param row [0 <= size_type < nrows] row index
@@ -5698,57 +5698,57 @@ public:
      * @b Exceptions:
      *  @li row < 0 || row >= nrows (check)
      */
-    template <typename OutputIterator1>
-    inline size_type getRowToSparse(size_type row,
-                                    OutputIterator1 idxValIt) const
+template <typename OutputIterator1>
+inline size_type getRowToSparse(size_type row,
+                                OutputIterator1 idxValIt) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "getRowToSparse(pair<idx,val>)");
+    } // End pre-conditions
+
+    ITERATE_ON_ROW
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "getRowToSparse(pair<idx,val>)");
-        } // End pre-conditions
-
-        ITERATE_ON_ROW
-        {
-            *idxValIt = std::make_pair(*ind, *nz);
-            ++idxValIt;
-        }
-
-        return nNonZerosOnRow(row);
+        *idxValIt = std::make_pair(*ind, *nz);
+        ++idxValIt;
     }
 
-    /**
+    return nNonZerosOnRow(row);
+}
+
+/**
      * Copies a row from one SparseMatrix to another.
      */
-    inline void copyRow(size_type dst_row, size_type src_row,
-                        SparseMatrix &other)
+inline void copyRow(size_type dst_row, size_type src_row,
+                    SparseMatrix &other)
+{
+    { // Pre-conditions
+        assert_valid_row_(dst_row, "copyRow");
+        other.assert_valid_row_(src_row, "copyRow");
+    } // End pre-conditions
+
+    if (&other == this && src_row == dst_row)
+        return;
+
+    size_type new_nnzr = other.nNonZerosOnRow(src_row);
+
+    if (new_nnzr > nNonZerosOnRow(dst_row))
     {
-        { // Pre-conditions
-            assert_valid_row_(dst_row, "copyRow");
-            other.assert_valid_row_(src_row, "copyRow");
-        } // End pre-conditions
-
-        if (&other == this && src_row == dst_row)
-            return;
-
-        size_type new_nnzr = other.nNonZerosOnRow(src_row);
-
-        if (new_nnzr > nNonZerosOnRow(dst_row))
-        {
-            if (isCompact())
-                decompact();
-            delete[] ind_[dst_row];
-            delete[] nz_[dst_row];
-            ind_[dst_row] = new size_type[new_nnzr];
-            nz_[dst_row] = new value_type[new_nnzr];
-        }
-
-        std::copy(other.ind_[src_row], other.ind_[src_row] + new_nnzr,
-                  ind_[dst_row]);
-        std::copy(other.nz_[src_row], other.nz_[src_row] + new_nnzr,
-                  nz_[dst_row]);
-        nnzr_[dst_row] = new_nnzr;
+        if (isCompact())
+            decompact();
+        delete[] ind_[dst_row];
+        delete[] nz_[dst_row];
+        ind_[dst_row] = new size_type[new_nnzr];
+        nz_[dst_row] = new value_type[new_nnzr];
     }
 
-    /**
+    std::copy(other.ind_[src_row], other.ind_[src_row] + new_nnzr,
+              ind_[dst_row]);
+    std::copy(other.nz_[src_row], other.nz_[src_row] + new_nnzr,
+              nz_[dst_row]);
+    nnzr_[dst_row] = new_nnzr;
+}
+
+/**
      * Exports a given column of this SparseMatrix to a pre-allocated dense
      * array. OutputIterator needs to be an iterator into a contiguous array of
      * memory.
@@ -5762,39 +5762,39 @@ public:
      * @b Exceptions:
      *  @li if col < 0 || col >= ncols (assert)
      */
-    template <typename OutputIterator>
-    inline void getColToDense(size_type col, OutputIterator dense) const
+template <typename OutputIterator>
+inline void getColToDense(size_type col, OutputIterator dense) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "getColToDense");
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "getColToDense");
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const difference_type offset = col_(row, col);
-            *dense = offset >= 0 ? *(nz_begin_(row) + offset) : value_type(0);
-            ++dense;
-        }
+        const difference_type offset = col_(row, col);
+        *dense = offset >= 0 ? *(nz_begin_(row) + offset) : value_type(0);
+        ++dense;
     }
+}
 
-    inline void getColToDense(size_type col,
-                              std::vector<value_type> &dense) const
+inline void getColToDense(size_type col,
+                          std::vector<value_type> &dense) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "getColToDense");
+    } // End pre-conditions
+
+    typename std::vector<value_type>::iterator it = dense.begin();
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "getColToDense");
-        } // End pre-conditions
-
-        typename std::vector<value_type>::iterator it = dense.begin();
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const difference_type offset = col_(row, col);
-            *it = offset >= 0 ? *(nz_begin_(row) + offset) : value_type(0);
-            ++it;
-        }
+        const difference_type offset = col_(row, col);
+        *it = offset >= 0 ? *(nz_begin_(row) + offset) : value_type(0);
+        ++it;
     }
+}
 
-    /**
+/**
      * Exports a given column of this SparseMatrix to a pre-allocated dense
      * array. OutputIterator needs to be an iterator into a contiguous array of
      * memory.
@@ -5808,33 +5808,33 @@ public:
      * @b Exceptions:
      *  @li if col < 0 || col >= ncols (assert)
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline size_type getColToSparse(size_type col, OutputIterator1 indIt,
-                                    OutputIterator2 nzIt) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline size_type getColToSparse(size_type col, OutputIterator1 indIt,
+                                OutputIterator2 nzIt) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "getColToSparse");
+    } // End pre-conditions
+
+    size_type count = 0;
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "getColToSparse");
-        } // End pre-conditions
-
-        size_type count = 0;
-
-        ITERATE_ON_ALL_ROWS
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
         {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-            {
-                *indIt = row;
-                *nzIt = *(nz_begin_(row) + offset);
-                ++indIt;
-                ++nzIt;
-                ++count;
-            }
+            *indIt = row;
+            *nzIt = *(nz_begin_(row) + offset);
+            ++indIt;
+            ++nzIt;
+            ++count;
         }
-
-        return count;
     }
 
-    /**
+    return count;
+}
+
+/**
      * Stores r-th column of this sparse matrix in provided iterators.
      * The first iterator will contain the indices of the non-zeros, the second
      * will contain the values of those non-zeros.
@@ -5852,65 +5852,65 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols (assert)
      */
-    template <typename OutputIterator1>
-    inline size_type getColToSparse(size_type col,
-                                    OutputIterator1 idxValIt) const
+template <typename OutputIterator1>
+inline size_type getColToSparse(size_type col,
+                                OutputIterator1 idxValIt) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "getColToSparse(pair<idx,val>)");
+    } // End pre-conditions
+
+    size_type count = 0;
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "getColToSparse(pair<idx,val>)");
-        } // End pre-conditions
-
-        size_type count = 0;
-
-        ITERATE_ON_ALL_ROWS
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
         {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-            {
-                *idxValIt = std::make_pair(row, *(nz_begin_(row) + offset));
-                ++idxValIt;
-                ++count;
-            }
-        }
-
-        return count;
-    }
-
-    template <typename InputIterator1>
-    inline void setColFromDense(size_type col, InputIterator1 it)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "setColFromDense");
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            this->set(row, col, *it);
-            ++it;
+            *idxValIt = std::make_pair(row, *(nz_begin_(row) + offset));
+            ++idxValIt;
+            ++count;
         }
     }
 
-    inline void setColFromDense(size_type col, const std::vector<value_type> &x)
+    return count;
+}
+
+template <typename InputIterator1>
+inline void setColFromDense(size_type col, InputIterator1 it)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "setColFromDense");
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            NTA_ASSERT(x.size() == nRows())
-                << "SparseMatrix setColFromDense std: "
-                << "Need vector with as many elements as "
-                << "number of rows= " << nRows();
-        } // End pre-conditions
-
-        setColFromDense(col, x.begin());
+        this->set(row, col, *it);
+        ++it;
     }
+}
 
-    // FILTERING
+inline void setColFromDense(size_type col, const std::vector<value_type> &x)
+{
+    { // Pre-conditions
+        NTA_ASSERT(x.size() == nRows())
+            << "SparseMatrix setColFromDense std: "
+            << "Need vector with as many elements as "
+            << "number of rows= " << nRows();
+    } // End pre-conditions
 
-    /**
+    setColFromDense(col, x.begin());
+}
+
+// FILTERING
+
+/**
      * Filter methods are like the STL remove_if algorithms, but the point is
      * that they handle removal "efficiently", without reallocating memories:
      * the rows are shrunk in place as needed.
      */
 
-    /**
+/**
      * Removes non-zeros on the given row according to unary predicate f.
      *
      * @param row [0 <= size_type < nrows] the row index
@@ -5923,61 +5923,61 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows
      */
-    template <typename UnaryFunction>
-    inline void filterRow(size_type row, const UnaryFunction &f1)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "filterRow");
-        } // End pre-conditions
+template <typename UnaryFunction>
+inline void filterRow(size_type row, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "filterRow");
+    } // End pre-conditions
 
-        size_type nnzr1 = nnzr_[row], nnzr2 = 0, *ind = ind_begin_(row);
-        value_type *nz = nz_begin_(row);
+    size_type nnzr1 = nnzr_[row], nnzr2 = 0, *ind = ind_begin_(row);
+    value_type *nz = nz_begin_(row);
 
-        for (size_type k = 0; k != nnzr1; ++k)
-            if (f1(nz[k]))
-            {
-                ind[nnzr2] = ind[k];
-                nz[nnzr2] = nz[k];
-                ++nnzr2;
-            }
+    for (size_type k = 0; k != nnzr1; ++k)
+        if (f1(nz[k]))
+        {
+            ind[nnzr2] = ind[k];
+            nz[nnzr2] = nz[k];
+            ++nnzr2;
+        }
 
-        nnzr_[row] = nnzr2;
-    }
+    nnzr_[row] = nnzr2;
+}
 
-    template <typename UnaryFunction, typename OutputIterator1,
-              typename OutputIterator2>
-    inline size_type filterRow(size_type row, const UnaryFunction &f1,
-                               OutputIterator1 cut_ind, OutputIterator2 cut_nz)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "filterRow");
-        } // End pre-conditions
+template <typename UnaryFunction, typename OutputIterator1,
+          typename OutputIterator2>
+inline size_type filterRow(size_type row, const UnaryFunction &f1,
+                           OutputIterator1 cut_ind, OutputIterator2 cut_nz)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "filterRow");
+    } // End pre-conditions
 
-        size_type nnzr1 = nnzr_[row], nnzr2 = 0, *ind = ind_begin_(row);
-        value_type *nz = nz_begin_(row);
+    size_type nnzr1 = nnzr_[row], nnzr2 = 0, *ind = ind_begin_(row);
+    value_type *nz = nz_begin_(row);
 
-        size_type count = 0;
+    size_type count = 0;
 
-        for (size_type k = 0; k != nnzr1; ++k)
-            if (f1(nz[k]))
-            {
-                ind[nnzr2] = ind[k];
-                nz[nnzr2] = nz[k];
-                ++nnzr2;
-            }
-            else
-            {
-                *cut_ind++ = ind[k];
-                *cut_nz++ = nz[k];
-                ++count;
-            }
+    for (size_type k = 0; k != nnzr1; ++k)
+        if (f1(nz[k]))
+        {
+            ind[nnzr2] = ind[k];
+            nz[nnzr2] = nz[k];
+            ++nnzr2;
+        }
+        else
+        {
+            *cut_ind++ = ind[k];
+            *cut_nz++ = nz[k];
+            ++count;
+        }
 
-        nnzr_[row] = nnzr2;
+    nnzr_[row] = nnzr2;
 
-        return count;
-    }
+    return count;
+}
 
-    /**
+/**
      * Removes non-zeros on the given col according to unary predicate f.
      *
      * @param row [0 <= size_type < ncols] the col index
@@ -5990,26 +5990,26 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols
      */
-    template <typename UnaryFunction>
-    inline void filterCol(size_type col, const UnaryFunction &f1)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "filterCol");
-        } // End pre-conditions
+template <typename UnaryFunction>
+inline void filterCol(size_type col, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "filterCol");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        size_type *ind_it = pos_(row, col);
+        if (ind_it != ind_end_(row) && *ind_it == col)
         {
-            size_type *ind_it = pos_(row, col);
-            if (ind_it != ind_end_(row) && *ind_it == col)
-            {
-                size_type offset = size_type(ind_it - ind_begin_(row));
-                if (!f1(nz_[row][offset]))
-                    erase_(row, ind_it);
-            }
+            size_type offset = size_type(ind_it - ind_begin_(row));
+            if (!f1(nz_[row][offset]))
+                erase_(row, ind_it);
         }
     }
+}
 
-    /**
+/**
      * Removes non-zeros in the whole matrix according to unary predicate f.
      * This operation leaves zeros at the end of the rows, resulting
      * in wasted storage. To avoid this, compact() can be called.
@@ -6023,36 +6023,36 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename UnaryFunction>
-    inline void filter(const UnaryFunction &f1)
-    {
-        ITERATE_ON_ALL_ROWS filterRow(row, f1);
-    }
+template <typename UnaryFunction>
+inline void filter(const UnaryFunction &f1)
+{
+    ITERATE_ON_ALL_ROWS filterRow(row, f1);
+}
 
-    template <typename UnaryFunction, typename OutputIterator1,
-              typename OutputIterator2>
-    inline size_type filter(const UnaryFunction &f1, OutputIterator1 cut_i,
-                            OutputIterator1 cut_j, OutputIterator2 cut_nz)
+template <typename UnaryFunction, typename OutputIterator1,
+          typename OutputIterator2>
+inline size_type filter(const UnaryFunction &f1, OutputIterator1 cut_i,
+                        OutputIterator1 cut_j, OutputIterator2 cut_nz)
+{
+    size_type count = 0;
+    std::vector<size_type> indb(nCols());
+    ITERATE_ON_ALL_ROWS
     {
-        size_type count = 0;
-        std::vector<size_type> indb(nCols());
-        ITERATE_ON_ALL_ROWS
+        size_type c = filterRow(row, f1, indb.begin(), cut_nz);
+        for (size_type i = 0; i != c; ++i)
         {
-            size_type c = filterRow(row, f1, indb.begin(), cut_nz);
-            for (size_type i = 0; i != c; ++i)
-            {
-                *cut_i++ = row;
-                *cut_j++ = indb[i];
-            }
-            count += c;
+            *cut_i++ = row;
+            *cut_j++ = indb[i];
         }
-
-        return count;
+        count += c;
     }
 
-    // PERMUTATIONS
+    return count;
+}
 
-    /**
+// PERMUTATIONS
+
+/**
      * Permutes the rows of this sparse matrix. The permutation is given as an
      * array,
      * where each element of the array indicates which row should take the place
@@ -6060,21 +6060,21 @@ public:
      * the permutation, the first row should be the old row 3, the second the
      * old row 2...
      */
-    template <typename InIter> inline void permuteRows(InIter p)
+template <typename InIter> inline void permuteRows(InIter p)
+{
+    std::vector<size_type> nnzr_old(nnzr_, nnzr_ + nrows_);
+    std::vector<size_type *> ind_old(ind_, ind_ + nrows_);
+    std::vector<value_type *> nz_old(nz_, nz_ + nrows_);
+
+    for (size_type row = 0; row != nRows(); ++row, ++p)
     {
-        std::vector<size_type> nnzr_old(nnzr_, nnzr_ + nrows_);
-        std::vector<size_type *> ind_old(ind_, ind_ + nrows_);
-        std::vector<value_type *> nz_old(nz_, nz_ + nrows_);
-
-        for (size_type row = 0; row != nRows(); ++row, ++p)
-        {
-            nnzr_[row] = nnzr_old[*p];
-            ind_[row] = ind_old[*p];
-            nz_[row] = nz_old[*p];
-        }
+        nnzr_[row] = nnzr_old[*p];
+        ind_[row] = ind_old[*p];
+        nz_[row] = nz_old[*p];
     }
+}
 
-    /**
+/**
      * Permutes the cols of this sparse matrix. The permutation is given as an
      * array,
      * where each element of the array indicates which col should take the place
@@ -6094,204 +6094,204 @@ public:
      *   new_val += val[ind.index(i)],
      *
      */
-    template <typename InIter> inline void permuteCols(InIter p)
-    {
-        InIter p_begin = p, p_end = p + nCols();
+template <typename InIter> inline void permuteCols(InIter p)
+{
+    InIter p_begin = p, p_end = p + nCols();
 
-        for (size_type row = 0; row != nRows(); ++row)
+    for (size_type row = 0; row != nRows(); ++row)
+    {
+        size_type *indb_end = indb_ + nNonZerosOnRow(row);
+        std::copy(ind_begin_(row), ind_end_(row), indb_);
+        std::copy(nz_begin_(row), nz_end_(row), nzb_);
+        size_type *ind = ind_begin_(row);
+        value_type *nz = nz_begin_(row);
+        for (InIter i = p_begin; i != p_end; ++i)
         {
-            size_type *indb_end = indb_ + nNonZerosOnRow(row);
-            std::copy(ind_begin_(row), ind_end_(row), indb_);
-            std::copy(nz_begin_(row), nz_end_(row), nzb_);
-            size_type *ind = ind_begin_(row);
-            value_type *nz = nz_begin_(row);
-            for (InIter i = p_begin; i != p_end; ++i)
+            size_type *w = std::lower_bound(indb_, indb_end, *i);
+            if (w != indb_end && *w == *i)
             {
-                size_type *w = std::lower_bound(indb_, indb_end, *i);
-                if (w != indb_end && *w == *i)
-                {
-                    *ind = size_type(std::find(p_begin, p_end, *i) - p_begin);
-                    *nz = *(nzb_ + (w - indb_));
-                    ++ind;
-                    ++nz;
-                }
+                *ind = size_type(std::find(p_begin, p_end, *i) - p_begin);
+                *nz = *(nzb_ + (w - indb_));
+                ++ind;
+                ++nz;
             }
         }
     }
+}
 
-    /**
+/**
      * After applying this function,
      * A[i, j] = (0 <= i-n < nRows) ? A_[i-n, j] : 0
      */
-    void shiftRows(int n)
+void shiftRows(int n)
+{
+    if (n == 0)
+        return;
+
+    const size_type nrows = nRows();
+
+    if ((size_type)::abs(n) >= nrows)
     {
-        if (n == 0)
-            return;
-
-        const size_type nrows = nRows();
-
-        if ((size_type)::abs(n) >= nrows)
-        {
-            setToZero();
-            return;
-        }
-
-        size_type beginSource, endSource, beginDest, beginDelete, endDelete,
-            beginZero, endZero;
-
-        if (n > 0)
-        {
-            beginSource = 0;
-            endSource = nrows - n;
-            beginDest = n;
-            beginDelete = endSource;
-            endDelete = nrows;
-            beginZero = beginSource;
-            endZero = beginDest;
-        }
-        else
-        {
-            const size_type ln = -n;
-            beginSource = ln;
-            endSource = nrows;
-            beginDest = 0;
-            beginDelete = 0;
-            endDelete = beginSource;
-            beginZero = nrows - ln;
-            endZero = endSource;
-        }
-
-        // Clear out the destination.
-        if (!isCompact())
-        {
-            for (size_type i = beginDelete; i != endDelete; ++i)
-            {
-                if (nnzr_[i])
-                { // Not safe to delete if no NZs?
-                    delete[] ind_[i];
-                    ind_[i] = 0;
-                    delete[] nz_[i];
-                    nz_[i] = 0;
-                    nnzr_[i] = 0;
-                }
-            }
-        }
-        else
-        {
-            std::fill(ind_ + beginDelete, ind_ + endDelete, (size_type *)0);
-            std::fill(nz_ + beginDelete, nz_ + endDelete, (value_type *)0);
-            std::fill(nnzr_ + beginDelete, nnzr_ + endDelete, (size_type)0);
-        }
-
-        if (beginSource < beginDest)
-        {
-            // TODO: Make work for non-POD data.
-            size_type nMove = (endSource - beginSource);
-            std::copy(nnzr_ + beginSource, nnzr_ + beginSource + nMove,
-                      nnzr_ + beginDest);
-            std::copy(ind_ + beginSource, ind_ + beginSource + nMove,
-                      ind_ + beginDest);
-            std::copy(nz_ + beginSource, nz_ + beginSource + nMove,
-                      nz_ + beginDest);
-
-            //         ::memmove(ind_ + beginDest, ind_ + beginSource,
-            //             nMove * sizeof(ind_[0]));
-            //         ::memmove(nz_ + beginDest, nz_ + beginSource,
-            //             nMove * sizeof(nz_[0]));
-            //         ::memmove(nnzr_ + beginDest, nnzr_ + beginSource,
-            //             nMove * sizeof(nnzr_[0]));
-        }
-        else
-        {
-            std::copy(ind_ + beginSource, ind_ + endSource, ind_ + beginDest);
-            std::copy(nz_ + beginSource, nz_ + endSource, nz_ + beginDest);
-            std::copy(nnzr_ + beginSource, nnzr_ + endSource,
-                      nnzr_ + beginDest);
-        }
-
-        std::fill(ind_ + beginZero, ind_ + endZero, (size_type *)0);
-        std::fill(nz_ + beginZero, nz_ + endZero, (value_type *)0);
-        std::fill(nnzr_ + beginZero, nnzr_ + endZero, (size_type)0);
+        setToZero();
+        return;
     }
 
-    //---------------------------------------------------------------------
-    /**
+    size_type beginSource, endSource, beginDest, beginDelete, endDelete,
+        beginZero, endZero;
+
+    if (n > 0)
+    {
+        beginSource = 0;
+        endSource = nrows - n;
+        beginDest = n;
+        beginDelete = endSource;
+        endDelete = nrows;
+        beginZero = beginSource;
+        endZero = beginDest;
+    }
+    else
+    {
+        const size_type ln = -n;
+        beginSource = ln;
+        endSource = nrows;
+        beginDest = 0;
+        beginDelete = 0;
+        endDelete = beginSource;
+        beginZero = nrows - ln;
+        endZero = endSource;
+    }
+
+    // Clear out the destination.
+    if (!isCompact())
+    {
+        for (size_type i = beginDelete; i != endDelete; ++i)
+        {
+            if (nnzr_[i])
+            { // Not safe to delete if no NZs?
+                delete[] ind_[i];
+                ind_[i] = 0;
+                delete[] nz_[i];
+                nz_[i] = 0;
+                nnzr_[i] = 0;
+            }
+        }
+    }
+    else
+    {
+        std::fill(ind_ + beginDelete, ind_ + endDelete, (size_type *)0);
+        std::fill(nz_ + beginDelete, nz_ + endDelete, (value_type *)0);
+        std::fill(nnzr_ + beginDelete, nnzr_ + endDelete, (size_type)0);
+    }
+
+    if (beginSource < beginDest)
+    {
+        // TODO: Make work for non-POD data.
+        size_type nMove = (endSource - beginSource);
+        std::copy(nnzr_ + beginSource, nnzr_ + beginSource + nMove,
+                  nnzr_ + beginDest);
+        std::copy(ind_ + beginSource, ind_ + beginSource + nMove,
+                  ind_ + beginDest);
+        std::copy(nz_ + beginSource, nz_ + beginSource + nMove,
+                  nz_ + beginDest);
+
+        //         ::memmove(ind_ + beginDest, ind_ + beginSource,
+        //             nMove * sizeof(ind_[0]));
+        //         ::memmove(nz_ + beginDest, nz_ + beginSource,
+        //             nMove * sizeof(nz_[0]));
+        //         ::memmove(nnzr_ + beginDest, nnzr_ + beginSource,
+        //             nMove * sizeof(nnzr_[0]));
+    }
+    else
+    {
+        std::copy(ind_ + beginSource, ind_ + endSource, ind_ + beginDest);
+        std::copy(nz_ + beginSource, nz_ + endSource, nz_ + beginDest);
+        std::copy(nnzr_ + beginSource, nnzr_ + endSource,
+                  nnzr_ + beginDest);
+    }
+
+    std::fill(ind_ + beginZero, ind_ + endZero, (size_type *)0);
+    std::fill(nz_ + beginZero, nz_ + endZero, (value_type *)0);
+    std::fill(nnzr_ + beginZero, nnzr_ + endZero, (size_type)0);
+}
+
+//---------------------------------------------------------------------
+/**
      * After applying this function,
      * A[i, j] = (0 <= j-n < nCols) ? A_[i, j-n] : 0
      */
-    void shiftCols(int n)
+void shiftCols(int n)
+{
+    if (n == 0)
+        return;
+
+    const size_type ncols = nCols();
+    if ((size_type)::abs(n) >= ncols)
     {
-        if (n == 0)
-            return;
-
-        const size_type ncols = nCols();
-        if ((size_type)::abs(n) >= ncols)
-        {
-            setToZero();
-            return;
-        }
-
-        const size_type nrows = nRows();
-
-        if (n > 0)
-        {
-
-            const size_type max = ncols - n;
-
-            for (size_type row = 0; row != nrows; ++row)
-            {
-
-                size_type *ind_write = ind_begin_(row);
-                const size_type *ind_begin = ind_write;
-                const size_type *ind_end = std::lower_bound(
-                    ind_begin, const_cast<const size_type *>(ind_end_(row)),
-                    max);
-
-                for (; ind_write != ind_end; ++ind_write)
-                    *ind_write += n;
-
-                nnzr_[row] = ind_write - ind_begin;
-            }
-        }
-        else
-        {
-
-            size_type ln = -n;
-
-            for (size_type row = 0; row != nrows; ++row)
-            {
-
-                size_type *ind_write = ind_begin_(row);
-                const size_type *ind_end = ind_end_(row);
-
-                const size_type *ind_begin = std::lower_bound(
-                    const_cast<const size_type *>(ind_write), ind_end, ln);
-                size_type offset = ind_begin - ind_write;
-
-                std::copy(ind_begin, ind_end, ind_write);
-
-                value_type *nz_write = nz_begin_(row);
-                const value_type *nz_begin = nz_write + offset;
-                const value_type *nz_end = nz_end_(row);
-
-                std::copy(nz_begin, nz_end, nz_write);
-
-                nnzr_[row] -= offset;
-                ind_end -= offset;
-                for (; ind_write != ind_end; ++ind_write)
-                    *ind_write -= ln;
-            }
-        }
+        setToZero();
+        return;
     }
 
-    // APPLY
+    const size_type nrows = nRows();
 
-    /**
+    if (n > 0)
+    {
+
+        const size_type max = ncols - n;
+
+        for (size_type row = 0; row != nrows; ++row)
+        {
+
+            size_type *ind_write = ind_begin_(row);
+            const size_type *ind_begin = ind_write;
+            const size_type *ind_end = std::lower_bound(
+                ind_begin, const_cast<const size_type *>(ind_end_(row)),
+                max);
+
+            for (; ind_write != ind_end; ++ind_write)
+                *ind_write += n;
+
+            nnzr_[row] = ind_write - ind_begin;
+        }
+    }
+    else
+    {
+
+        size_type ln = -n;
+
+        for (size_type row = 0; row != nrows; ++row)
+        {
+
+            size_type *ind_write = ind_begin_(row);
+            const size_type *ind_end = ind_end_(row);
+
+            const size_type *ind_begin = std::lower_bound(
+                const_cast<const size_type *>(ind_write), ind_end, ln);
+            size_type offset = ind_begin - ind_write;
+
+            std::copy(ind_begin, ind_end, ind_write);
+
+            value_type *nz_write = nz_begin_(row);
+            const value_type *nz_begin = nz_write + offset;
+            const value_type *nz_end = nz_end_(row);
+
+            std::copy(nz_begin, nz_end, nz_write);
+
+            nnzr_[row] -= offset;
+            ind_end -= offset;
+            for (; ind_write != ind_end; ++ind_write)
+                *ind_write -= ln;
+        }
+    }
+}
+
+// APPLY
+
+/**
      * Apply methods are like STL's transform algorithm, with a unary or a
      * binary functor.
      */
 
-    /**
+/**
      * Applies given unary functor to non-zeros on the specified row:
      *
      *  this[row,k] = f1(this[row,k])
@@ -6309,35 +6309,35 @@ public:
      * TODO threshold and apply in the same loop by assining to new position
      * with an offset
      */
-    template <typename UnaryFunction>
-    inline void elementRowNZApply(size_type row, const UnaryFunction &f1)
+template <typename UnaryFunction>
+inline void elementRowNZApply(size_type row, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowNZApply");
+    } // End pre-conditions
+
+    size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+    value_type *nz = nz_begin_(row);
+    size_type offset = 0;
+
+    for (; ind != ind_end; ++ind, ++nz)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowNZApply");
-        } // End pre-conditions
-
-        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-        value_type *nz = nz_begin_(row);
-        size_type offset = 0;
-
-        for (; ind != ind_end; ++ind, ++nz)
+        value_type val = f1(*nz);
+        if (isZero_(val))
         {
-            value_type val = f1(*nz);
-            if (isZero_(val))
-            {
-                ++offset;
-            }
-            else
-            {
-                *(nz - offset) = val;
-                *(ind - offset) = *ind;
-            }
+            ++offset;
         }
-
-        nnzr_[row] -= offset;
+        else
+        {
+            *(nz - offset) = val;
+            *(ind - offset) = *ind;
+        }
     }
 
-    /**
+    nnzr_[row] -= offset;
+}
+
+/**
      * Applies given functor to non-zeros on the specified column:
      *
      *  this[row,col] = f1(this[row,col])
@@ -6351,27 +6351,27 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols
      */
-    template <typename UnaryFunction>
-    inline void elementColNZApply(size_type col, const UnaryFunction &f1)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "elementColNZApply");
-        } // End pre-conditions
+template <typename UnaryFunction>
+inline void elementColNZApply(size_type col, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "elementColNZApply");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
         {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-            {
-                value_type *nz = nz_begin_(row) + offset;
-                *nz = f1(*nz);
-                if (isZero_(*nz))
-                    erase_(row, ind_begin_(row) + offset);
-            }
+            value_type *nz = nz_begin_(row) + offset;
+            *nz = f1(*nz);
+            if (isZero_(*nz))
+                erase_(row, ind_begin_(row) + offset);
         }
     }
+}
 
-    /**
+/**
      * Applies given functor to non-zeros on the whole matrix:
      *
      *  this[row,col] = f1(this[row,col])
@@ -6384,13 +6384,13 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename UnaryFunction>
-    inline void elementNZApply(const UnaryFunction &f1)
-    {
-        ITERATE_ON_ALL_ROWS elementRowNZApply(row, f1);
-    }
+template <typename UnaryFunction>
+inline void elementNZApply(const UnaryFunction &f1)
+{
+    ITERATE_ON_ALL_ROWS elementRowNZApply(row, f1);
+}
 
-    /**
+/**
      * Applies given functor to all the elements of the given row, the zeros as
      * well
      * as the non-zeros:
@@ -6408,24 +6408,24 @@ public:
      *
      * TODO remove projection to buffer by iterating over non-zeros only
      */
-    template <typename UnaryFunction>
-    inline void elementRowApply(size_type row, const UnaryFunction &f1)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowApply");
-        } // End pre-conditions
+template <typename UnaryFunction>
+inline void elementRowApply(size_type row, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowApply");
+    } // End pre-conditions
 
-        to_nzb_(row);
+    to_nzb_(row);
 
-        value_type *nzb = nzb_, *nzb_end = nzb_ + nCols();
+    value_type *nzb = nzb_, *nzb_end = nzb_ + nCols();
 
-        for (; nzb != nzb_end; ++nzb)
-            *nzb = f1(*nzb);
+    for (; nzb != nzb_end; ++nzb)
+        *nzb = f1(*nzb);
 
-        set_row_(row, nzb_, nzb_ + nCols());
-    }
+    set_row_(row, nzb_, nzb_ + nCols());
+}
 
-    /**
+/**
      * Applies given unary function to all the elements on the given column, the
      * zeros
      * as well as the non-zeros:
@@ -6444,17 +6444,17 @@ public:
      *
      * TODO faster?
      */
-    template <typename UnaryFunction>
-    inline void elementColApply(size_type col, const UnaryFunction &f1)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "elementColApply");
-        } // End pre-conditions
+template <typename UnaryFunction>
+inline void elementColApply(size_type col, const UnaryFunction &f1)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "elementColApply");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS set(row, col, f1(get(row, col)));
-    }
+    ITERATE_ON_ALL_ROWS set(row, col, f1(get(row, col)));
+}
 
-    /**
+/**
      * Applies give unary function to all the elements in this sparse matrix,
      * the zeros as well as the non-zeros:
      *
@@ -6468,13 +6468,13 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename UnaryFunction>
-    inline void elementApply(const UnaryFunction &f1)
-    {
-        ITERATE_ON_ALL_ROWS elementRowApply(row, f1);
-    }
+template <typename UnaryFunction>
+inline void elementApply(const UnaryFunction &f1)
+{
+    ITERATE_ON_ALL_ROWS elementRowApply(row, f1);
+}
 
-    /**
+/**
      * Applies given binary functor f to the elements of a row and the given
      * vector:
      *
@@ -6491,74 +6491,74 @@ public:
      * @b Exceptions:
      *  @li If row is not in range.
      */
-    template <typename BinaryFunction, typename InputIterator>
-    inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
-                                  InputIterator x_begin)
+template <typename BinaryFunction, typename InputIterator>
+inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
+                              InputIterator x_begin)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowNZApply");
+    } // End pre-conditions
+
+    size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+    value_type *nz = nz_begin_(row);
+    size_type offset = 0;
+
+    for (; ind != ind_end; ++ind, ++nz)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowNZApply");
-        } // End pre-conditions
-
-        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-        value_type *nz = nz_begin_(row);
-        size_type offset = 0;
-
-        for (; ind != ind_end; ++ind, ++nz)
+        value_type val = f2(*nz, *(x_begin + *ind));
+        if (isZero_(val))
         {
-            value_type val = f2(*nz, *(x_begin + *ind));
-            if (isZero_(val))
-            {
-                ++offset;
-            }
-            else
-            {
-                *(nz - offset) = val;
-                *(ind - offset) = *ind;
-            }
+            ++offset;
         }
-
-        nnzr_[row] -= offset;
+        else
+        {
+            *(nz - offset) = val;
+            *(ind - offset) = *ind;
+        }
     }
 
-    /**
+    nnzr_[row] -= offset;
+}
+
+/**
      * Apply binary functor to x and each non-zero of a given row, and put the
      * result
      * in y. This assumes that f2(0, x) = 0,
      */
-    template <typename BinaryFunction, typename InputIterator,
-              typename OutputIterator>
-    inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
-                                  InputIterator x, OutputIterator y) const
+template <typename BinaryFunction, typename InputIterator,
+          typename OutputIterator>
+inline void elementRowNZApply(size_type row, const BinaryFunction &f2,
+                              InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowNZApply");
+    } // End pre-conditions
+
+    if (nnzr_[row] == 0)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowNZApply");
-        } // End pre-conditions
-
-        if (nnzr_[row] == 0)
-        {
-            std::fill(y, y + nCols(), (value_type)0);
-            return;
-        }
-
-        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-        value_type *nz = nz_begin_(row);
-
-        for (size_type col = 0; col != nCols(); ++col, ++y, ++x)
-        {
-            if (ind != ind_end && *ind == col)
-            {
-                *y = f2(*nz, *x);
-                ++ind;
-                ++nz;
-            }
-            else
-            {
-                *y = 0;
-            }
-        }
+        std::fill(y, y + nCols(), (value_type)0);
+        return;
     }
 
-    /**
+    size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+    value_type *nz = nz_begin_(row);
+
+    for (size_type col = 0; col != nCols(); ++col, ++y, ++x)
+    {
+        if (ind != ind_end && *ind == col)
+        {
+            *y = f2(*nz, *x);
+            ++ind;
+            ++nz;
+        }
+        else
+        {
+            *y = 0;
+        }
+    }
+}
+
+/**
      * Applies given binary functor f to all the elements of a row and the given
      * vector:
      *
@@ -6575,65 +6575,65 @@ public:
      * @b Exceptions:
      *  @li If row is not in range.
      */
-    template <typename BinaryFunction, typename InputIterator>
-    inline void elementRowApply(size_type row, const BinaryFunction &f2,
-                                InputIterator x_begin)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowApply");
-        } // End pre-conditions
+template <typename BinaryFunction, typename InputIterator>
+inline void elementRowApply(size_type row, const BinaryFunction &f2,
+                            InputIterator x_begin)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowApply");
+    } // End pre-conditions
 
-        value_type *nzb_end = nzb_ + nCols();
+    value_type *nzb_end = nzb_ + nCols();
 
-        to_nzb_(row);
+    to_nzb_(row);
 
-        for (value_type *nzb = nzb_; nzb != nzb_end; ++nzb, ++x_begin)
-            *nzb = f2(*nzb, *x_begin);
+    for (value_type *nzb = nzb_; nzb != nzb_end; ++nzb, ++x_begin)
+        *nzb = f2(*nzb, *x_begin);
 
-        set_row_(row, nzb_, nzb_ + nCols());
-    }
+    set_row_(row, nzb_, nzb_ + nCols());
+}
 
-    /**
+/**
      * Apply binary functor to each element of a given row and x, and put the
      * result
      * in y.
      */
-    template <typename BinaryFunction, typename InputIterator,
-              typename OutputIterator>
-    inline void elementRowApply(size_type row, const BinaryFunction &f2,
-                                InputIterator x, OutputIterator y) const
+template <typename BinaryFunction, typename InputIterator,
+          typename OutputIterator>
+inline void elementRowApply(size_type row, const BinaryFunction &f2,
+                            InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "elementRowApply");
+    } // End pre-conditions
+
+    if (nnzr_[row] == 0)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "elementRowApply");
-        } // End pre-conditions
-
-        if (nnzr_[row] == 0)
-        {
-            InputIterator x_end = x + nCols();
-            for (; x != x_end; ++x, ++y)
-                *y = f2(0, *x);
-            return;
-        }
-
-        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-        value_type *nz = nz_begin_(row);
-
-        for (size_type col = 0; col != nCols(); ++col, ++y, ++x)
-        {
-            if (ind != ind_end && *ind == col)
-            {
-                *y = f2(*nz, *x);
-                ++ind;
-                ++nz;
-            }
-            else
-            {
-                *y = f2(0, *x);
-            }
-        }
+        InputIterator x_end = x + nCols();
+        for (; x != x_end; ++x, ++y)
+            *y = f2(0, *x);
+        return;
     }
 
-    /**
+    size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+    value_type *nz = nz_begin_(row);
+
+    for (size_type col = 0; col != nCols(); ++col, ++y, ++x)
+    {
+        if (ind != ind_end && *ind == col)
+        {
+            *y = f2(*nz, *x);
+            ++ind;
+            ++nz;
+        }
+        else
+        {
+            *y = f2(0, *x);
+        }
+    }
+}
+
+/**
      * Applies given binary functor f to the non-zeros of a col and the given
      * vector:
      *
@@ -6650,47 +6650,47 @@ public:
      * @b Exceptions:
      *  @li If col is not in range.
      */
-    template <typename BinaryFunction, typename InputIterator>
-    inline void elementColNZApply(size_type col, const BinaryFunction &f2,
-                                  InputIterator x_begin)
+template <typename BinaryFunction, typename InputIterator>
+inline void elementColNZApply(size_type col, const BinaryFunction &f2,
+                              InputIterator x_begin)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "elementColNZApply");
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "elementColNZApply");
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
         {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-            {
-                value_type *nz = nz_begin_(row) + offset;
-                *nz = f2(*nz, *x_begin);
-                if (isZero_(*nz))
-                    erase_(row, ind_begin_(row) + offset);
-            }
-            ++x_begin;
+            value_type *nz = nz_begin_(row) + offset;
+            *nz = f2(*nz, *x_begin);
+            if (isZero_(*nz))
+                erase_(row, ind_begin_(row) + offset);
         }
+        ++x_begin;
     }
+}
 
-    template <typename BinaryFunction, typename InputIterator,
-              typename OutputIterator>
-    inline void elementColNZApply(size_type col, const BinaryFunction &f2,
-                                  InputIterator x, OutputIterator y) const
+template <typename BinaryFunction, typename InputIterator,
+          typename OutputIterator>
+inline void elementColNZApply(size_type col, const BinaryFunction &f2,
+                              InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "elementColNZApply");
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "elementColNZApply");
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const difference_type offset = col_(row, col);
-            *y = offset >= 0 ? f2(*(nz_begin_(row) + offset), *x) : 0;
-            ++x;
-            ++y;
-        }
+        const difference_type offset = col_(row, col);
+        *y = offset >= 0 ? f2(*(nz_begin_(row) + offset), *x) : 0;
+        ++x;
+        ++y;
     }
+}
 
-    /**
+/**
      * Applies given binary functor f to all the elements of a col and the given
      * vector:
      *
@@ -6707,22 +6707,22 @@ public:
      * @b Exceptions:
      *  @li If col is not in range.
      */
-    template <typename BinaryFunction, typename InputIterator>
-    inline void elementColApply(size_type col, const BinaryFunction &f2,
-                                InputIterator x_begin)
+template <typename BinaryFunction, typename InputIterator>
+inline void elementColApply(size_type col, const BinaryFunction &f2,
+                            InputIterator x_begin)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "elementColApply");
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "elementColApply");
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            set(row, col, f2(get(row, col), *x_begin));
-            ++x_begin;
-        }
+        set(row, col, f2(get(row, col), *x_begin));
+        ++x_begin;
     }
+}
 
-    /**
+/**
      * Applies given functor to non-zeros of this sparse matrix and other:
      *
      *  this[row,col] = f2(this[row,col], other[row,col])
@@ -6735,38 +6735,38 @@ public:
      * The resulting sparse matrix has at most the same number of non-zeros
      * as the initial sparse matrix, but maybe less.
      */
-    template <typename BinaryFunction>
-    inline void elementNZApply(const SparseMatrix &other,
-                               const BinaryFunction &f2)
+template <typename BinaryFunction>
+inline void elementNZApply(const SparseMatrix &other,
+                           const BinaryFunction &f2)
+{
+    { // Pre-conditions
+        NTA_ASSERT(other.nRows() == nRows())
+            << "SparseMatrix elementNZApply: Number of rows don't match: "
+            << nRows() << " and " << other.nRows();
+        NTA_ASSERT(other.nCols() == nCols())
+            << "SparseMatrix elementNZApply: Number of columns don't "
+               "match: "
+            << nCols() << " and " << other.nCols();
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            NTA_ASSERT(other.nRows() == nRows())
-                << "SparseMatrix elementNZApply: Number of rows don't match: "
-                << nRows() << " and " << other.nRows();
-            NTA_ASSERT(other.nCols() == nCols())
-                << "SparseMatrix elementNZApply: Number of columns don't "
-                   "match: "
-                << nCols() << " and " << other.nCols();
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
+        size_type nnzr2 = 0;
+        ITERATE_ON_ROW
         {
-            size_type nnzr2 = 0;
-            ITERATE_ON_ROW
+            value_type val = f2(*nz, other.get(row, *ind));
+            if (!isZero_(val))
             {
-                value_type val = f2(*nz, other.get(row, *ind));
-                if (!isZero_(val))
-                {
-                    ind_[row][nnzr2] = *ind;
-                    nz_[row][nnzr2] = val;
-                    ++nnzr2;
-                }
+                ind_[row][nnzr2] = *ind;
+                nz_[row][nnzr2] = val;
+                ++nnzr2;
             }
-            nnzr_[row] = nnzr2;
         }
+        nnzr_[row] = nnzr2;
     }
+}
 
-    /**
+/**
      * Applies given functor to all elements of this sparse matrix
      * (zeros and non-zeros), and to the corresponding elements of other:
      *
@@ -6778,28 +6778,28 @@ public:
      * This works for any functor. The resulting matrix may have more or less
      * non-zeros than the initial one.
      */
-    template <typename BinaryFunction>
-    inline void elementApply(const SparseMatrix &other,
-                             const BinaryFunction &f2)
+template <typename BinaryFunction>
+inline void elementApply(const SparseMatrix &other,
+                         const BinaryFunction &f2)
+{
+    { // Pre-conditions
+        NTA_ASSERT(other.nRows() == nRows())
+            << "SparseMatrix elementApply: Number of rows don't match: "
+            << nRows() << " and " << other.nRows();
+        NTA_ASSERT(other.nCols() == nCols())
+            << "SparseMatrix elementApply: Number of columns don't match: "
+            << nCols() << " and " << other.nCols();
+
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            NTA_ASSERT(other.nRows() == nRows())
-                << "SparseMatrix elementApply: Number of rows don't match: "
-                << nRows() << " and " << other.nRows();
-            NTA_ASSERT(other.nCols() == nCols())
-                << "SparseMatrix elementApply: Number of columns don't match: "
-                << nCols() << " and " << other.nCols();
-
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const_cast<SparseMatrix &>(other).to_nzb_(row);
-            elementRowApply(row, f2, other.nzb_);
-        }
+        const_cast<SparseMatrix &>(other).to_nzb_(row);
+        elementRowApply(row, f2, other.nzb_);
     }
+}
 
-    /**
+/**
      * Applies unary function to outer product of two ranges passed in:
      *
      *  this[row,col] = f1(this[row,col])
@@ -6807,22 +6807,22 @@ public:
      * where:
      *  row,col in [row range) X [col range)
      */
-    template <typename InputIterator, typename UnaryFunction>
-    inline void applyOuter(InputIterator row_begin, InputIterator row_end,
-                           InputIterator col_begin, InputIterator col_end,
-                           const UnaryFunction &f1)
+template <typename InputIterator, typename UnaryFunction>
+inline void applyOuter(InputIterator row_begin, InputIterator row_end,
+                       InputIterator col_begin, InputIterator col_end,
+                       const UnaryFunction &f1)
+{
+    for (InputIterator row = row_begin; row != row_end; ++row)
     {
-        for (InputIterator row = row_begin; row != row_end; ++row)
+        for (InputIterator col = col_begin; col != col_end; ++col)
         {
-            for (InputIterator col = col_begin; col != col_end; ++col)
-            {
-                size_type i = *row, j = *col;
-                set(i, j, f1(get(i, j)));
-            }
+            size_type i = *row, j = *col;
+            set(i, j, f1(get(i, j)));
         }
     }
+}
 
-    /**
+/**
      * Applies binary function to outer product of two ranges passed in:
      *
      *  this[i,j] = f2(this[i,j], other[ii, jj])
@@ -6833,27 +6833,27 @@ public:
      *
      * Note: the get is "dense" on other but enumerated on this?
      */
-    template <typename InputIterator, typename BinaryFunction, typename Other>
-    inline void applyOuter(InputIterator row_begin, InputIterator row_end,
-                           InputIterator col_begin, InputIterator col_end,
-                           const BinaryFunction &f2, const Other &other)
+template <typename InputIterator, typename BinaryFunction, typename Other>
+inline void applyOuter(InputIterator row_begin, InputIterator row_end,
+                       InputIterator col_begin, InputIterator col_end,
+                       const BinaryFunction &f2, const Other &other)
+{
+    size_type i_other = 0;
+    for (InputIterator row = row_begin; row != row_end; ++row, ++i_other)
     {
-        size_type i_other = 0;
-        for (InputIterator row = row_begin; row != row_end; ++row, ++i_other)
+        size_type j_other = 0;
+        for (InputIterator col = col_begin; col != col_end;
+             ++col, ++j_other)
         {
-            size_type j_other = 0;
-            for (InputIterator col = col_begin; col != col_end;
-                 ++col, ++j_other)
-            {
-                size_type i = *row, j = *col;
-                set(i, j, f2(get(i, j), other.get(i_other, j_other)));
-            }
+            size_type i = *row, j = *col;
+            set(i, j, f2(get(i, j), other.get(i_other, j_other)));
         }
     }
+}
 
-    // ACCUMULATE
+// ACCUMULATE
 
-    /**
+/**
      * Accumulates the non-zeros of the given row, using the binary functor f2:
      *
      *  result = init
@@ -6869,36 +6869,36 @@ public:
      *
      * TODO Compare to performance of std::accumulate, look at assembly.
      */
-    template <typename BinaryFunction>
-    inline value_type accumulateRowNZ(size_type row, const BinaryFunction &f2,
-                                      const value_type &init = 0) const
+template <typename BinaryFunction>
+inline value_type accumulateRowNZ(size_type row, const BinaryFunction &f2,
+                                  const value_type &init = 0) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "accumulateRowNZ");
+    } // End pre-conditions
+
+    value_type *nz = nz_begin_(row);
+    value_type *nz_end1 = nz + 4 * (nnzr_[row] / 4),
+               *nz_end2 = nz_end_(row);
+    value_type result = init;
+
+    for (; nz != nz_end1; nz += 4)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "accumulateRowNZ");
-        } // End pre-conditions
-
-        value_type *nz = nz_begin_(row);
-        value_type *nz_end1 = nz + 4 * (nnzr_[row] / 4),
-                   *nz_end2 = nz_end_(row);
-        value_type result = init;
-
-        for (; nz != nz_end1; nz += 4)
-        {
-            result = f2(result, *nz);
-            result = f2(result, *(nz + 1));
-            result = f2(result, *(nz + 2));
-            result = f2(result, *(nz + 3));
-        }
-
-        for (; nz != nz_end2; ++nz)
-            result = f2(result, *nz);
-
-        return result;
-
-        // return std::accumulate(nz_begin_(row), nz_end_(row), init, f);
+        result = f2(result, *nz);
+        result = f2(result, *(nz + 1));
+        result = f2(result, *(nz + 2));
+        result = f2(result, *(nz + 3));
     }
 
-    /**
+    for (; nz != nz_end2; ++nz)
+        result = f2(result, *nz);
+
+    return result;
+
+    // return std::accumulate(nz_begin_(row), nz_end_(row), init, f);
+}
+
+/**
      * Accumulates the non-zeros on all the rows of this SparseMatrix,
      * using the binary functor f2, and puts the result to an iterator:
      *
@@ -6916,19 +6916,19 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator, typename BinaryFunction>
-    inline void accumulateAllRowsNZ(OutputIterator result,
-                                    const BinaryFunction &f2,
-                                    const value_type &init = 0) const
+template <typename OutputIterator, typename BinaryFunction>
+inline void accumulateAllRowsNZ(OutputIterator result,
+                                const BinaryFunction &f2,
+                                const value_type &init = 0) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            *result = accumulateRowNZ(row, f2, init);
-            ++result;
-        }
+        *result = accumulateRowNZ(row, f2, init);
+        ++result;
     }
+}
 
-    /**
+/**
      * Accumulates all the values on the given row, using the binary functor f2:
      *
      * result = init
@@ -6942,32 +6942,32 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows
      */
-    template <typename BinaryFunction>
-    inline value_type accumulateRow(size_type row, const BinaryFunction &f2,
-                                    const value_type &init = 0) const
+template <typename BinaryFunction>
+inline value_type accumulateRow(size_type row, const BinaryFunction &f2,
+                                const value_type &init = 0) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "accumulateRow");
+    } // End pre-conditions
+
+    size_type col = 0;
+    value_type result = init;
+
+    ITERATE_ON_ROW
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "accumulateRow");
-        } // End pre-conditions
-
-        size_type col = 0;
-        value_type result = init;
-
-        ITERATE_ON_ROW
+        size_type ind_end2 = *ind;
+        while (col != ind_end2)
         {
-            size_type ind_end2 = *ind;
-            while (col != ind_end2)
-            {
-                result = f(result, value_type(0));
-                ++col;
-            }
-            result = f2(result, *nz);
+            result = f(result, value_type(0));
+            ++col;
         }
-
-        return result;
+        result = f2(result, *nz);
     }
 
-    /**
+    return result;
+}
+
+/**
      * Accumulates the non-zeros on all the rows of this SparseMatrix,
      * using the binary functor f2, and puts the result to an iterator:
      *
@@ -6985,19 +6985,19 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator, typename BinaryFunction>
-    inline void accumulateAllRows(OutputIterator result,
-                                  const BinaryFunction &f2,
-                                  const value_type &init = 0) const
+template <typename OutputIterator, typename BinaryFunction>
+inline void accumulateAllRows(OutputIterator result,
+                              const BinaryFunction &f2,
+                              const value_type &init = 0) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            *result = accumulateRow(row, f2, init);
-            ++result;
-        }
+        *result = accumulateRow(row, f2, init);
+        ++result;
     }
+}
 
-    /**
+/**
      * Accumulates the non-zeros of the given column, using the binary functor
      * f2:
      *
@@ -7012,27 +7012,27 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols
      */
-    template <typename BinaryFunction>
-    inline value_type accumulateColNZ(size_type col, const BinaryFunction &f2,
-                                      const value_type &init = 0) const
+template <typename BinaryFunction>
+inline value_type accumulateColNZ(size_type col, const BinaryFunction &f2,
+                                  const value_type &init = 0) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "accumulateColNZ");
+    } // End pre-conditions
+
+    value_type result = init;
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "accumulateColNZ");
-        } // End pre-conditions
-
-        value_type result = init;
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-                result = f2(result, value_(row, offset));
-        }
-
-        return result;
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
+            result = f2(result, value_(row, offset));
     }
 
-    /**
+    return result;
+}
+
+/**
      * Accumulates the non-zeros on all the columns of this SparseMatrix
      * using the binary functor f2, and puts the result to an iterator:
      *
@@ -7050,24 +7050,24 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator, typename BinaryFunction>
-    inline void accumulateAllColsNZ(OutputIterator result,
-                                    const BinaryFunction &f2,
-                                    const value_type &init = 0) const
-    {
-        std::fill(result, result + nCols(), (value_type)init);
+template <typename OutputIterator, typename BinaryFunction>
+inline void accumulateAllColsNZ(OutputIterator result,
+                                const BinaryFunction &f2,
+                                const value_type &init = 0) const
+{
+    std::fill(result, result + nCols(), (value_type)init);
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                value_type &res = result[*ind];
-                res = f2(res, *nz);
-            }
+            value_type &res = result[*ind];
+            res = f2(res, *nz);
         }
     }
+}
 
-    /**
+/**
      * Accumulates all the values on the given column, using the binary functor
      * f2:
      *
@@ -7082,29 +7082,29 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols
      */
-    template <typename BinaryFunction>
-    inline value_type accumulateCol(size_type col, const BinaryFunction &f2,
-                                    const value_type &init = 0) const
+template <typename BinaryFunction>
+inline value_type accumulateCol(size_type col, const BinaryFunction &f2,
+                                const value_type &init = 0) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "accumulate");
+    } // End pre-conditions
+
+    value_type result = init;
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "accumulate");
-        } // End pre-conditions
-
-        value_type result = init;
-
-        ITERATE_ON_ALL_ROWS
-        {
-            const difference_type offset = col_(row, col);
-            if (offset >= 0)
-                result = f2(result, value_(row, offset));
-            else
-                result = f2(result, value_type(0));
-        }
-
-        return result;
+        const difference_type offset = col_(row, col);
+        if (offset >= 0)
+            result = f2(result, value_(row, offset));
+        else
+            result = f2(result, value_type(0));
     }
 
-    /**
+    return result;
+}
+
+/**
      * Accumulates the non-zeros on all the columns of this SparseMatrix,
      * using the binary functor f2, and puts the result to an iterator:
      *
@@ -7122,37 +7122,37 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator, typename BinaryFunction>
-    inline void accumulateAllCols(OutputIterator result,
-                                  const BinaryFunction &f2,
-                                  const value_type &init = 0) const
+template <typename OutputIterator, typename BinaryFunction>
+inline void accumulateAllCols(OutputIterator result,
+                              const BinaryFunction &f2,
+                              const value_type &init = 0) const
+{
+    const size_type ncols = nCols();
+
+    std::fill(result, result + nCols(), (value_type)init);
+
+    ITERATE_ON_ALL_ROWS
     {
-        const size_type ncols = nCols();
-
-        std::fill(result, result + nCols(), (value_type)init);
-
-        ITERATE_ON_ALL_ROWS
+        size_type *ind = ind_begin_(row);
+        value_type *nz = nz_begin_(row);
+        for (size_type col = 0; col != ncols; ++col)
         {
-            size_type *ind = ind_begin_(row);
-            value_type *nz = nz_begin_(row);
-            for (size_type col = 0; col != ncols; ++col)
+            if (col == *ind)
             {
-                if (col == *ind)
-                {
-                    value_type &res = result[*ind];
-                    res = f(res, *nz);
-                    ++ind;
-                    ++nz;
-                }
-                else
-                {
-                    result[col] = f(result[col], value_type(0));
-                }
+                value_type &res = result[*ind];
+                res = f(res, *nz);
+                ++ind;
+                ++nz;
+            }
+            else
+            {
+                result[col] = f(result[col], value_type(0));
             }
         }
     }
+}
 
-    /**
+/**
      * Accumulate all the non-zeros in this matrix using the binary functor f2,
      * starting with an initial value of init:
      *
@@ -7167,18 +7167,18 @@ public:
      * @b Exceptions:
      *  @li If f2 is not a binary functor.
      */
-    template <typename BinaryFunction>
-    inline value_type accumulateNZ(BinaryFunction f2,
-                                   const value_type &init) const
-    {
-        value_type result = init;
+template <typename BinaryFunction>
+inline value_type accumulateNZ(BinaryFunction f2,
+                               const value_type &init) const
+{
+    value_type result = init;
 
-        ITERATE_ON_ALL_ROWS result = accumulateRowNZ(row, f2, result);
+    ITERATE_ON_ALL_ROWS result = accumulateRowNZ(row, f2, result);
 
-        return result;
-    }
+    return result;
+}
 
-    /**
+/**
      * Accumulate all the elements in this matrix using the binary functor f2,
      * starting with an initial value of init, iterating over the non-zeros as
      * well
@@ -7194,20 +7194,20 @@ public:
      * @b Exceptions:
      *  @li If f2 is not a binary functor.
      */
-    template <typename BinaryFunction>
-    inline value_type accumulate(BinaryFunction f2,
-                                 const value_type &init) const
-    {
-        value_type result = init;
+template <typename BinaryFunction>
+inline value_type accumulate(BinaryFunction f2,
+                             const value_type &init) const
+{
+    value_type result = init;
 
-        ITERATE_ON_ALL_ROWS result = accumulateRow(row, f2, result);
+    ITERATE_ON_ALL_ROWS result = accumulateRow(row, f2, result);
 
-        return result;
-    }
+    return result;
+}
 
-    // TRANSPOSE
+// TRANSPOSE
 
-    /**
+/**
      * Computes the transpose of this sparse matrix, storing the result
      * in tr. Discards the previous value of tr.
      *
@@ -7219,132 +7219,132 @@ public:
      * @b Exceptions:
      *  @li Not enough memory (error)
      */
-    inline void transpose(SparseMatrix &tr) const
+inline void transpose(SparseMatrix &tr) const
+{
+    std::vector<std::vector<size_type>> tind(nCols());
+    std::vector<std::vector<value_type>> tnz(nCols());
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::vector<std::vector<size_type>> tind(nCols());
-        std::vector<std::vector<value_type>> tnz(nCols());
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                tind[*ind].push_back(row);
-                tnz[*ind].push_back(*nz);
-            }
-        }
-
-        size_type nnz = nNonZeros();
-        size_type tnrows = nCols();
-        size_type tncols = nRows();
-
-        tr.deallocate_();
-        tr.allocate_(tnrows, tncols);
-        tr.nrows_ = tnrows;
-        tr.ncols_ = tncols;
-
-        tr.ind_mem_ = new size_type[nnz];
-        size_type *indp = tr.ind_mem_;
-        tr.nz_mem_ = new value_type[nnz];
-        value_type *nzp = tr.nz_mem_;
-
-        for (size_type row = 0; row != tnrows; ++row)
-        {
-            const std::vector<size_type> &rind = tind[row];
-            const std::vector<value_type> &rnz = tnz[row];
-            size_type nk = (size_type)rind.size();
-            tr.nnzr_[row] = nk;
-            tr.ind_[row] = indp;
-            tr.nz_[row] = nzp;
-            for (size_type k = 0; k != nk; ++k)
-            {
-                *indp++ = rind[k];
-                *nzp++ = rnz[k];
-            }
+            tind[*ind].push_back(row);
+            tnz[*ind].push_back(*nz);
         }
     }
 
-    /**
+    size_type nnz = nNonZeros();
+    size_type tnrows = nCols();
+    size_type tncols = nRows();
+
+    tr.deallocate_();
+    tr.allocate_(tnrows, tncols);
+    tr.nrows_ = tnrows;
+    tr.ncols_ = tncols;
+
+    tr.ind_mem_ = new size_type[nnz];
+    size_type *indp = tr.ind_mem_;
+    tr.nz_mem_ = new value_type[nnz];
+    value_type *nzp = tr.nz_mem_;
+
+    for (size_type row = 0; row != tnrows; ++row)
+    {
+        const std::vector<size_type> &rind = tind[row];
+        const std::vector<value_type> &rnz = tnz[row];
+        size_type nk = (size_type)rind.size();
+        tr.nnzr_[row] = nk;
+        tr.ind_[row] = indp;
+        tr.nz_[row] = nzp;
+        for (size_type k = 0; k != nk; ++k)
+        {
+            *indp++ = rind[k];
+            *nzp++ = rnz[k];
+        }
+    }
+}
+
+/**
      * In place transpose.
      */
-    inline void transpose()
+inline void transpose()
+{
+    std::vector<std::vector<size_type>> tind(nCols());
+    std::vector<std::vector<value_type>> tnz(nCols());
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::vector<std::vector<size_type>> tind(nCols());
-        std::vector<std::vector<value_type>> tnz(nCols());
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                tind[*ind].push_back(row);
-                tnz[*ind].push_back(*nz);
-            }
-        }
-
-        size_type nnz = nNonZeros();
-        size_type tnrows = nCols();
-        size_type tncols = nRows();
-
-        deallocate_();
-        allocate_(tnrows, tncols);
-        ind_mem_ = new size_type[nnz];
-        nz_mem_ = new value_type[nnz];
-
-        nrows_ = tnrows;
-        ncols_ = tncols;
-
-        size_type *indp = ind_mem_;
-        value_type *nzp = nz_mem_;
-
-        for (size_type row = 0; row != tnrows; ++row)
-        {
-            const std::vector<size_type> &rind = tind[row];
-            const std::vector<value_type> &rnz = tnz[row];
-            size_type nk = rind.size();
-            nnzr_[row] = nk;
-            ind_[row] = indp;
-            nz_[row] = nzp;
-            for (size_type k = 0; k != nk; ++k)
-            {
-                *indp++ = rind[k];
-                *nzp++ = rnz[k];
-            }
+            tind[*ind].push_back(row);
+            tnz[*ind].push_back(*nz);
         }
     }
 
-    /**
+    size_type nnz = nNonZeros();
+    size_type tnrows = nCols();
+    size_type tncols = nRows();
+
+    deallocate_();
+    allocate_(tnrows, tncols);
+    ind_mem_ = new size_type[nnz];
+    nz_mem_ = new value_type[nnz];
+
+    nrows_ = tnrows;
+    ncols_ = tncols;
+
+    size_type *indp = ind_mem_;
+    value_type *nzp = nz_mem_;
+
+    for (size_type row = 0; row != tnrows; ++row)
+    {
+        const std::vector<size_type> &rind = tind[row];
+        const std::vector<value_type> &rnz = tnz[row];
+        size_type nk = rind.size();
+        nnzr_[row] = nk;
+        ind_[row] = indp;
+        nz_[row] = nzp;
+        for (size_type k = 0; k != nk; ++k)
+        {
+            *indp++ = rind[k];
+            *nzp++ = rnz[k];
+        }
+    }
+}
+
+/**
      * Adds this matrix to its transpose. This creates symmetric matrices.
      */
-    inline void addToTranspose(SparseMatrix &sm) const
-    {
-        { // Pre-conditions
-            NTA_ASSERT(nRows() == nCols()) << "SparseMatrix addToTranspose: "
-                                           << "Matrix needs to be square";
-        } // End pre-conditions
+inline void addToTranspose(SparseMatrix &sm) const
+{
+    { // Pre-conditions
+        NTA_ASSERT(nRows() == nCols()) << "SparseMatrix addToTranspose: "
+                                       << "Matrix needs to be square";
+    } // End pre-conditions
 
-        SparseMatrix tmp(nCols(), nCols());
-        this->transpose(tmp);
-        sm.copy(*this);
-        sm.add(tmp);
-    }
+    SparseMatrix tmp(nCols(), nCols());
+    this->transpose(tmp);
+    sm.copy(*this);
+    sm.add(tmp);
+}
 
-    /**
+/**
      * Inline version, that adds this to its transpose.
      */
-    inline void addToTranspose()
-    {
-        { // Pre-conditions
-            NTA_ASSERT(nRows() == nCols()) << "SparseMatrix addToTranspose: "
-                                           << "Matrix needs to be square";
-        } // End pre-conditions
+inline void addToTranspose()
+{
+    { // Pre-conditions
+        NTA_ASSERT(nRows() == nCols()) << "SparseMatrix addToTranspose: "
+                                       << "Matrix needs to be square";
+    } // End pre-conditions
 
-        SparseMatrix tmp(nCols(), nCols());
-        this->transpose(tmp);
-        this->add(tmp);
-    }
+    SparseMatrix tmp(nCols(), nCols());
+    this->transpose(tmp);
+    this->add(tmp);
+}
 
-    // THRESHOLD
+// THRESHOLD
 
-    /**
+/**
      * Removes the non-zeros on this row that are below the given threshold.
      *
      * this[row,col] = this[row,col] >= threshold
@@ -7356,32 +7356,32 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows
      */
-    inline void thresholdRow(size_type row,
-                             const value_type &threshold = crucian::Epsilon)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "thresholdRow");
-        } // End pre-conditions
+inline void thresholdRow(size_type row,
+                         const value_type &threshold = crucian::Epsilon)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "thresholdRow");
+    } // End pre-conditions
 
-        filterRow(row, std::bind(std::greater_equal<value_type>(),
-                                 std::placeholders::_1, threshold));
-    }
+    filterRow(row, std::bind(std::greater_equal<value_type>(),
+                             std::placeholders::_1, threshold));
+}
 
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline size_type thresholdRow(size_type row, const value_type &threshold,
-                                  OutputIterator1 cut_j, OutputIterator2 cut_nz)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "thresholdRow");
-        } // End pre-conditions
+template <typename OutputIterator1, typename OutputIterator2>
+inline size_type thresholdRow(size_type row, const value_type &threshold,
+                              OutputIterator1 cut_j, OutputIterator2 cut_nz)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "thresholdRow");
+    } // End pre-conditions
 
-        return filterRow(row,
-                         std::bind(std::greater_equal<value_type>(),
-                                   std::placeholders::_1, threshold),
-                         cut_j, cut_nz);
-    }
+    return filterRow(row,
+                     std::bind(std::greater_equal<value_type>(),
+                               std::placeholders::_1, threshold),
+                     cut_j, cut_nz);
+}
 
-    /**
+/**
      * Removes non-zeros on the given column that are below a threshold.
      *
      * this[row,col] = this[row,col] >= threshold
@@ -7393,18 +7393,18 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols
      */
-    inline void thresholdCol(size_type col,
-                             const value_type &threshold = crucian::Epsilon)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "thresholdCol");
-        } // End pre-conditions
+inline void thresholdCol(size_type col,
+                         const value_type &threshold = crucian::Epsilon)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "thresholdCol");
+    } // End pre-conditions
 
-        filterCol(col, std::bind(std::greater_equal<value_type>(),
-                                 std::placeholders::_1, threshold));
-    }
+    filterCol(col, std::bind(std::greater_equal<value_type>(),
+                             std::placeholders::_1, threshold));
+}
 
-    /**
+/**
      * Removes non-zeros that are below a given threshold.
      *
      * this[row,col] = this[row,col] >= threshold
@@ -7415,25 +7415,25 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    inline void threshold(const value_type &threshold = crucian::Epsilon)
-    {
-        filter(std::bind(std::greater_equal<value_type>(),
-                         std::placeholders::_1, threshold));
-    }
+inline void threshold(const value_type &threshold = crucian::Epsilon)
+{
+    filter(std::bind(std::greater_equal<value_type>(),
+                     std::placeholders::_1, threshold));
+}
 
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline size_type threshold(const value_type &threshold,
-                               OutputIterator1 cut_i, OutputIterator1 cut_j,
-                               OutputIterator2 cut_nz)
-    {
-        return filter(std::bind(std::greater_equal<value_type>(),
-                                std::placeholders::_1, threshold),
-                      cut_i, cut_j, cut_nz);
-    }
+template <typename OutputIterator1, typename OutputIterator2>
+inline size_type threshold(const value_type &threshold,
+                           OutputIterator1 cut_i, OutputIterator1 cut_j,
+                           OutputIterator2 cut_nz)
+{
+    return filter(std::bind(std::greater_equal<value_type>(),
+                            std::placeholders::_1, threshold),
+                  cut_i, cut_j, cut_nz);
+}
 
-    // CLIP
+// CLIP
 
-    /**
+/**
      * Clips a row with the value passed in: if a non-zero is greater than the
      * value
      * then it is replaced by the value. Otherwise, the non-zero is left
@@ -7451,33 +7451,33 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows (assert).
      */
-    inline void clipRow(size_type row, value_type val, bool above = true)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "clipRow");
-        } // End pre-conditions
+inline void clipRow(size_type row, value_type val, bool above = true)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "clipRow");
+    } // End pre-conditions
 
-        if (above)
-            elementRowNZApply(row, ClipAbove<value_type>(val));
-        else
-            elementRowNZApply(row, ClipBelow<value_type>(val));
-    }
+    if (above)
+        elementRowNZApply(row, ClipAbove<value_type>(val));
+    else
+        elementRowNZApply(row, ClipBelow<value_type>(val));
+}
 
-    /**
+/**
      * Clip row both above and below given values.
      */
-    inline void clipRowBelowAndAbove(size_type row, value_type a, value_type b)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "clipRowBelowAndAbove");
-            NTA_ASSERT(a <= b);
-        } // End pre-conditions
+inline void clipRowBelowAndAbove(size_type row, value_type a, value_type b)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "clipRowBelowAndAbove");
+        NTA_ASSERT(a <= b);
+    } // End pre-conditions
 
-        elementRowNZApply(row, ClipBelow<value_type>(a));
-        elementRowNZApply(row, ClipAbove<value_type>(b));
-    }
+    elementRowNZApply(row, ClipBelow<value_type>(a));
+    elementRowNZApply(row, ClipAbove<value_type>(b));
+}
 
-    /**
+/**
      * Clips a column with the value passed in: if a non-zero is greater than
      * the value then it is replaced by the value. Otherwise, the non-zero is
      * left unchanged.
@@ -7494,33 +7494,33 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols (assert).
      */
-    inline void clipCol(size_type col, value_type val, bool above = true)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "clipCol");
-        } // End pre-conditions
+inline void clipCol(size_type col, value_type val, bool above = true)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "clipCol");
+    } // End pre-conditions
 
-        if (above)
-            elementColNZApply(col, ClipAbove<value_type>(val));
-        else
-            elementColNZApply(col, ClipBelow<value_type>(val));
-    }
+    if (above)
+        elementColNZApply(col, ClipAbove<value_type>(val));
+    else
+        elementColNZApply(col, ClipBelow<value_type>(val));
+}
 
-    /**
+/**
      * Clips col both above and below given values.
      */
-    inline void clipColBelowAndAbove(size_type col, value_type a, value_type b)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "clipColBelowAndAbove");
-            NTA_ASSERT(a <= b);
-        } // End pre-conditions
+inline void clipColBelowAndAbove(size_type col, value_type a, value_type b)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "clipColBelowAndAbove");
+        NTA_ASSERT(a <= b);
+    } // End pre-conditions
 
-        elementColNZApply(col, ClipBelow<value_type>(a));
-        elementColNZApply(col, ClipAbove<value_type>(b));
-    }
+    elementColNZApply(col, ClipBelow<value_type>(a));
+    elementColNZApply(col, ClipAbove<value_type>(b));
+}
 
-    /**
+/**
      * Clip whole matrix: all values above val become val. Values below val are
      * unchanged.
      *
@@ -7532,24 +7532,24 @@ public:
      * @b Complexity:
      *  @li O(nnzr)
      */
-    inline void clip(value_type val, bool above = true)
-    {
-        ITERATE_ON_ALL_ROWS clipRow(row, val, above);
-    }
+inline void clip(value_type val, bool above = true)
+{
+    ITERATE_ON_ALL_ROWS clipRow(row, val, above);
+}
 
-    /**
+/**
      * Clips whole matrix below and above given values.
      */
-    inline void clipBelowAndAbove(value_type a, value_type b)
-    {
-        ITERATE_ON_ALL_ROWS clipRowBelowAndAbove(row, a, b);
-    }
+inline void clipBelowAndAbove(value_type a, value_type b)
+{
+    ITERATE_ON_ALL_ROWS clipRowBelowAndAbove(row, a, b);
+}
 
-    // FIND
+// FIND
 
-    // TODO: find with values returned
+// TODO: find with values returned
 
-    /**
+/**
      * Counts the elements that satisfy the passed unary predicate
      * inside the box [begin_row, end_row) X [begin_col, end_col).
      *
@@ -7571,44 +7571,44 @@ public:
      *  @li If box invalid (assert)
      *  @li If predicate not unary (compile time)
      */
-    template <typename UnaryPredicate>
-    inline size_type countWhere(size_type begin_row, size_type end_row,
-                                size_type begin_col, size_type end_col,
-                                const UnaryPredicate &f1) const
+template <typename UnaryPredicate>
+inline size_type countWhere(size_type begin_row, size_type end_row,
+                            size_type begin_col, size_type end_col,
+                            const UnaryPredicate &f1) const
+{
+    { // Pre-conditions
+        assert_valid_box_(begin_row, end_row, begin_col, end_col,
+                          "countWhere");
+    } // End pre-conditions
+
+    size_type count = 0;
+
+    ITERATE_ON_BOX_ROWS
     {
-        { // Pre-conditions
-            assert_valid_box_(begin_row, end_row, begin_col, end_col,
-                              "countWhere");
-        } // End pre-conditions
-
-        size_type count = 0;
-
-        ITERATE_ON_BOX_ROWS
+        ITERATE_ON_BOX_COLS
         {
-            ITERATE_ON_BOX_COLS
-            {
-                if (f1(*nz))
-                    ++count;
-            }
+            if (f1(*nz))
+                ++count;
         }
-
-        if (f1(0))
-            count += (end_row - begin_row) * (end_col - begin_col) -
-                     nNonZerosInBox(begin_row, end_row, begin_col, end_col);
-
-        { // Post-conditions
-            NTA_ASSERT(0 <= count &&
-                       count <= (end_row - begin_row) * (end_col - begin_col))
-                << "SparseMatrix countWhere: "
-                << "post-condition: Found count = " << count
-                << " when box has size = "
-                << (end_row - begin_row) * (end_col - begin_col);
-        } // End post-conditions
-
-        return count;
     }
 
-    /**
+    if (f1(0))
+        count += (end_row - begin_row) * (end_col - begin_col) -
+                 nNonZerosInBox(begin_row, end_row, begin_col, end_col);
+
+    { // Post-conditions
+        NTA_ASSERT(0 <= count &&
+                   count <= (end_row - begin_row) * (end_col - begin_col))
+            << "SparseMatrix countWhere: "
+            << "post-condition: Found count = " << count
+            << " when box has size = "
+            << (end_row - begin_row) * (end_col - begin_col);
+    } // End post-conditions
+
+    return count;
+}
+
+/**
      * Find the elements that satisfy the passed unary predicate inside the box
      * [begin_row, end_row) X [begin_col, end_col) and return their indices.
      * The indices returned are relative to (0,0) in this matrix. To adjust
@@ -7635,62 +7635,44 @@ public:
      *  @li If predicate not unary (compile time)
      *  @li If row_it or col_it not output iterator (compile time)
      */
-    template <typename UnaryPredicate, typename OutputIterator1>
-    inline void findIndices(size_type begin_row, size_type end_row,
-                            size_type begin_col, size_type end_col,
-                            const UnaryPredicate &f1, OutputIterator1 row_it,
-                            OutputIterator1 col_it) const
+template <typename UnaryPredicate, typename OutputIterator1>
+inline void findIndices(size_type begin_row, size_type end_row,
+                        size_type begin_col, size_type end_col,
+                        const UnaryPredicate &f1, OutputIterator1 row_it,
+                        OutputIterator1 col_it) const
+{
+    { // Pre-conditions
+        assert_valid_box_(begin_row, end_row, begin_col, end_col,
+                          "findIndices");
+    } // End pre-conditions
+
+    if (!f1(0))
     {
-        { // Pre-conditions
-            assert_valid_box_(begin_row, end_row, begin_col, end_col,
-                              "findIndices");
-        } // End pre-conditions
 
-        if (!f1(0))
+        ITERATE_ON_BOX_ROWS
         {
-
-            ITERATE_ON_BOX_ROWS
+            ITERATE_ON_BOX_COLS
             {
-                ITERATE_ON_BOX_COLS
+                value_type v = *nz;
+                if (f1(v))
                 {
-                    value_type v = *nz;
-                    if (f1(v))
-                    {
-                        *row_it = row;
-                        *col_it = *ind;
-                        ++row_it;
-                        ++col_it;
-                    }
+                    *row_it = row;
+                    *col_it = *ind;
+                    ++row_it;
+                    ++col_it;
                 }
             }
         }
-        else
-        {
+    }
+    else
+    {
 
-            ITERATE_ON_BOX_ROWS
+        ITERATE_ON_BOX_ROWS
+        {
+            size_type j = begin_col;
+            ITERATE_ON_BOX_COLS
             {
-                size_type j = begin_col;
-                ITERATE_ON_BOX_COLS
-                {
-                    size_type l = *ind;
-                    for (; j != l; ++j)
-                    {
-                        *row_it = row;
-                        *col_it = j;
-                        ++row_it;
-                        ++col_it;
-                    }
-                    value_type v = *nz;
-                    if (f1(v))
-                    {
-                        *row_it = row;
-                        *col_it = *ind;
-                        ++row_it;
-                        ++col_it;
-                    }
-                    ++j;
-                }
-                size_type l = std::min(end_col, nCols());
+                size_type l = *ind;
                 for (; j != l; ++j)
                 {
                     *row_it = row;
@@ -7698,11 +7680,29 @@ public:
                     ++row_it;
                     ++col_it;
                 }
+                value_type v = *nz;
+                if (f1(v))
+                {
+                    *row_it = row;
+                    *col_it = *ind;
+                    ++row_it;
+                    ++col_it;
+                }
+                ++j;
+            }
+            size_type l = std::min(end_col, nCols());
+            for (; j != l; ++j)
+            {
+                *row_it = row;
+                *col_it = j;
+                ++row_it;
+                ++col_it;
             }
         }
     }
+}
 
-    /**
+/**
      * Counts all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col)
      * inside this matrix whose value is the passed value.
@@ -7721,19 +7721,19 @@ public:
      * @b Exceptions:
      *  @li If box invalid (assert)
      */
-    inline size_type countWhereEqual(size_type begin_row, size_type end_row,
-                                     size_type begin_col, size_type end_col,
-                                     const value_type &value) const
-    {
-        { // Pre-conditions
-        } // End pre-conditions
+inline size_type countWhereEqual(size_type begin_row, size_type end_row,
+                                 size_type begin_col, size_type end_col,
+                                 const value_type &value) const
+{
+    { // Pre-conditions
+    } // End pre-conditions
 
-        return countWhere(begin_row, end_row, begin_col, end_col,
-                          std::bind(std::equal_to<value_type>(),
-                                    std::placeholders::_1, value));
-    }
+    return countWhere(begin_row, end_row, begin_col, end_col,
+                      std::bind(std::equal_to<value_type>(),
+                                std::placeholders::_1, value));
+}
 
-    /**
+/**
      * Finds all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col) inside this matrix whose value is the passed value.
      * The indices returned are relative to (0,0) in this matrix. To adjust
@@ -7755,19 +7755,19 @@ public:
      *  @li If OutputIterator1 not an output iterator.
      *  @li If OutputIterator2 not an output iterator.
      */
-    template <typename OutputIterator1>
-    inline void whereEqual(size_type begin_row, size_type end_row,
-                           size_type begin_col, size_type end_col,
-                           const value_type &value, OutputIterator1 row_it,
-                           OutputIterator1 col_it) const
-    {
-        findIndices(begin_row, end_row, begin_col, end_col,
-                    std::bind(std::equal_to<value_type>(),
-                              std::placeholders::_1, value),
-                    row_it, col_it);
-    }
+template <typename OutputIterator1>
+inline void whereEqual(size_type begin_row, size_type end_row,
+                       size_type begin_col, size_type end_col,
+                       const value_type &value, OutputIterator1 row_it,
+                       OutputIterator1 col_it) const
+{
+    findIndices(begin_row, end_row, begin_col, end_col,
+                std::bind(std::equal_to<value_type>(),
+                          std::placeholders::_1, value),
+                row_it, col_it);
+}
 
-    /**
+/**
      * Counts all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col)
      * inside this matrix whose value is greater than the passed value.
@@ -7786,19 +7786,19 @@ public:
      * @b Exceptions:
      *  @li If box invalid (assert)
      */
-    inline size_type countWhereGreater(size_type begin_row, size_type end_row,
-                                       size_type begin_col, size_type end_col,
-                                       const value_type &value) const
-    {
-        { // Pre-conditions
-        } // End pre-conditions
+inline size_type countWhereGreater(size_type begin_row, size_type end_row,
+                                   size_type begin_col, size_type end_col,
+                                   const value_type &value) const
+{
+    { // Pre-conditions
+    } // End pre-conditions
 
-        return countWhere(begin_row, end_row, begin_col, end_col,
-                          std::bind(std::greater<value_type>(),
-                                    std::placeholders::_1, value));
-    }
+    return countWhere(begin_row, end_row, begin_col, end_col,
+                      std::bind(std::greater<value_type>(),
+                                std::placeholders::_1, value));
+}
 
-    /**
+/**
      * Finds all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col) inside this matrix whose value is greater than the
      * passed value. The indices returned are relative to (0,0) in this matrix.
@@ -7819,19 +7819,19 @@ public:
      *  @li If OutputIterator1 not an output iterator.
      *  @li If OutputIterator2 not an output iterator.
      */
-    template <typename OutputIterator1>
-    inline void whereGreater(size_type begin_row, size_type end_row,
-                             size_type begin_col, size_type end_col,
-                             const value_type &value, OutputIterator1 row_it,
-                             OutputIterator1 col_it) const
-    {
-        findIndices(
-            begin_row, end_row, begin_col, end_col,
-            std::bind(std::greater<value_type>(), std::placeholders::_1, value),
-            row_it, col_it);
-    }
+template <typename OutputIterator1>
+inline void whereGreater(size_type begin_row, size_type end_row,
+                         size_type begin_col, size_type end_col,
+                         const value_type &value, OutputIterator1 row_it,
+                         OutputIterator1 col_it) const
+{
+    findIndices(
+        begin_row, end_row, begin_col, end_col,
+        std::bind(std::greater<value_type>(), std::placeholders::_1, value),
+        row_it, col_it);
+}
 
-    /**
+/**
      * Counts all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col)
      * inside this matrix whose value is greater than the passed value.
@@ -7850,21 +7850,21 @@ public:
      * @b Exceptions:
      *  @li If box invalid (assert)
      */
-    inline size_type countWhereGreaterEqual(size_type begin_row,
-                                            size_type end_row,
-                                            size_type begin_col,
-                                            size_type end_col,
-                                            const value_type &value) const
-    {
-        { // Pre-conditions
-        } // End pre-conditions
+inline size_type countWhereGreaterEqual(size_type begin_row,
+                                        size_type end_row,
+                                        size_type begin_col,
+                                        size_type end_col,
+                                        const value_type &value) const
+{
+    { // Pre-conditions
+    } // End pre-conditions
 
-        return countWhere(begin_row, end_row, begin_col, end_col,
-                          std::bind(std::greater_equal<value_type>(),
-                                    std::placeholders::_1, value));
-    }
+    return countWhere(begin_row, end_row, begin_col, end_col,
+                      std::bind(std::greater_equal<value_type>(),
+                                std::placeholders::_1, value));
+}
 
-    /**
+/**
      * Finds all the elements in the box [begin_row,end_row) X
      * [begin_col,end_col) inside this matrix whose value is greater than the
      * passed value. The indices returned are relative to (0,0) in this matrix.
@@ -7885,131 +7885,131 @@ public:
      *  @li If OutputIterator1 not an output iterator.
      *  @li If OutputIterator2 not an output iterator.
      */
-    template <typename OutputIterator1>
-    inline void whereGreaterEqual(size_type begin_row, size_type end_row,
-                                  size_type begin_col, size_type end_col,
-                                  const value_type &value,
-                                  OutputIterator1 row_it,
-                                  OutputIterator1 col_it) const
-    {
-        findIndices(begin_row, end_row, begin_col, end_col,
-                    std::bind(std::greater_equal<value_type>(),
-                              std::placeholders::_1, value),
-                    row_it, col_it);
-    }
+template <typename OutputIterator1>
+inline void whereGreaterEqual(size_type begin_row, size_type end_row,
+                              size_type begin_col, size_type end_col,
+                              const value_type &value,
+                              OutputIterator1 row_it,
+                              OutputIterator1 col_it) const
+{
+    findIndices(begin_row, end_row, begin_col, end_col,
+                std::bind(std::greater_equal<value_type>(),
+                          std::placeholders::_1, value),
+                row_it, col_it);
+}
 
-    /**
+/**
      * Finds a row that matches the passed iterators in this SparseMatrix.
      * Returns a row index in [0..nrows) if the row is found, nrows otherwise.
      *
      * TODO find row with predicate
      * TODO find columns
      */
-    template <typename IndIt, typename NzIt>
-    inline size_type findRow(size_type nnzr, IndIt ind_it, NzIt nz_it)
-    {
-        { // Pre-conditions
-            NTA_ASSERT(nnzr >= 0) << "SparseMatrix::findRow(): "
-                                  << "Passed in " << nnzr << " non-zeros";
+template <typename IndIt, typename NzIt>
+inline size_type findRow(size_type nnzr, IndIt ind_it, NzIt nz_it)
+{
+    { // Pre-conditions
+        NTA_ASSERT(nnzr >= 0) << "SparseMatrix::findRow(): "
+                              << "Passed in " << nnzr << " non-zeros";
 
-            NTA_ASSERT(nnzr <= nCols())
-                << "SparseMatrix::findRow(): "
-                << "Passed in " << nnzr << " non-zeros "
-                << "but there are only " << nCols() << " columns";
+        NTA_ASSERT(nnzr <= nCols())
+            << "SparseMatrix::findRow(): "
+            << "Passed in " << nnzr << " non-zeros "
+            << "but there are only " << nCols() << " columns";
 
 #ifdef NTA_ASSERTIONS_ON // to avoid compilation of loop
-            IndIt jj = ind_it;
-            NzIt nn = nz_it;
-            size_type j = 0, prev = 0;
-            for (j = 0; j != nnzr; ++j, ++jj, ++nn)
+        IndIt jj = ind_it;
+        NzIt nn = nz_it;
+        size_type j = 0, prev = 0;
+        for (j = 0; j != nnzr; ++j, ++jj, ++nn)
+        {
+            NTA_ASSERT(0 <= *jj && *jj < nCols())
+                << "SparseMatrix::findRow(): "
+                << "Invalid column index"
+                << " - Should be >= 0 and < " << nCols();
+            NTA_ASSERT(!isZero_(*nn)) << "SparseMatrix::findRow(): "
+                                      << "Passed zero at index: " << *jj
+                                      << " - Should pass non-zeros only";
+            if (j > 0)
             {
-                NTA_ASSERT(0 <= *jj && *jj < nCols())
+                NTA_ASSERT(prev < *jj)
                     << "SparseMatrix::findRow(): "
-                    << "Invalid column index"
-                    << " - Should be >= 0 and < " << nCols();
-                NTA_ASSERT(!isZero_(*nn)) << "SparseMatrix::findRow(): "
-                                          << "Passed zero at index: " << *jj
-                                          << " - Should pass non-zeros only";
-                if (j > 0)
-                {
-                    NTA_ASSERT(prev < *jj)
-                        << "SparseMatrix::findRow(): "
-                        << "Indices need to be in strictly increasing order";
-                }
-                prev = *jj;
+                    << "Indices need to be in strictly increasing order";
             }
+            prev = *jj;
+        }
 #endif
-        }
-
-        for (size_type i = 0; i != nnzr; ++i, ++ind_it, ++nz_it)
-        {
-            indb_[i] = *ind_it;
-            nzb_[i] = *nz_it;
-        }
-
-        ITERATE_ON_ALL_ROWS
-        {
-            if (nnzr == nnzr_[row])
-            {
-                size_type j = 0, *ind = ind_[row];
-                value_type *nz = nz_[row];
-                while ((j != nnzr) && (indb_[j] == ind[j]) &&
-                       (nearlyEqual(nzb_[j], nz[j])))
-                    ++j;
-                if (j == nnzr)
-                    return row;
-            }
-        }
-
-        return nrows;
     }
 
-    /**
+    for (size_type i = 0; i != nnzr; ++i, ++ind_it, ++nz_it)
+    {
+        indb_[i] = *ind_it;
+        nzb_[i] = *nz_it;
+    }
+
+    ITERATE_ON_ALL_ROWS
+    {
+        if (nnzr == nnzr_[row])
+        {
+            size_type j = 0, *ind = ind_[row];
+            value_type *nz = nz_[row];
+            while ((j != nnzr) && (indb_[j] == ind[j]) &&
+                   (nearlyEqual(nzb_[j], nz[j])))
+                ++j;
+            if (j == nnzr)
+                return row;
+        }
+    }
+
+    return nrows;
+}
+
+/**
      * Finds all the rows in this SparseMatrix that match with the given
      * functor. Returns a row index in [0..nrows) if the row is found, nrows
      * otherwise.
      */
-    template <typename F, typename MatchIt>
-    inline void findAllRows(F f, MatchIt m_it) const
+template <typename F, typename MatchIt>
+inline void findAllRows(F f, MatchIt m_it) const
+{
+    for (size_type i = 0; i != nRows(); ++i)
     {
-        for (size_type i = 0; i != nRows(); ++i)
+        if (f(ind_[i], ind_[i] + nnzr_[i], nz_[i]))
         {
-            if (f(ind_[i], ind_[i] + nnzr_[i], nz_[i]))
-            {
-                *m_it = i;
-                ++m_it;
-            }
+            *m_it = i;
+            ++m_it;
         }
     }
+}
 
-    // MIN, MAX
+// MIN, MAX
 
-    /**
+/**
      * Finds the extremum among the non-zeros of this SparseMatrix, where
      * the extremum is defined by a binary function.
      */
-    template <typename BinaryFunction>
-    inline void extremumNZ(size_type &ext_row, size_type &ext_col,
-                           value_type &ext_val, const BinaryFunction &f2) const
-    {
-        ext_row = ext_col = 0;
+template <typename BinaryFunction>
+inline void extremumNZ(size_type &ext_row, size_type &ext_col,
+                       value_type &ext_val, const BinaryFunction &f2) const
+{
+    ext_row = ext_col = 0;
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+            value_type val = *nz;
+            if (f2(val, ext_val))
             {
-                value_type val = *nz;
-                if (f2(val, ext_val))
-                {
-                    ext_val = val;
-                    ext_row = row;
-                    ext_col = *ind;
-                }
+                ext_val = val;
+                ext_row = row;
+                ext_col = *ind;
             }
         }
     }
+}
 
-    /**
+/**
      * Returns the row, column and value of the maximum among the non-zeros
      * of the SparseMatrix.
      *
@@ -8020,17 +8020,17 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    inline void max(size_type &max_row, size_type &max_col,
-                    value_type &max_val) const
-    {
-        max_val = -std::numeric_limits<value_type>::max();
-        extremumNZ(max_row, max_col, max_val, std::greater<value_type>());
+inline void max(size_type &max_row, size_type &max_col,
+                value_type &max_val) const
+{
+    max_val = -std::numeric_limits<value_type>::max();
+    extremumNZ(max_row, max_col, max_val, std::greater<value_type>());
 
-        if (max_val == -std::numeric_limits<value_type>::max())
-            max_val = 0;
-    }
+    if (max_val == -std::numeric_limits<value_type>::max())
+        max_val = 0;
+}
 
-    /**
+/**
      * Returns the row, column and value of the minimum among the non-zeros
      * of the SparseMatrix.
      *
@@ -8041,38 +8041,38 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    inline void min(size_type &min_row, size_type &min_col,
-                    value_type &min_val) const
-    {
-        min_val = std::numeric_limits<value_type>::max();
-        extremumNZ(min_row, min_col, min_val, std::less<value_type>());
+inline void min(size_type &min_row, size_type &min_col,
+                value_type &min_val) const
+{
+    min_val = std::numeric_limits<value_type>::max();
+    extremumNZ(min_row, min_col, min_val, std::less<value_type>());
 
-        if (min_val == std::numeric_limits<value_type>::max())
-            min_val = 0;
-    }
+    if (min_val == std::numeric_limits<value_type>::max())
+        min_val = 0;
+}
 
-    /**
+/**
      * Finds an extremum (according to f2) among the non-zeros on the given row.
      */
-    template <typename BinaryFunction>
-    inline void rowExtremumNZ(size_type row, size_type &idx,
-                              value_type &ext_val,
-                              const BinaryFunction &f2) const
-    {
-        idx = 0;
+template <typename BinaryFunction>
+inline void rowExtremumNZ(size_type row, size_type &idx,
+                          value_type &ext_val,
+                          const BinaryFunction &f2) const
+{
+    idx = 0;
 
-        ITERATE_ON_ROW
+    ITERATE_ON_ROW
+    {
+        value_type val = *nz;
+        if (f2(val, ext_val))
         {
-            value_type val = *nz;
-            if (f2(val, ext_val))
-            {
-                ext_val = val;
-                idx = *ind;
-            }
+            ext_val = val;
+            idx = *ind;
         }
     }
+}
 
-    /**
+/**
      * Finds the maximum value and its position for a given row.
      *
      * @param row_index [0 <= size_type < nrows] the row index
@@ -8083,22 +8083,22 @@ public:
      * @b Exceptions:
      *  @li If row_index < 0 || row_index >= nrows
      */
-    inline void rowMax(size_type row, size_type &row_max_j,
-                       value_type &row_max) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "rowMax");
-        }
-
-        row_max = -std::numeric_limits<value_type>::max();
-
-        rowExtremumNZ(row, row_max_j, row_max, std::greater<value_type>());
-
-        if (row_max == -std::numeric_limits<value_type>::max())
-            row_max = value_type(0);
+inline void rowMax(size_type row, size_type &row_max_j,
+                   value_type &row_max) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "rowMax");
     }
 
-    /**
+    row_max = -std::numeric_limits<value_type>::max();
+
+    rowExtremumNZ(row, row_max_j, row_max, std::greater<value_type>());
+
+    if (row_max == -std::numeric_limits<value_type>::max())
+        row_max = value_type(0);
+}
+
+/**
      * Finds the minimum value and its position for a given row.
      *
      * @param row [0 <= size_type < nrows] the row index
@@ -8109,22 +8109,22 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows
      */
-    inline void rowMin(size_type row, size_type &row_min_j,
-                       value_type &row_min) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "rowMin");
-        } // End pre-conditions
+inline void rowMin(size_type row, size_type &row_min_j,
+                   value_type &row_min) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "rowMin");
+    } // End pre-conditions
 
-        row_min = std::numeric_limits<value_type>::max();
+    row_min = std::numeric_limits<value_type>::max();
 
-        rowExtremumNZ(row, row_min_j, row_min, std::less<value_type>());
+    rowExtremumNZ(row, row_min_j, row_min, std::less<value_type>());
 
-        if (row_min == std::numeric_limits<value_type>::max())
-            row_min = value_type(0);
-    }
+    if (row_min == std::numeric_limits<value_type>::max())
+        row_min = value_type(0);
+}
 
-    /**
+/**
      * Finds the row-wise maxima of this sparse matrix. The maximum for each row
      * and its index are found simultaneously.
      * Maxima is a std::vector<std::pair<size_type, value_type> > or
@@ -8140,27 +8140,27 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename Maxima> inline void rowMax(Maxima maxima) const
-    {
-        ITERATE_ON_ALL_ROWS rowMax(row, maxima[row].first, maxima[row].second);
-    }
+template <typename Maxima> inline void rowMax(Maxima maxima) const
+{
+    ITERATE_ON_ALL_ROWS rowMax(row, maxima[row].first, maxima[row].second);
+}
 
-    /**
+/**
      * Finds the row-wise maxima of this sparse matrix, for all rows
      * simultaneously.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void rowMax(OutputIterator1 indices, OutputIterator2 values) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline void rowMax(OutputIterator1 indices, OutputIterator2 values) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            rowMax(row, *indices, *values);
-            ++indices;
-            ++values;
-        }
+        rowMax(row, *indices, *values);
+        ++indices;
+        ++values;
     }
+}
 
-    /**
+/**
      * Finds the row-wise minima of this sparse matrix. The minimum for each row
      * and its index are found simultaneously. This is the minimum among the
      * non-zeros
@@ -8178,54 +8178,54 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename Minima> inline void rowMin(Minima minima) const
-    {
-        ITERATE_ON_ALL_ROWS rowMin(row, minima[row].first, minima[row].second);
-    }
+template <typename Minima> inline void rowMin(Minima minima) const
+{
+    ITERATE_ON_ALL_ROWS rowMin(row, minima[row].first, minima[row].second);
+}
 
-    /**
+/**
      * Finds the row-wise minima of this sparse matrix for all rows
      * simultaneously.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void rowMin(OutputIterator1 indices, OutputIterator2 values) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline void rowMin(OutputIterator1 indices, OutputIterator2 values) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            rowMin(row, *indices, *values);
-            ++indices;
-            ++values;
-        }
+        rowMin(row, *indices, *values);
+        ++indices;
+        ++values;
     }
+}
 
-    /**
+/**
      * Finds the extremum according to binary predicate f2 among all the
      * non-zeros of the given column.
      */
-    template <typename BinaryFunction>
-    inline void colExtremumNZ(size_type col, size_type &idx,
-                              value_type &ext_val,
-                              const BinaryFunction &f2) const
-    {
-        idx = 0;
+template <typename BinaryFunction>
+inline void colExtremumNZ(size_type col, size_type &idx,
+                          value_type &ext_val,
+                          const BinaryFunction &f2) const
+{
+    idx = 0;
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        size_type *ind_it = pos_(row, col);
+        if (ind_it != ind_end_(row) && *ind_it == col)
         {
-            size_type *ind_it = pos_(row, col);
-            if (ind_it != ind_end_(row) && *ind_it == col)
+            size_type offset = size_type(ind_it - ind_begin_(row));
+            value_type val = nz_[row][offset];
+            if (f2(val, ext_val))
             {
-                size_type offset = size_type(ind_it - ind_begin_(row));
-                value_type val = nz_[row][offset];
-                if (f2(val, ext_val))
-                {
-                    ext_val = val;
-                    idx = row;
-                }
+                ext_val = val;
+                idx = row;
             }
         }
     }
+}
 
-    /**
+/**
      * Finds the maximum value and its position for a given column.
      *
      * @param col_index [0 <= size_type < ncols] the column index
@@ -8236,22 +8236,22 @@ public:
      * @b Exceptions:
      *  @li If col_index < 0 || col_index >= ncols.
      */
-    inline void colMax(size_type col, size_type &col_max_i,
-                       value_type &col_max) const
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "colMax");
-        } // End pre-conditions
+inline void colMax(size_type col, size_type &col_max_i,
+                   value_type &col_max) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "colMax");
+    } // End pre-conditions
 
-        col_max = -std::numeric_limits<value_type>::max();
+    col_max = -std::numeric_limits<value_type>::max();
 
-        colExtremumNZ(col, col_max_i, col_max, std::greater<value_type>());
+    colExtremumNZ(col, col_max_i, col_max, std::greater<value_type>());
 
-        if (col_max == -std::numeric_limits<value_type>::max())
-            col_max = 0;
-    }
+    if (col_max == -std::numeric_limits<value_type>::max())
+        col_max = 0;
+}
 
-    /**
+/**
      * Finds the minimum value and its position for a given column.
      *
      * @param col [0 <= size_type < ncols] the column index
@@ -8262,22 +8262,22 @@ public:
      * @b Exceptions:
      *  @li NoneIf col < 0 || col >= ncols.
      */
-    inline void colMin(size_type col, size_type &col_min_i,
-                       value_type &col_min) const
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "colMin");
-        }
-
-        col_min = std::numeric_limits<value_type>::max();
-
-        colExtremumNZ(col, col_min_i, col_min, std::less<value_type>());
-
-        if (col_min == std::numeric_limits<value_type>::max())
-            col_min = 0;
+inline void colMin(size_type col, size_type &col_min_i,
+                   value_type &col_min) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "colMin");
     }
 
-    /**
+    col_min = std::numeric_limits<value_type>::max();
+
+    colExtremumNZ(col, col_min_i, col_min, std::less<value_type>());
+
+    if (col_min == std::numeric_limits<value_type>::max())
+        col_min = 0;
+}
+
+/**
      * Finds the column-wise maxima of this sparse matrix and their positions.
      * Maxima is a std::vector<std::pair<size_type, value_type> > or
      * equivalent that allows direct indexing (operator[]).
@@ -8294,74 +8294,74 @@ public:
      *
      * TODO write a colExtremumNZ that does many columns simultaneously?
      */
-    template <typename Maxima> inline void colMax(Maxima maxima) const
+template <typename Maxima> inline void colMax(Maxima maxima) const
+{
+    const size_type ncols = nCols();
+
+    std::pair<size_type, value_type> init_p(
+        0, -std::numeric_limits<value_type>::max());
+    std::fill(maxima, maxima + ncols, init_p);
+
+    ITERATE_ON_ALL_ROWS
     {
-        const size_type ncols = nCols();
-
-        std::pair<size_type, value_type> init_p(
-            0, -std::numeric_limits<value_type>::max());
-        std::fill(maxima, maxima + ncols, init_p);
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+
+            const size_type col = *ind;
+            const value_type val = *nz;
+
+            if (val > maxima[col].second)
             {
-
-                const size_type col = *ind;
-                const value_type val = *nz;
-
-                if (val > maxima[col].second)
-                {
-                    maxima[col].first = row;
-                    maxima[col].second = val;
-                }
+                maxima[col].first = row;
+                maxima[col].second = val;
             }
-        }
-
-        for (size_type j = 0; j != ncols; ++j)
-        {
-            if (maxima[j].second == -std::numeric_limits<value_type>::max())
-                maxima[j].second = 0;
         }
     }
 
-    /**
+    for (size_type j = 0; j != ncols; ++j)
+    {
+        if (maxima[j].second == -std::numeric_limits<value_type>::max())
+            maxima[j].second = 0;
+    }
+}
+
+/**
      * Finds the column-wise maxima for this sparse matrix, for all columns
      * simultaneously.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void colMax(OutputIterator1 indices, OutputIterator2 maxima) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline void colMax(OutputIterator1 indices, OutputIterator2 maxima) const
+{
+    const size_type ncols = nCols();
+
+    std::fill(indices, indices + ncols, 0);
+    std::fill(maxima, maxima + ncols,
+              -std::numeric_limits<value_type>::max());
+
+    ITERATE_ON_ALL_ROWS
     {
-        const size_type ncols = nCols();
-
-        std::fill(indices, indices + ncols, 0);
-        std::fill(maxima, maxima + ncols,
-                  -std::numeric_limits<value_type>::max());
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+
+            const size_type col = *ind;
+            const value_type val = *nz;
+
+            if (val > maxima[col])
             {
-
-                const size_type col = *ind;
-                const value_type val = *nz;
-
-                if (val > maxima[col])
-                {
-                    indices[col] = row;
-                    maxima[col] = val;
-                }
+                indices[col] = row;
+                maxima[col] = val;
             }
-        }
-
-        for (size_type j = 0; j != ncols; ++j)
-        {
-            if (maxima[j] == -std::numeric_limits<value_type>::max())
-                maxima[j] = 0;
         }
     }
 
-    /**
+    for (size_type j = 0; j != ncols; ++j)
+    {
+        if (maxima[j] == -std::numeric_limits<value_type>::max())
+            maxima[j] = 0;
+    }
+}
+
+/**
      * Finds the column-wise minima of this sparse matrix and their positions.
      * Maxima is a std::vector<std::pair<size_type, value_type> > or
      * equivalent that allows direct indexing (operator[]).
@@ -8376,188 +8376,188 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename Minima> inline void colMin(Minima minima) const
+template <typename Minima> inline void colMin(Minima minima) const
+{
+    const size_type ncols = nCols();
+
+    std::pair<size_type, value_type> init_p(
+        0, std::numeric_limits<value_type>::max());
+    std::fill(minima, minima + ncols, init_p);
+
+    ITERATE_ON_ALL_ROWS
     {
-        const size_type ncols = nCols();
-
-        std::pair<size_type, value_type> init_p(
-            0, std::numeric_limits<value_type>::max());
-        std::fill(minima, minima + ncols, init_p);
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+
+            const size_type col = *ind;
+            const value_type val = *nz;
+
+            if (val < minima[col].second)
             {
-
-                const size_type col = *ind;
-                const value_type val = *nz;
-
-                if (val < minima[col].second)
-                {
-                    minima[col].first = row;
-                    minima[col].second = val;
-                }
+                minima[col].first = row;
+                minima[col].second = val;
             }
-        }
-
-        for (size_type j = 0; j != ncols; ++j)
-        {
-            if (minima[j].second == std::numeric_limits<value_type>::max())
-                minima[j].second = 0;
         }
     }
 
-    /**
+    for (size_type j = 0; j != ncols; ++j)
+    {
+        if (minima[j].second == std::numeric_limits<value_type>::max())
+            minima[j].second = 0;
+    }
+}
+
+/**
      * Finds the column-wise minima for this sparse matrix, for all columns
      * simultaneously.
      */
-    template <typename OutputIterator1, typename OutputIterator2>
-    inline void colMin(OutputIterator1 indices, OutputIterator2 minima) const
+template <typename OutputIterator1, typename OutputIterator2>
+inline void colMin(OutputIterator1 indices, OutputIterator2 minima) const
+{
+    const size_type ncols = nCols();
+
+    std::fill(indices, indices + ncols, 0);
+    std::fill(minima, minima + ncols,
+              std::numeric_limits<value_type>::max());
+
+    ITERATE_ON_ALL_ROWS
     {
-        const size_type ncols = nCols();
-
-        std::fill(indices, indices + ncols, 0);
-        std::fill(minima, minima + ncols,
-                  std::numeric_limits<value_type>::max());
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+
+            const size_type col = *ind;
+            const value_type val = *nz;
+
+            if (val < minima[col])
             {
-
-                const size_type col = *ind;
-                const value_type val = *nz;
-
-                if (val < minima[col])
-                {
-                    indices[col] = row;
-                    minima[col] = val;
-                }
+                indices[col] = row;
+                minima[col] = val;
             }
-        }
-
-        for (size_type j = 0; j != ncols; ++j)
-        {
-            if (minima[j] == std::numeric_limits<value_type>::max())
-                minima[j] = 0;
         }
     }
 
-    /**
+    for (size_type j = 0; j != ncols; ++j)
+    {
+        if (minima[j] == std::numeric_limits<value_type>::max())
+            minima[j] = 0;
+    }
+}
+
+/**
      * Returns the position and value of the minimum non-zero in the specified
      * box.
      */
-    inline void boxMin(size_type begin_row, size_type end_row,
-                       size_type begin_col, size_type end_col,
-                       size_type &min_row, size_type &min_col,
-                       value_type &min_val) const
+inline void boxMin(size_type begin_row, size_type end_row,
+                   size_type begin_col, size_type end_col,
+                   size_type &min_row, size_type &min_col,
+                   value_type &min_val) const
+{
+    { // Pre-conditions
+        assert_valid_row_range_(begin_row, end_row, "boxMin");
+        assert_valid_col_range_(begin_col, end_col, "boxMin");
+    } // End pre-conditions
+
+    min_row = begin_row;
+    min_col = begin_col;
+    min_val = std::numeric_limits<value_type>::max();
+
+    ITERATE_ON_BOX_ROWS
     {
-        { // Pre-conditions
-            assert_valid_row_range_(begin_row, end_row, "boxMin");
-            assert_valid_col_range_(begin_col, end_col, "boxMin");
-        } // End pre-conditions
-
-        min_row = begin_row;
-        min_col = begin_col;
-        min_val = std::numeric_limits<value_type>::max();
-
-        ITERATE_ON_BOX_ROWS
+        ITERATE_ON_BOX_COLS
         {
-            ITERATE_ON_BOX_COLS
+            if (*nz < min_val)
             {
-                if (*nz < min_val)
-                {
-                    min_row = row;
-                    min_col = *ind;
-                    min_val = *nz;
-                }
+                min_row = row;
+                min_col = *ind;
+                min_val = *nz;
             }
         }
-
-        if (min_val == std::numeric_limits<value_type>::max())
-            min_val = (value_type)0;
     }
 
-    /**
+    if (min_val == std::numeric_limits<value_type>::max())
+        min_val = (value_type)0;
+}
+
+/**
      * Returns the position and value of the maximum non-zero in the specified
      * box.
      */
-    inline void boxMax(size_type begin_row, size_type end_row,
-                       size_type begin_col, size_type end_col,
-                       size_type &max_row, size_type &max_col,
-                       value_type &max_val) const
+inline void boxMax(size_type begin_row, size_type end_row,
+                   size_type begin_col, size_type end_col,
+                   size_type &max_row, size_type &max_col,
+                   value_type &max_val) const
+{
+    { // Pre-conditions
+        assert_valid_row_range_(begin_row, end_row, "boxMax");
+        assert_valid_col_range_(begin_col, end_col, "boxMax");
+    } // End pre-conditions
+
+    max_row = begin_row;
+    max_col = begin_col;
+    max_val = -std::numeric_limits<value_type>::max();
+
+    ITERATE_ON_BOX_ROWS
     {
-        { // Pre-conditions
-            assert_valid_row_range_(begin_row, end_row, "boxMax");
-            assert_valid_col_range_(begin_col, end_col, "boxMax");
-        } // End pre-conditions
-
-        max_row = begin_row;
-        max_col = begin_col;
-        max_val = -std::numeric_limits<value_type>::max();
-
-        ITERATE_ON_BOX_ROWS
+        ITERATE_ON_BOX_COLS
         {
-            ITERATE_ON_BOX_COLS
+            if (*nz > max_val)
             {
-                if (*nz > max_val)
-                {
-                    max_row = row;
-                    max_col = *ind;
-                    max_val = *nz;
-                }
+                max_row = row;
+                max_col = *ind;
+                max_val = *nz;
             }
         }
-
-        if (max_val == -std::numeric_limits<value_type>::max())
-            max_val = (value_type)0;
     }
 
-    inline std::pair<size_type, size_type> argmax() const
-    {
-        size_type max_row = 0, max_col = 0;
-        value_type m = -std::numeric_limits<value_type>::max();
+    if (max_val == -std::numeric_limits<value_type>::max())
+        max_val = (value_type)0;
+}
 
-        ITERATE_ON_ALL_ROWS
+inline std::pair<size_type, size_type> argmax() const
+{
+    size_type max_row = 0, max_col = 0;
+    value_type m = -std::numeric_limits<value_type>::max();
+
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+            if (*nz > m)
             {
-                if (*nz > m)
-                {
-                    m = *nz;
-                    max_row = row;
-                    max_col = *ind;
-                }
+                m = *nz;
+                max_row = row;
+                max_col = *ind;
             }
         }
-
-        return std::make_pair(max_row, max_col);
     }
 
-    inline std::pair<size_type, size_type> argmin() const
-    {
-        size_type min_row = 0, min_col = 0;
-        value_type m = std::numeric_limits<value_type>::max();
+    return std::make_pair(max_row, max_col);
+}
 
-        ITERATE_ON_ALL_ROWS
+inline std::pair<size_type, size_type> argmin() const
+{
+    size_type min_row = 0, min_col = 0;
+    value_type m = std::numeric_limits<value_type>::max();
+
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
+            if (*nz < m)
             {
-                if (*nz < m)
-                {
-                    m = *nz;
-                    min_row = row;
-                    min_col = *ind;
-                }
+                m = *nz;
+                min_row = row;
+                min_col = *ind;
             }
         }
-
-        return std::make_pair(min_row, min_col);
     }
 
-    // NORMALIZATION
+    return std::make_pair(min_row, min_col);
+}
 
-    /**
+// NORMALIZATION
+
+/**
      * Normalize given row such that the sum of the row after normalization is
      * val.
      * For sparse matrices, a single pass of normalization might introduce new
@@ -8576,29 +8576,29 @@ public:
      *
      * TODO expose perturbation?
      */
-    inline value_type normalizeRow(size_type row, const value_type &val = 1.0,
-                                   bool exact = false)
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "normalizeRow");
-            assert_not_zero_value_(val, "normalizeRow");
-        } // End pre-conditions
+inline value_type normalizeRow(size_type row, const value_type &val = 1.0,
+                               bool exact = false)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "normalizeRow");
+        assert_not_zero_value_(val, "normalizeRow");
+    } // End pre-conditions
 
-        value_type sum = rowSum(row);
+    value_type sum = rowSum(row);
 
-        if (isZero_(sum))
-            return sum;
-
-        elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
-                                         std::placeholders::_1, val / sum));
-
-        if (exact)
-            normalizeRow(row, val, false);
-
+    if (isZero_(sum))
         return sum;
-    }
 
-    /**
+    elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
+                                     std::placeholders::_1, val / sum));
+
+    if (exact)
+        normalizeRow(row, val, false);
+
+    return sum;
+}
+
+/**
      * Normalize given col such that the sum of the col after normalization is
      * val.
      * For sparse matrices, a single pass of normalization might introduce new
@@ -8617,29 +8617,29 @@ public:
      *
      * TODO expose perturbation?
      */
-    inline value_type normalizeCol(size_type col, const value_type &val = 1.0,
-                                   bool exact = false)
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "normalizeCol");
-            assert_not_zero_value_(val, "normalizeCol");
-        } // End pre-conditions
+inline value_type normalizeCol(size_type col, const value_type &val = 1.0,
+                               bool exact = false)
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "normalizeCol");
+        assert_not_zero_value_(val, "normalizeCol");
+    } // End pre-conditions
 
-        value_type sum = colSum(col);
+    value_type sum = colSum(col);
 
-        if (isZero_(sum))
-            return sum;
-
-        elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
-                                         std::placeholders::_1, val / sum));
-
-        if (exact)
-            normalizeCol(col, val, false);
-
+    if (isZero_(sum))
         return sum;
-    }
 
-    /**
+    elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
+                                     std::placeholders::_1, val / sum));
+
+    if (exact)
+        normalizeCol(col, val, false);
+
+    return sum;
+}
+
+/**
      * Normalizes all the rows of this SparseMatrix.
      * There is an issue when normalizing sparse matrices where the result after
      * normalization could not equal 1, because some values disappear below
@@ -8652,16 +8652,16 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    inline void normalizeRows(const value_type &val = 1.0, bool exact = false)
-    {
-        { // Pre-conditions
-            assert_not_zero_value_(val, "normalizeRows");
-        } // End pre-conditions
+inline void normalizeRows(const value_type &val = 1.0, bool exact = false)
+{
+    { // Pre-conditions
+        assert_not_zero_value_(val, "normalizeRows");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS normalizeRow(row, val, exact);
-    }
+    ITERATE_ON_ALL_ROWS normalizeRow(row, val, exact);
+}
 
-    /**
+/**
      * Normalizes all the columns of this SparseMatrix.
      * There is an issue when normalizing sparse matrices where the result after
      * normalization could not equal 1, because some values disappear below
@@ -8675,38 +8675,38 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    inline void normalizeCols(const value_type &val = 1.0, bool exact = false)
+inline void normalizeCols(const value_type &val = 1.0, bool exact = false)
+{
+    { // Pre-conditions
+        assert_not_zero_value_(val, "normalizeCols");
+    } // End pre-conditions
+
+    const size_type ncols = nCols();
+
+    colSums(nzb_);
+
+    value_type *nz = nzb_, *nz_end = nzb_ + ncols;
+    while (nz != nz_end)
     {
-        { // Pre-conditions
-            assert_not_zero_value_(val, "normalizeCols");
-        } // End pre-conditions
-
-        const size_type ncols = nCols();
-
-        colSums(nzb_);
-
-        value_type *nz = nzb_, *nz_end = nzb_ + ncols;
-        while (nz != nz_end)
-        {
-            value_type &col_sum = *nz;
-            if (!isZero_(col_sum))
-                col_sum = val / col_sum;
-            else
-                col_sum = (value_type)1;
-            ++nz;
-        }
-
-        ITERATE_ON_ALL_ROWS
-        {
-            ITERATE_ON_ROW { *nz *= nzb_[*ind]; }
-            thresholdRow(row, crucian::Epsilon);
-        }
-
-        if (exact)
-            normalizeCols(val, false);
+        value_type &col_sum = *nz;
+        if (!isZero_(col_sum))
+            col_sum = val / col_sum;
+        else
+            col_sum = (value_type)1;
+        ++nz;
     }
 
-    /**
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW { *nz *= nzb_[*ind]; }
+        thresholdRow(row, crucian::Epsilon);
+    }
+
+    if (exact)
+        normalizeCols(val, false);
+}
+
+/**
      * Normalize whole matrix such that the sum of all the elements after
      * normalization
      * sums to val.
@@ -8724,204 +8724,204 @@ public:
      *
      * TODO expose perturbation?
      */
-    inline void normalize(const value_type &val = 1.0, bool exact = false)
+inline void normalize(const value_type &val = 1.0, bool exact = false)
+{
+    { // Pre-conditions
+        assert_not_zero_value_(val, "normalize");
+    } // End pre-conditions
+
+    value_type k = val / sum();
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_not_zero_value_(val, "normalize");
-        } // End pre-conditions
-
-        value_type k = val / sum();
-
-        ITERATE_ON_ALL_ROWS
-        {
-            ITERATE_ON_ROW { *nz *= k; }
-            thresholdRow(row, crucian::Epsilon);
-        }
-
-        if (exact)
-            normalize(val, false);
+        ITERATE_ON_ROW { *nz *= k; }
+        thresholdRow(row, crucian::Epsilon);
     }
 
-    /**
+    if (exact)
+        normalize(val, false);
+}
+
+/**
      * Normalize so that the max is val.
      */
-    inline void normalize_max(const value_type &val = 1.0)
+inline void normalize_max(const value_type &val = 1.0)
+{
+    { // Pre-conditions
+        assert_not_zero_value_(val, "normalize");
+    } // end PRE-conditions
+
+    value_type max_val = std::numeric_limits<value_type>::max();
+
     {
-        { // Pre-conditions
-            assert_not_zero_value_(val, "normalize");
-        } // end PRE-conditions
-
-        value_type max_val = std::numeric_limits<value_type>::max();
-
+        ITERATE_ON_ALL_ROWS
         {
-            ITERATE_ON_ALL_ROWS
+            ITERATE_ON_ROW
             {
-                ITERATE_ON_ROW
+                if (*nz > max_val)
                 {
-                    if (*nz > max_val)
-                    {
-                        max_val = *nz;
-                    }
+                    max_val = *nz;
                 }
             }
         }
-
-        value_type k = val / max_val;
-
-        ITERATE_ON_ALL_ROWS
-        {
-            ITERATE_ON_ROW { *nz *= k; }
-            thresholdRow(row, crucian::Epsilon);
-        }
     }
 
-    /**
+    value_type k = val / max_val;
+
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW { *nz *= k; }
+        thresholdRow(row, crucian::Epsilon);
+    }
+}
+
+/**
      * Normalize block by defined by outer product of range.
      * If the range is [0,3,5], then the block is defined by [0,3,5] X [0,3,5],
      * and only the intersection of those rows and columns will participate in
      * the normalization. This implementation uses a linear scan of the rows.
      */
-    template <typename InputIterator>
-    inline void normalizeBlockByRows(InputIterator begin, InputIterator end,
-                                     const value_type &val = -1.0,
-                                     const value_type &eps_n = 1e-6)
+template <typename InputIterator>
+inline void normalizeBlockByRows(InputIterator begin, InputIterator end,
+                                 const value_type &val = -1.0,
+                                 const value_type &eps_n = 1e-6)
+{
+    { // Pre-conditions
+        assert_valid_sorted_index_range_(nRows(), begin, end,
+                                         "normalizeBlockByRows");
+        assert_not_zero_value_(val, "normalizeBlockByRows");
+    } // End pre-conditions
+
+    std::vector<value_type *> nz_ptrs(nCols());
+
+    for (InputIterator i = begin; i != end; ++i)
     {
-        { // Pre-conditions
-            assert_valid_sorted_index_range_(nRows(), begin, end,
-                                             "normalizeBlockByRows");
-            assert_not_zero_value_(val, "normalizeBlockByRows");
-        } // End pre-conditions
-
-        std::vector<value_type *> nz_ptrs(nCols());
-
-        for (InputIterator i = begin; i != end; ++i)
+        size_type row = *i;
+        size_type *ind = ind_begin_(row);
+        size_type *ind_end = ind_end_(row);
+        value_type *nz = nz_begin_(row);
+        InputIterator j = begin;
+        value_type s = 0;
+        size_type k = 0;
+        while (j != end && ind != ind_end)
         {
-            size_type row = *i;
-            size_type *ind = ind_begin_(row);
-            size_type *ind_end = ind_end_(row);
-            value_type *nz = nz_begin_(row);
-            InputIterator j = begin;
-            value_type s = 0;
-            size_type k = 0;
-            while (j != end && ind != ind_end)
+            size_type col = *j;
+            if (col == *ind)
             {
-                size_type col = *j;
-                if (col == *ind)
-                {
-                    s += *nz;
-                    nz_ptrs[k++] = nz;
-                    ++ind;
-                    ++nz;
-                    ++j;
-                }
-                else if (col < *ind)
-                {
-                    s += eps_n;
-                    ++j;
-                }
-                else if (*ind < col)
-                {
-                    ++ind;
-                    ++nz;
-                }
+                s += *nz;
+                nz_ptrs[k++] = nz;
+                ++ind;
+                ++nz;
+                ++j;
             }
-            s += size_type(end - j) * eps_n;
-            if (val > 0)
-                s /= val;
-            for (size_type ii = 0; ii != k; ++ii)
-                *(nz_ptrs[ii]) /= s;
+            else if (col < *ind)
+            {
+                s += eps_n;
+                ++j;
+            }
+            else if (*ind < col)
+            {
+                ++ind;
+                ++nz;
+            }
         }
+        s += size_type(end - j) * eps_n;
+        if (val > 0)
+            s /= val;
+        for (size_type ii = 0; ii != k; ++ii)
+            *(nz_ptrs[ii]) /= s;
     }
+}
 
-    /**
+/**
      * Normalize block by defined by outer product of range.
      * If the range is [0,3,5], then the block is defined by [0,3,5] X [0,3,5],
      * and only the intersection of those rows and columns will participate in
      * the normalization. This implementation uses a binary search on the rows.
      */
-    template <typename InputIterator>
-    inline void normalizeBlockByRows_binary(InputIterator begin,
-                                            InputIterator end,
-                                            const value_type &val = -1.0,
-                                            const value_type &eps_n = 1e-6)
+template <typename InputIterator>
+inline void normalizeBlockByRows_binary(InputIterator begin,
+                                        InputIterator end,
+                                        const value_type &val = -1.0,
+                                        const value_type &eps_n = 1e-6)
+{
+    { // Pre-conditions
+        assert_valid_sorted_index_range_(nRows(), begin, end,
+                                         "normalizeBlockByRows_binary");
+        assert_not_zero_value_(val, "normalizeBlockByRows_binary");
+    } // End pre-conditions
+
+    std::vector<value_type *> nz_ptrs(nCols());
+
+    for (InputIterator i = begin; i != end; ++i)
     {
-        { // Pre-conditions
-            assert_valid_sorted_index_range_(nRows(), begin, end,
-                                             "normalizeBlockByRows_binary");
-            assert_not_zero_value_(val, "normalizeBlockByRows_binary");
-        } // End pre-conditions
-
-        std::vector<value_type *> nz_ptrs(nCols());
-
-        for (InputIterator i = begin; i != end; ++i)
+        size_type row = *i;
+        size_type *ind_begin = ind_begin_(row);
+        size_type *ind_end = ind_end_(row);
+        size_type *p = ind_begin;
+        value_type *nz_begin = nz_begin_(row);
+        value_type s = 0;
+        size_type k = 0;
+        for (InputIterator j = begin; j != end; ++j)
         {
-            size_type row = *i;
-            size_type *ind_begin = ind_begin_(row);
-            size_type *ind_end = ind_end_(row);
-            size_type *p = ind_begin;
-            value_type *nz_begin = nz_begin_(row);
-            value_type s = 0;
-            size_type k = 0;
-            for (InputIterator j = begin; j != end; ++j)
+            p = std::lower_bound(p, ind_end, *j);
+            value_type *ptr = nz_begin + (p - ind_begin);
+            if (p != ind_end && *p == *j)
             {
-                p = std::lower_bound(p, ind_end, *j);
-                value_type *ptr = nz_begin + (p - ind_begin);
-                if (p != ind_end && *p == *j)
-                {
-                    s += *ptr;
-                    nz_ptrs[k++] = ptr;
-                }
-                else
-                {
-                    s += eps_n;
-                }
-            }
-            if (val > 0)
-                s /= val;
-            for (size_type i = 0; i != k; ++i)
-                *(nz_ptrs[i]) /= s;
-        }
-    }
-
-    // SCALING
-
-    /**
-     * Scales each row by the corresponding element of a vector.
-     */
-    template <typename InIter> inline void scaleRows(InIter s_begin)
-    {
-        { // Pre-conditions
-        } // End pre-conditions
-
-        ITERATE_ON_ALL_ROWS
-        {
-            value_type val = *s_begin;
-            if (isZero_(val))
-            {
-                nnzr_[row] = 0;
+                s += *ptr;
+                nz_ptrs[k++] = ptr;
             }
             else
             {
-                ITERATE_ON_ROW *nz *= val;
+                s += eps_n;
             }
-            ++s_begin;
         }
+        if (val > 0)
+            s /= val;
+        for (size_type i = 0; i != k; ++i)
+            *(nz_ptrs[i]) /= s;
     }
+}
 
-    /**
+// SCALING
+
+/**
+     * Scales each row by the corresponding element of a vector.
+     */
+template <typename InIter> inline void scaleRows(InIter s_begin)
+{
+    { // Pre-conditions
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
+    {
+        value_type val = *s_begin;
+        if (isZero_(val))
+        {
+            nnzr_[row] = 0;
+        }
+        else
+        {
+            ITERATE_ON_ROW *nz *= val;
+        }
+        ++s_begin;
+    }
+}
+
+/**
      * Scales each column by the corresponding element of a vector.
      */
-    template <typename InIter> inline void scaleCols(InIter s_begin)
-    {
-        { // Pre-conditions
-        } // End pre-conditions
+template <typename InIter> inline void scaleCols(InIter s_begin)
+{
+    { // Pre-conditions
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS { ITERATE_ON_ROW *nz *= s_begin[*ind]; }
-    }
+    ITERATE_ON_ALL_ROWS { ITERATE_ON_ROW *nz *= s_begin[*ind]; }
+}
 
-    // SUMS AND PRODS
+// SUMS AND PRODS
 
-    /**
+/**
      * Computes the sum of the non-zeros for a given row:
      *
      *  result = sum(this[row,col], for col in [0,ncols))
@@ -8932,19 +8932,19 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows.
      */
-    inline value_type rowSum(size_type row) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "rowSum");
-        } // End pre-conditions
+inline value_type rowSum(size_type row) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "rowSum");
+    } // End pre-conditions
 
-        if (isRowZero(row))
-            return value_type(0);
-        else
-            return accumulateRowNZ(row, std::plus<value_type>(), (value_type)0);
-    }
+    if (isRowZero(row))
+        return value_type(0);
+    else
+        return accumulateRowNZ(row, std::plus<value_type>(), (value_type)0);
+}
 
-    /**
+/**
      * Computes the sum of each row in the SparseMatrix:
      *
      *  sums[row] = sum(this[row,col], for col in [0,ncols))
@@ -8957,23 +8957,23 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator>
-    inline void rowSums(OutputIterator sums, value_type init = 0) const
-    {
-        accumulateAllRowsNZ(sums, std::plus<value_type>(), (value_type)init);
-    }
+template <typename OutputIterator>
+inline void rowSums(OutputIterator sums, value_type init = 0) const
+{
+    accumulateAllRowsNZ(sums, std::plus<value_type>(), (value_type)init);
+}
 
-    inline void rowSums(std::vector<value_type> &sums) const
-    {
-        { // Pre-conditions
-            NTA_ASSERT(sums.size() == nRows())
-                << "rowSums: Wrong size for vector";
-        } // End pre-conditions
+inline void rowSums(std::vector<value_type> &sums) const
+{
+    { // Pre-conditions
+        NTA_ASSERT(sums.size() == nRows())
+            << "rowSums: Wrong size for vector";
+    } // End pre-conditions
 
-        rowSums(sums.begin());
-    }
+    rowSums(sums.begin());
+}
 
-    /**
+/**
      * Computes the product of the non-zeros for a given row:
      *
      *  result = prod(this[row,col], for col in [0,ncols) s.t. this[row,col] !=
@@ -8985,20 +8985,20 @@ public:
      * @b Exceptions:
      *  @li If row < 0 || row >= nrows.
      */
-    inline value_type rowProd(size_type row) const
-    {
-        { // Pre-conditions
-            assert_valid_row_(row, "rowProd");
-        } // End pre-conditions
+inline value_type rowProd(size_type row) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "rowProd");
+    } // End pre-conditions
 
-        if (isRowZero(row))
-            return value_type(0);
-        else
-            return accumulateRowNZ(row, std::multiplies<value_type>(),
-                                   (value_type)1);
-    }
+    if (isRowZero(row))
+        return value_type(0);
+    else
+        return accumulateRowNZ(row, std::multiplies<value_type>(),
+                               (value_type)1);
+}
 
-    /**
+/**
      * Computes the prod of each row in the SparseMatrix:
      *
      *  prods[row] = prod(this[row,col], for col in [0,ncols), s.t.
@@ -9014,17 +9014,17 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator>
-    inline void rowProds(OutputIterator prods) const
+template <typename OutputIterator>
+inline void rowProds(OutputIterator prods) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            *prods = rowProd(row);
-            ++prods;
-        }
+        *prods = rowProd(row);
+        ++prods;
     }
+}
 
-    /**
+/**
      * Computes the sum of the non-zeros for a given column:
      *
      *  result = sum(this[row,col], for row in [0,nrows))
@@ -9035,16 +9035,16 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols.
      */
-    inline value_type colSum(size_type col) const
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "colSum");
-        } // End pre-conditions
+inline value_type colSum(size_type col) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "colSum");
+    } // End pre-conditions
 
-        return accumulateColNZ(col, std::plus<value_type>(), (value_type)0);
-    }
+    return accumulateColNZ(col, std::plus<value_type>(), (value_type)0);
+}
 
-    /**
+/**
      * Computes the sum of each column in the SparseMatrix:
      *
      *  sums[col] = sum(this[row,col], for row in [0,nrows))
@@ -9058,64 +9058,64 @@ public:
      * @b Exceptions:
      *  @li None.
      */
-    template <typename OutputIterator>
-    inline void colSums(OutputIterator sums, value_type init = 0) const
-    {
-        accumulateAllColsNZ(sums, std::plus<value_type>(), (value_type)init);
-    }
+template <typename OutputIterator>
+inline void colSums(OutputIterator sums, value_type init = 0) const
+{
+    accumulateAllColsNZ(sums, std::plus<value_type>(), (value_type)init);
+}
 
-    /**
+/**
      * Adds several rows. Which rows to add is specified by a sparse binary
      * vector.
      */
-    template <typename InIt, typename OutIt>
-    inline void addRows(InIt indicator, InIt indicator_end, OutIt result,
-                        OutIt result_end) const
+template <typename InIt, typename OutIt>
+inline void addRows(InIt indicator, InIt indicator_end, OutIt result,
+                    OutIt result_end) const
+{
     {
-        {
-            NTA_ASSERT((size_type)(indicator_end - indicator) == nRows());
-            NTA_ASSERT(nCols() <= (size_type)(result_end - result));
-        }
-
-        std::fill(result, result + nCols(), (value_type)0);
-
-        for (size_type r = 0; indicator != indicator_end; ++indicator, ++r)
-        {
-
-            if (!*indicator)
-                continue;
-
-            size_type *ind = ind_[r], *ind_end = ind + nnzr_[r];
-            value_type *nz = nz_[r];
-
-            for (; ind != ind_end; ++ind, ++nz)
-                result[*ind] += *nz;
-        }
+        NTA_ASSERT((size_type)(indicator_end - indicator) == nRows());
+        NTA_ASSERT(nCols() <= (size_type)(result_end - result));
     }
 
-    template <typename InIt, typename OutIt>
-    inline void addListOfRows(InIt whichRows, InIt whichRows_end, OutIt result,
-                              OutIt result_end) const
+    std::fill(result, result + nCols(), (value_type)0);
+
+    for (size_type r = 0; indicator != indicator_end; ++indicator, ++r)
     {
-        {
-            NTA_ASSERT(nCols() <= (size_type)(result_end - result));
-        }
 
-        std::fill(result, result + nCols(), (value_type)0);
+        if (!*indicator)
+            continue;
 
-        for (; whichRows != whichRows_end; ++whichRows)
-        {
+        size_type *ind = ind_[r], *ind_end = ind + nnzr_[r];
+        value_type *nz = nz_[r];
 
-            size_type r = *whichRows;
-            size_type *ind = ind_[r], *ind_end = ind + nnzr_[r];
-            value_type *nz = nz_[r];
+        for (; ind != ind_end; ++ind, ++nz)
+            result[*ind] += *nz;
+    }
+}
 
-            for (; ind != ind_end; ++ind, ++nz)
-                result[*ind] += *nz;
-        }
+template <typename InIt, typename OutIt>
+inline void addListOfRows(InIt whichRows, InIt whichRows_end, OutIt result,
+                          OutIt result_end) const
+{
+    {
+        NTA_ASSERT(nCols() <= (size_type)(result_end - result));
     }
 
-    /**
+    std::fill(result, result + nCols(), (value_type)0);
+
+    for (; whichRows != whichRows_end; ++whichRows)
+    {
+
+        size_type r = *whichRows;
+        size_type *ind = ind_[r], *ind_end = ind + nnzr_[r];
+        value_type *nz = nz_[r];
+
+        for (; ind != ind_end; ++ind, ++nz)
+            result[*ind] += *nz;
+    }
+}
+
+/**
      * Computes the product of the non-zeros for a given column:
      *
      *  result = prod(this[row,col], for row in [0,nrows), s.t. this[row,col] !=
@@ -9127,20 +9127,20 @@ public:
      * @b Exceptions:
      *  @li If col < 0 || col >= ncols.
      */
-    inline value_type colProd(size_type col) const
-    {
-        { // Pre-conditions
-            assert_valid_col_(col, "colProd");
-        } // End pre-conditions
+inline value_type colProd(size_type col) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "colProd");
+    } // End pre-conditions
 
-        if (isColZero(col))
-            return value_type(0);
-        else
-            return accumulateColNZ(col, std::multiplies<value_type>(),
-                                   (value_type)1);
-    }
+    if (isColZero(col))
+        return value_type(0);
+    else
+        return accumulateColNZ(col, std::multiplies<value_type>(),
+                               (value_type)1);
+}
 
-    /**
+/**
      * Computes the prod of each column in the SparseMatrix:
      *
      *  prods[col] = prod(this[row,col], for row in [0,nrows), s.t.
@@ -9158,20 +9158,20 @@ public:
      *
      * TODO make faster
      */
-    template <typename OutputIterator>
-    inline void colProds(OutputIterator prods) const
+template <typename OutputIterator>
+inline void colProds(OutputIterator prods) const
+{
+    OutputIterator prods_end = prods + nCols();
+    size_type col = 0;
+    while (prods != prods_end)
     {
-        OutputIterator prods_end = prods + nCols();
-        size_type col = 0;
-        while (prods != prods_end)
-        {
-            *prods = colProd(col);
-            ++prods;
-            ++col;
-        }
+        *prods = colProd(col);
+        ++prods;
+        ++col;
     }
+}
 
-    /**
+/**
      * Computes the sum of all the non-zeros in this matrix:
      *
      *  result = sum(this[row,col], for row,col in [0,nrows) X [0,ncols))
@@ -9179,12 +9179,12 @@ public:
      * @b Complexity:
      *  @li O(nnz)
      */
-    inline value_type sum() const
-    {
-        return accumulateNZ(std::plus<value_type>(), (value_type)0);
-    }
+inline value_type sum() const
+{
+    return accumulateNZ(std::plus<value_type>(), (value_type)0);
+}
 
-    /**
+/**
      * Computes the product of all the non-zeros in this matrix:
      *
      *  result = prod(this[row,col], for row,col in [0,nrows) X [0,ncols))
@@ -9192,17 +9192,17 @@ public:
      * @b Complexity:
      *  @li O(nnz)
      */
-    inline value_type prod() const
-    {
-        if (isZero())
-            return value_type(0);
-        else
-            return accumulateNZ(std::multiplies<value_type>(), value_type(1));
-    }
+inline value_type prod() const
+{
+    if (isZero())
+        return value_type(0);
+    else
+        return accumulateNZ(std::multiplies<value_type>(), value_type(1));
+}
 
-    // AXBY/LERP
+// AXBY/LERP
 
-    /**
+/**
      * Computes axby between given row and vector x, with coefficients a and b:
      *
      *  for col in [0,ncols):
@@ -9224,108 +9224,108 @@ public:
      *  @li row < 0 || row >= nrows (assert)
      *  @li Not enough memory (error)
      */
-    template <typename InputIterator>
-    inline void axby(size_type row, value_type a, value_type b, InputIterator x)
+template <typename InputIterator>
+inline void axby(size_type row, value_type a, value_type b, InputIterator x)
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "axby");
+    } // End pre-conditions
+
+    size_type nnzr = nnzr_[row], *ind = ind_[row], ncols = nCols();
+    size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
+    value_type *nz = nzb_;
+    InputIterator end_x1 = x + 4 * (ncols / 4), end_x2 = x + ncols;
+
+    if (a == 1.0 && b == 1.0)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "axby");
-        } // End pre-conditions
 
-        size_type nnzr = nnzr_[row], *ind = ind_[row], ncols = nCols();
-        size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
-        value_type *nz = nzb_;
-        InputIterator end_x1 = x + 4 * (ncols / 4), end_x2 = x + ncols;
-
-        if (a == 1.0 && b == 1.0)
+        for (; x != end_x1; x += 4, nz += 4)
         {
-
-            for (; x != end_x1; x += 4, nz += 4)
-            {
-                *nz = *x;
-                *(nz + 1) = *(x + 1);
-                *(nz + 2) = *(x + 2);
-                *(nz + 3) = *(x + 3);
-            }
-
-            while (x != end_x2)
-                *nz++ = *x++;
-
-            nz = nz_[row];
-
-            for (; ind != end1; ind += 4, nz += 4)
-            {
-                nzb_[*ind] += *nz;
-                nzb_[*(ind + 1)] += *(nz + 1);
-                nzb_[*(ind + 2)] += *(nz + 2);
-                nzb_[*(ind + 3)] += *(nz + 3);
-            }
-
-            while (ind != end2)
-                nzb_[*ind++] += *nz++;
-        }
-        else if (a == 1.0 && b == -1.0)
-        {
-
-            for (; x != end_x1; x += 4, nz += 4)
-            {
-                *nz = *x;
-                *(nz + 1) = *(x + 1);
-                *(nz + 2) = *(x + 2);
-                *(nz + 3) = *(x + 3);
-            }
-
-            while (x != end_x2)
-                *nz++ = *x++;
-
-            nz = nz_[row];
-
-            for (; ind != end1; ind += 4, nz += 4)
-            {
-                nzb_[*ind] -= *nz;
-                nzb_[*(ind + 1)] -= *(nz + 1);
-                nzb_[*(ind + 2)] -= *(nz + 2);
-                nzb_[*(ind + 3)] -= *(nz + 3);
-            }
-
-            while (ind != end2)
-                nzb_[*ind++] -= *nz++;
-        }
-        else
-        {
-
-            // Doing this first allows us to "initialize" nzb_
-            // to receive additions for the non-zeros later
-            for (; x != end_x1; x += 4, nz += 4)
-            {
-                *nz = b * *x;
-                *(nz + 1) = b * *(x + 1);
-                *(nz + 2) = b * *(x + 2);
-                *(nz + 3) = b * *(x + 3);
-            }
-
-            while (x != end_x2)
-                *nz++ = b * *x++;
-
-            // We switch over to pointing to the non-zeros
-            // (we were pointing in nzb_!)
-            nz = nz_[row];
-
-            for (; ind != end1; ind += 4, nz += 4)
-            {
-                nzb_[*ind] += a * *nz;
-                nzb_[*(ind + 1)] += a * *(nz + 1);
-                nzb_[*(ind + 2)] += a * *(nz + 2);
-                nzb_[*(ind + 3)] += a * *(nz + 3);
-            }
-
-            while (ind != end2)
-                nzb_[*ind++] += a * *nz++;
+            *nz = *x;
+            *(nz + 1) = *(x + 1);
+            *(nz + 2) = *(x + 2);
+            *(nz + 3) = *(x + 3);
         }
 
-        set_row_(row, nzb_, nzb_ + nCols());
+        while (x != end_x2)
+            *nz++ = *x++;
+
+        nz = nz_[row];
+
+        for (; ind != end1; ind += 4, nz += 4)
+        {
+            nzb_[*ind] += *nz;
+            nzb_[*(ind + 1)] += *(nz + 1);
+            nzb_[*(ind + 2)] += *(nz + 2);
+            nzb_[*(ind + 3)] += *(nz + 3);
+        }
+
+        while (ind != end2)
+            nzb_[*ind++] += *nz++;
+    }
+    else if (a == 1.0 && b == -1.0)
+    {
+
+        for (; x != end_x1; x += 4, nz += 4)
+        {
+            *nz = *x;
+            *(nz + 1) = *(x + 1);
+            *(nz + 2) = *(x + 2);
+            *(nz + 3) = *(x + 3);
+        }
+
+        while (x != end_x2)
+            *nz++ = *x++;
+
+        nz = nz_[row];
+
+        for (; ind != end1; ind += 4, nz += 4)
+        {
+            nzb_[*ind] -= *nz;
+            nzb_[*(ind + 1)] -= *(nz + 1);
+            nzb_[*(ind + 2)] -= *(nz + 2);
+            nzb_[*(ind + 3)] -= *(nz + 3);
+        }
+
+        while (ind != end2)
+            nzb_[*ind++] -= *nz++;
+    }
+    else
+    {
+
+        // Doing this first allows us to "initialize" nzb_
+        // to receive additions for the non-zeros later
+        for (; x != end_x1; x += 4, nz += 4)
+        {
+            *nz = b * *x;
+            *(nz + 1) = b * *(x + 1);
+            *(nz + 2) = b * *(x + 2);
+            *(nz + 3) = b * *(x + 3);
+        }
+
+        while (x != end_x2)
+            *nz++ = b * *x++;
+
+        // We switch over to pointing to the non-zeros
+        // (we were pointing in nzb_!)
+        nz = nz_[row];
+
+        for (; ind != end1; ind += 4, nz += 4)
+        {
+            nzb_[*ind] += a * *nz;
+            nzb_[*(ind + 1)] += a * *(nz + 1);
+            nzb_[*(ind + 2)] += a * *(nz + 2);
+            nzb_[*(ind + 3)] += a * *(nz + 3);
+        }
+
+        while (ind != end2)
+            nzb_[*ind++] += a * *nz++;
     }
 
-    /**
+    set_row_(row, nzb_, nzb_ + nCols());
+}
+
+/**
      * Computes linear combination of each row and vector x, with coefficients a
      * and b:
      *
@@ -9341,14 +9341,14 @@ public:
      * @b Exceptions:
      *  @li Not enough memory (error)
      */
-    template <typename InputIterator>
-    inline void axby(value_type a, value_type b, InputIterator x)
-    {
-        for (size_type i = 0; i != nRows(); ++i)
-            axby(i, a, b, x);
-    }
+template <typename InputIterator>
+inline void axby(value_type a, value_type b, InputIterator x)
+{
+    for (size_type i = 0; i != nRows(); ++i)
+        axby(i, a, b, x);
+}
 
-    /**
+/**
      * Computes the linear interpolation of this sparse matrix and B,
      * with coefficients a and b respectively, in place:
      *
@@ -9366,50 +9366,50 @@ public:
      *  @li If this matrix and B don't have the same number of rows.
      *  @li If this matrix and B don't have the same number of columns.
      */
-    inline void lerp(value_type a, value_type b, const SparseMatrix &B)
+inline void lerp(value_type a, value_type b, const SparseMatrix &B)
+{
+    { // Pre-conditions
+        NTA_ASSERT(B.nRows() == this->nRows())
+            << "SparseMatrix::lerp(): "
+            << " B matrix has " << B.nRows() << " rows"
+            << " when this matrix has " << this->nRows() << " rows"
+            << " - Both matrices need to have the same number of rows";
+
+        NTA_ASSERT(B.nCols() == this->nCols())
+            << "SparseMatrix::lerp(): "
+            << " B matrix has " << B.nCols() << " columns"
+            << " when this matrix has " << this->nCols() << " columns"
+            << " - Both matrices need to have the same number of columns";
+    } // End pre-conditions
+
+    const size_type nrows = nRows();
+    const size_type ncols = nCols();
+
+    for (size_type i = 0; i != nrows; ++i)
     {
-        { // Pre-conditions
-            NTA_ASSERT(B.nRows() == this->nRows())
-                << "SparseMatrix::lerp(): "
-                << " B matrix has " << B.nRows() << " rows"
-                << " when this matrix has " << this->nRows() << " rows"
-                << " - Both matrices need to have the same number of rows";
 
-            NTA_ASSERT(B.nCols() == this->nCols())
-                << "SparseMatrix::lerp(): "
-                << " B matrix has " << B.nCols() << " columns"
-                << " when this matrix has " << this->nCols() << " columns"
-                << " - Both matrices need to have the same number of columns";
-        } // End pre-conditions
+        std::fill(nzb_, nzb_ + ncols, (value_type)0);
 
-        const size_type nrows = nRows();
-        const size_type ncols = nCols();
+        size_type *ind = ind_[i];
+        value_type *nz = nz_[i], *nz_end = nz + nnzr_[i];
 
-        for (size_type i = 0; i != nrows; ++i)
-        {
+        if (a != 0)
+            while (nz != nz_end)
+                nzb_[*ind++] = a * *nz++;
 
-            std::fill(nzb_, nzb_ + ncols, (value_type)0);
+        ind = B.ind_[i];
+        nz = B.nz_[i];
+        nz_end = nz + B.nnzr_[i];
 
-            size_type *ind = ind_[i];
-            value_type *nz = nz_[i], *nz_end = nz + nnzr_[i];
+        if (b != 0)
+            while (nz != nz_end)
+                nzb_[*ind++] += b * *nz++;
 
-            if (a != 0)
-                while (nz != nz_end)
-                    nzb_[*ind++] = a * *nz++;
-
-            ind = B.ind_[i];
-            nz = B.nz_[i];
-            nz_end = nz + B.nnzr_[i];
-
-            if (b != 0)
-                while (nz != nz_end)
-                    nzb_[*ind++] += b * *nz++;
-
-            set_row_(i, nzb_, nzb_ + nCols());
-        }
+        set_row_(i, nzb_, nzb_ + nCols());
     }
+}
 
-    /**
+/**
      * Adds two rows of a matrix together. The first argument is the source row,
      * and the second is the destination row:
      *
@@ -9426,100 +9426,100 @@ public:
      *  @li if src_row < 0 || src_row > nrows (assert)
      *  @li if dst_row < 0 || dst_row > nrows (assert)
      */
-    void addTwoRows(size_type src_row, size_type dst_row)
+void addTwoRows(size_type src_row, size_type dst_row)
+{
+    { // Pre-conditions
+        assert_valid_row_(src_row, "addTwoRows");
+        assert_valid_row_(dst_row, "addTwoRows");
+    } // End pre-conditions
+
+    if (isRowZero(src_row))
+        return;
+
+    size_type *ind_src = ind_begin_(src_row);
+    size_type *ind_dst = ind_begin_(dst_row);
+    size_type *ind_src_end = ind_end_(src_row);
+    size_type *ind_dst_end = ind_end_(dst_row);
+
+    value_type *nz_src = nz_begin_(src_row);
+    value_type *nz_dst = nz_begin_(dst_row);
+
+    size_type k = 0;
+
+    while (ind_src != ind_src_end && ind_dst != ind_dst_end)
     {
-        { // Pre-conditions
-            assert_valid_row_(src_row, "addTwoRows");
-            assert_valid_row_(dst_row, "addTwoRows");
-        } // End pre-conditions
-
-        if (isRowZero(src_row))
-            return;
-
-        size_type *ind_src = ind_begin_(src_row);
-        size_type *ind_dst = ind_begin_(dst_row);
-        size_type *ind_src_end = ind_end_(src_row);
-        size_type *ind_dst_end = ind_end_(dst_row);
-
-        value_type *nz_src = nz_begin_(src_row);
-        value_type *nz_dst = nz_begin_(dst_row);
-
-        size_type k = 0;
-
-        while (ind_src != ind_src_end && ind_dst != ind_dst_end)
+        size_type i_src = *ind_src, i_dst = *ind_dst;
+        if (i_src == i_dst)
         {
-            size_type i_src = *ind_src, i_dst = *ind_dst;
-            if (i_src == i_dst)
-            {
-                value_type val = *nz_src + *nz_dst;
-                if (!isZero_(val))
-                {
-                    indb_[k] = i_src;
-                    nzb_[k] = val;
-                    ++k;
-                }
-                ++ind_src;
-                ++ind_dst;
-                ++nz_src;
-                ++nz_dst;
-            }
-            else if (i_src < i_dst)
+            value_type val = *nz_src + *nz_dst;
+            if (!isZero_(val))
             {
                 indb_[k] = i_src;
-                nzb_[k] = *nz_src;
-                ++ind_src;
-                ++nz_src;
+                nzb_[k] = val;
                 ++k;
             }
-            else
-            {
-                indb_[k] = i_dst;
-                nzb_[k] = *nz_dst;
-                ++ind_dst;
-                ++nz_dst;
-                ++k;
-            }
+            ++ind_src;
+            ++ind_dst;
+            ++nz_src;
+            ++nz_dst;
         }
-
-        size_type *ind = NULL, *ind_end = ind;
-        value_type *nz = NULL;
-
-        if (ind_src == ind_src_end)
+        else if (i_src < i_dst)
         {
-            ind = ind_dst;
-            ind_end = ind_dst_end;
-            nz = nz_dst;
+            indb_[k] = i_src;
+            nzb_[k] = *nz_src;
+            ++ind_src;
+            ++nz_src;
+            ++k;
         }
         else
         {
-            ind = ind_src;
-            ind_end = ind_src_end;
-            nz = nz_src;
-        }
-
-        while (ind != ind_end)
-        {
-            indb_[k] = *ind;
-            nzb_[k] = *nz;
-            ++ind;
-            ++nz;
+            indb_[k] = i_dst;
+            nzb_[k] = *nz_dst;
+            ++ind_dst;
+            ++nz_dst;
             ++k;
         }
-
-        if (isCompact())
-            decompact();
-
-        delete[] ind_[dst_row];
-        delete[] nz_[dst_row];
-
-        nnzr_[dst_row] = k;
-        ind_[dst_row] = new size_type[nnzr_[dst_row]];
-        nz_[dst_row] = new value_type[nnzr_[dst_row]];
-        std::copy(indb_, indb_ + nnzr_[dst_row], ind_[dst_row]);
-        std::copy(nzb_, nzb_ + nnzr_[dst_row], nz_[dst_row]);
     }
 
-    /**
+    size_type *ind = NULL, *ind_end = ind;
+    value_type *nz = NULL;
+
+    if (ind_src == ind_src_end)
+    {
+        ind = ind_dst;
+        ind_end = ind_dst_end;
+        nz = nz_dst;
+    }
+    else
+    {
+        ind = ind_src;
+        ind_end = ind_src_end;
+        nz = nz_src;
+    }
+
+    while (ind != ind_end)
+    {
+        indb_[k] = *ind;
+        nzb_[k] = *nz;
+        ++ind;
+        ++nz;
+        ++k;
+    }
+
+    if (isCompact())
+        decompact();
+
+    delete[] ind_[dst_row];
+    delete[] nz_[dst_row];
+
+    nnzr_[dst_row] = k;
+    ind_[dst_row] = new size_type[nnzr_[dst_row]];
+    nz_[dst_row] = new value_type[nnzr_[dst_row]];
+    std::copy(indb_, indb_ + nnzr_[dst_row], ind_[dst_row]);
+    std::copy(nzb_, nzb_ + nnzr_[dst_row], nz_[dst_row]);
+}
+
+/**
      * Adds two cols of a matrix together. The first argument is the source col,
      * and the second is the destination col:
      *
@@ -9536,126 +9536,126 @@ public:
      *  @li if src_col < 0 || src_col > ncols (assert)
      *  @li if dst_col < 0 || dst_col > ncols (assert)
      */
-    void addTwoCols(size_type src_col, size_type dst_col)
-    {
-        { // Pre-conditions
-            assert_valid_col_(src_col, "addTwoCols");
-            assert_valid_col_(dst_col, "addTwoCols");
-        } // End pre-conditions
+void addTwoCols(size_type src_col, size_type dst_col)
+{
+    { // Pre-conditions
+        assert_valid_col_(src_col, "addTwoCols");
+        assert_valid_col_(dst_col, "addTwoCols");
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+
+        size_type *ind_begin = ind_begin_(row), *ind_end = ind_end_(row);
+        size_type *p_src = std::lower_bound(ind_begin, ind_end, src_col);
+
+        if (p_src != ind_end && *p_src == src_col)
         {
 
-            size_type *ind_begin = ind_begin_(row), *ind_end = ind_end_(row);
-            size_type *p_src = std::lower_bound(ind_begin, ind_end, src_col);
+            size_type *p_dst =
+                dst_col > src_col
+                    ? std::lower_bound(p_src, ind_end, dst_col)
+                    : std::lower_bound(ind_begin, p_src, dst_col);
 
-            if (p_src != ind_end && *p_src == src_col)
+            if (*p_dst != dst_col)
             {
-
-                size_type *p_dst =
-                    dst_col > src_col
-                        ? std::lower_bound(p_src, ind_end, dst_col)
-                        : std::lower_bound(ind_begin, p_src, dst_col);
-
-                if (*p_dst != dst_col)
-                {
-                    insertNewNonZero_(row, dst_col, p_dst,
-                                      nz_[row][p_src - ind_begin]);
-                }
-                else
-                {
-                    value_type *nz = nz_[row];
-                    nz[p_dst - ind_begin] += nz[p_src - ind_begin];
-                }
+                insertNewNonZero_(row, dst_col, p_dst,
+                                  nz_[row][p_src - ind_begin]);
+            }
+            else
+            {
+                value_type *nz = nz_[row];
+                nz[p_dst - ind_begin] += nz[p_src - ind_begin];
             }
         }
     }
+}
 
-    // ADD
+// ADD
 
-    /**
+/**
      * Adds one SparseMatrix to another.
      */
-    inline void add(const SparseMatrix &other)
+inline void add(const SparseMatrix &other)
+{
+    { // Pre-conditions
+        NTA_ASSERT(other.nRows() == nRows())
+            << "add: Wrong number of rows: " << other.nRows() << " and "
+            << nRows();
+        NTA_ASSERT(other.nCols() == nCols())
+            << "add: Wrong number of columns: " << other.nCols() << " and "
+            << nCols();
+    } // End pre-conditions
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            NTA_ASSERT(other.nRows() == nRows())
-                << "add: Wrong number of rows: " << other.nRows() << " and "
-                << nRows();
-            NTA_ASSERT(other.nCols() == nCols())
-                << "add: Wrong number of columns: " << other.nCols() << " and "
-                << nCols();
-        } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+        size_type *ind = ind_begin_(row);
+        size_type *ind_end = ind_end_(row);
+        value_type *nz = nz_begin_(row);
+        size_type *ind_b = other.ind_begin_(row);
+        size_type *ind_b_end = other.ind_end_(row);
+        value_type *nz_b = other.nz_begin_(row);
+        size_type *indb = indb_;
+        value_type *nzb = nzb_;
+
+        while (ind != ind_end && ind_b != ind_b_end)
         {
-
-            size_type *ind = ind_begin_(row);
-            size_type *ind_end = ind_end_(row);
-            value_type *nz = nz_begin_(row);
-            size_type *ind_b = other.ind_begin_(row);
-            size_type *ind_b_end = other.ind_end_(row);
-            value_type *nz_b = other.nz_begin_(row);
-            size_type *indb = indb_;
-            value_type *nzb = nzb_;
-
-            while (ind != ind_end && ind_b != ind_b_end)
+            if (*ind == *ind_b)
             {
-                if (*ind == *ind_b)
+                value_type val = *nz++ + *nz_b++;
+                if (!isZero_(val))
                 {
-                    value_type val = *nz++ + *nz_b++;
-                    if (!isZero_(val))
-                    {
-                        *indb++ = *ind;
-                        *nzb++ = val;
-                    }
-                    ++ind;
-                    ++ind_b;
+                    *indb++ = *ind;
+                    *nzb++ = val;
                 }
-                else if (*ind < *ind_b)
-                {
-                    *indb++ = *ind++;
-                    *nzb++ = *nz++;
-                }
-                else if (*ind_b < *ind)
-                {
-                    *indb++ = *ind_b++;
-                    *nzb++ = *nz_b++;
-                }
+                ++ind;
+                ++ind_b;
             }
-
-            while (ind != ind_end)
+            else if (*ind < *ind_b)
             {
                 *indb++ = *ind++;
                 *nzb++ = *nz++;
             }
-
-            while (ind_b != ind_b_end)
+            else if (*ind_b < *ind)
             {
                 *indb++ = *ind_b++;
                 *nzb++ = *nz_b++;
             }
-
-            size_type nnzr = (size_type)(indb - indb_);
-
-            if (nnzr > nnzr_[row])
-            {
-                decompact();
-                delete[] ind_[row];
-                delete[] nz_[row];
-                ind_[row] = new size_type[nnzr];
-                nz_[row] = new value_type[nnzr];
-            }
-
-            std::copy(indb_, indb_ + nnzr, ind_[row]);
-            std::copy(nzb_, nzb_ + nnzr, nz_[row]);
-            nnzr_[row] = nnzr;
         }
+
+        while (ind != ind_end)
+        {
+            *indb++ = *ind++;
+            *nzb++ = *nz++;
+        }
+
+        while (ind_b != ind_b_end)
+        {
+            *indb++ = *ind_b++;
+            *nzb++ = *nz_b++;
+        }
+
+        size_type nnzr = (size_type)(indb - indb_);
+
+        if (nnzr > nnzr_[row])
+        {
+            decompact();
+            delete[] ind_[row];
+            delete[] nz_[row];
+            ind_[row] = new size_type[nnzr];
+            nz_[row] = new value_type[nnzr];
+        }
+
+        std::copy(indb_, indb_ + nnzr, ind_[row]);
+        std::copy(nzb_, nzb_ + nnzr, nz_[row]);
+        nnzr_[row] = nnzr;
     }
+}
 
-    // MULTIPLY
+// MULTIPLY
 
-    /**
+/**
      * Multiplies this sparse matrix by B and puts the result into C.
      * Multiplication occurs on the right of this SparseMatrix.
      * B's number of rows needs to be the same as A's number of columns.
@@ -9670,264 +9670,264 @@ public:
      * @b Exceptions:
      *  @li If this->ncols != B.nrows
      */
-    inline void multiply(const SparseMatrix &B, SparseMatrix &C) const
+inline void multiply(const SparseMatrix &B, SparseMatrix &C) const
+{
+    { // Pre-conditions
+        NTA_ASSERT(nCols() == B.nRows())
+            << "SparseMatrix::multiply(): "
+            << "A matrix's number of columns (" << nCols() << ") "
+            << "should be the same as B matrix's number of rows ("
+            << B.nRows() << ")";
+    } // End pre-conditions
+
+    C.resize(nRows(), B.nCols());
+
+    size_type nrowsB = B.nRows();
+    size_type nrowsC = C.nRows();
+    size_type ncolsC = C.nCols();
+
+    std::vector<size_type> front;
+    front.resize(nrowsB);
+
+    for (size_type iC = 0; iC < nrowsC; ++iC)
     {
-        { // Pre-conditions
-            NTA_ASSERT(nCols() == B.nRows())
-                << "SparseMatrix::multiply(): "
-                << "A matrix's number of columns (" << nCols() << ") "
-                << "should be the same as B matrix's number of rows ("
-                << B.nRows() << ")";
-        } // End pre-conditions
 
-        C.resize(nRows(), B.nCols());
+        size_type nnzrA = nnzr_[iC];
+        size_type *indA = ind_[iC];
+        value_type *nzA = nz_[iC];
 
-        size_type nrowsB = B.nRows();
-        size_type nrowsC = C.nRows();
-        size_type ncolsC = C.nCols();
+        std::fill(front.begin(), front.end(), (size_type)0);
+        std::fill(C.nzb_, C.nzb_ + ncolsC, (value_type)0);
 
-        std::vector<size_type> front;
-        front.resize(nrowsB);
-
-        for (size_type iC = 0; iC < nrowsC; ++iC)
+        for (size_type jC = 0; jC != ncolsC; ++jC)
         {
-
-            size_type nnzrA = nnzr_[iC];
-            size_type *indA = ind_[iC];
-            value_type *nzA = nz_[iC];
-
-            std::fill(front.begin(), front.end(), (size_type)0);
-            std::fill(C.nzb_, C.nzb_ + ncolsC, (value_type)0);
-
-            for (size_type jC = 0; jC != ncolsC; ++jC)
+            for (size_type kA = 0; kA != nnzrA; ++kA)
             {
-                for (size_type kA = 0; kA != nnzrA; ++kA)
+
+                size_type k = indA[kA];
+                size_type nnzrB = B.nnzr_[k];
+                size_type *indB = B.ind_[k];
+                value_type *nzB = B.nz_[k];
+
+                if (nnzrB > 0)
                 {
 
-                    size_type k = indA[kA];
-                    size_type nnzrB = B.nnzr_[k];
-                    size_type *indB = B.ind_[k];
-                    value_type *nzB = B.nz_[k];
+                    size_type kB = front[k];
+                    for (; kB != nnzrB && indB[kB] < jC; ++kB)
+                        ;
 
-                    if (nnzrB > 0)
+                    if (kB < nnzrB && indB[kB] == jC)
                     {
-
-                        size_type kB = front[k];
-                        for (; kB != nnzrB && indB[kB] < jC; ++kB)
-                            ;
-
-                        if (kB < nnzrB && indB[kB] == jC)
-                        {
-                            C.nzb_[jC] += nzA[kA] * nzB[kB];
-                            front[k] = kB;
-                        }
+                        C.nzb_[jC] += nzA[kA] * nzB[kB];
+                        front[k] = kB;
                     }
                 }
             }
-
-            C.set_row_(iC, C.nzb_, C.nzb_ + C.nCols());
         }
-    }
 
-    /**
+        C.set_row_(iC, C.nzb_, C.nzb_ + C.nCols());
+    }
+}
+
+/**
      * Element by element multiplication of two sparse matrices, in place.
      */
-    inline void elementMultiply(const SparseMatrix &b)
-    {
-        { // Pre-conditions
-            NTA_ASSERT(b.nRows() == nRows())
-                << "elementMultiply needs same number of rows in both matrices";
-            NTA_ASSERT(b.nCols() == nCols())
-                << "elementMultiply needs same number of columns in both "
-                   "matrices";
-        } // End pre-conditions
+inline void elementMultiply(const SparseMatrix &b)
+{
+    { // Pre-conditions
+        NTA_ASSERT(b.nRows() == nRows())
+            << "elementMultiply needs same number of rows in both matrices";
+        NTA_ASSERT(b.nCols() == nCols())
+            << "elementMultiply needs same number of columns in both "
+               "matrices";
+    } // End pre-conditions
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        if (nNonZerosOnRow(row) == 0 || b.nNonZerosOnRow(row) == 0)
+            nnzr_[row] = 0;
+        else
         {
-            if (nNonZerosOnRow(row) == 0 || b.nNonZerosOnRow(row) == 0)
-                nnzr_[row] = 0;
-            else
+            size_type *ind_a = ind_begin_(row);
+            size_type *ind_a_end = ind_end_(row);
+            size_type *ind_a_2 = ind_a;
+            value_type *nz_a = nz_begin_(row);
+            value_type *nz_a_2 = nz_a;
+            size_type *ind_b = b.ind_begin_(row);
+            size_type *ind_b_end = b.ind_end_(row);
+            value_type *nz_b = b.nz_begin_(row);
+            while (ind_a != ind_a_end && ind_b != ind_b_end)
             {
-                size_type *ind_a = ind_begin_(row);
-                size_type *ind_a_end = ind_end_(row);
-                size_type *ind_a_2 = ind_a;
-                value_type *nz_a = nz_begin_(row);
-                value_type *nz_a_2 = nz_a;
-                size_type *ind_b = b.ind_begin_(row);
-                size_type *ind_b_end = b.ind_end_(row);
-                value_type *nz_b = b.nz_begin_(row);
-                while (ind_a != ind_a_end && ind_b != ind_b_end)
+                if (*ind_a == *ind_b)
                 {
-                    if (*ind_a == *ind_b)
+                    value_type val = *nz_a * *nz_b;
+                    if (!isZero_(val))
                     {
-                        value_type val = *nz_a * *nz_b;
-                        if (!isZero_(val))
-                        {
-                            *ind_a_2++ = *ind_a;
-                            *nz_a_2++ = val;
-                        }
-                        ++ind_a;
-                        ++nz_a;
-                        ++ind_b;
-                        ++nz_b;
+                        *ind_a_2++ = *ind_a;
+                        *nz_a_2++ = val;
                     }
-                    else if (*ind_a < *ind_b)
-                    {
-                        ++ind_a;
-                        ++nz_a;
-                    }
-                    else if (*ind_b < *ind_a)
-                    {
-                        ++ind_b;
-                        ++nz_b;
-                    }
+                    ++ind_a;
+                    ++nz_a;
+                    ++ind_b;
+                    ++nz_b;
                 }
-                nnzr_[row] = (size_type)(ind_a_2 - ind_begin_(row));
+                else if (*ind_a < *ind_b)
+                {
+                    ++ind_a;
+                    ++nz_a;
+                }
+                else if (*ind_b < *ind_a)
+                {
+                    ++ind_b;
+                    ++nz_b;
+                }
             }
+            nnzr_[row] = (size_type)(ind_a_2 - ind_begin_(row));
         }
     }
+}
 
-    /**
+/**
      * Element by element multiplication of two matrices, but not in place.
      */
-    inline void elementMultiply(const SparseMatrix &m,
-                                SparseMatrix &result) const
+inline void elementMultiply(const SparseMatrix &m,
+                            SparseMatrix &result) const
+{
+    { // Pre-conditions
+        NTA_ASSERT(m.nRows() == nRows())
+            << "elementMultiply needs same number of rows in both matrices";
+        NTA_ASSERT(m.nCols() == nCols())
+            << "elementMultiply needs same number of columns in both "
+               "matrices";
+    } // End pre-conditions
+
+    result.resize(nRows(), nCols());
+    result.setToZero();
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            NTA_ASSERT(m.nRows() == nRows())
-                << "elementMultiply needs same number of rows in both matrices";
-            NTA_ASSERT(m.nCols() == nCols())
-                << "elementMultiply needs same number of columns in both "
-                   "matrices";
-        } // End pre-conditions
-
-        result.resize(nRows(), nCols());
-        result.setToZero();
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                size_type col = *ind;
-                result.set(row, col, *nz * m.get(row, col));
-            }
+            size_type col = *ind;
+            result.set(row, col, *nz * m.get(row, col));
         }
     }
+}
 
-    /**
+/**
      * Element by element multiplication of two sparse matrices, in place.
      */
-    inline void elementMultiply(value_type *dense)
+inline void elementMultiply(value_type *dense)
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        size_type offset = 0;
+        ITERATE_ON_ROW
         {
-            size_type offset = 0;
-            ITERATE_ON_ROW
+            size_type col = *ind;
+            value_type val = *nz * *(dense + row * nCols() + col);
+            if (isZero_(val))
             {
-                size_type col = *ind;
-                value_type val = *nz * *(dense + row * nCols() + col);
-                if (isZero_(val))
-                {
-                    ++offset;
-                }
-                else
-                {
-                    *(nz - offset) = val;
-                    *(ind - offset) = col;
-                }
+                ++offset;
             }
-            nnzr_[row] -= offset;
+            else
+            {
+                *(nz - offset) = val;
+                *(ind - offset) = col;
+            }
         }
+        nnzr_[row] -= offset;
     }
+}
 
-    /**
+/**
      * Element by element multiplication of two sparse matrices, not in place.
      */
-    inline void elementMultiply(value_type *dense, SparseMatrix &result) const
-    {
-        result.resize(nRows(), nCols());
-        result.setToZero();
+inline void elementMultiply(value_type *dense, SparseMatrix &result) const
+{
+    result.resize(nRows(), nCols());
+    result.setToZero();
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                size_type col = *ind;
-                result.set(row, col, *nz * *(dense + row * nCols() + col));
-            }
+            size_type col = *ind;
+            result.set(row, col, *nz * *(dense + row * nCols() + col));
         }
     }
+}
 
-    /**
+/**
      *  for row,col in [0,A.nrows) X [0,B.ncols):
      *   C[row,col] = sum(A[row,k] * B[k,col], for k in [0,A.ncols))
      *
      * @b Complexity:
      *  @li O(B.ncols * nnz)
      */
-    template <typename Dense>
-    inline void rightDenseMatProd(const Dense &B, Dense &C) const
-    {
-        typedef typename Dense::size_type size_type2;
+template <typename Dense>
+inline void rightDenseMatProd(const Dense &B, Dense &C) const
+{
+    typedef typename Dense::size_type size_type2;
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        for (size_type2 col = 0; col != B.nCols(); ++col)
         {
-            for (size_type2 col = 0; col != B.nCols(); ++col)
-            {
-                value_type val = 0;
-                ITERATE_ON_ROW val += *nz * B.get(*ind, col);
-                C.set(row, col, val);
-            }
+            value_type val = 0;
+            ITERATE_ON_ROW val += *nz * B.get(*ind, col);
+            C.set(row, col, val);
         }
     }
+}
 
-    /**
+/**
      *  for row,col in [0,A.nrows) X [0,B.ncols):
      *   C[row,col] = sum(A[row,k] * B[k,col], for k in [0,A.ncols))
      *
      * @b Complexity:
      *  @li O(B.ncols * nnz)
      */
-    template <typename Dense>
-    inline void rightDenseMatProdAtNZ(const Dense &B, Dense &C) const
-    {
-        typedef typename Dense::size_type size_type2;
+template <typename Dense>
+inline void rightDenseMatProdAtNZ(const Dense &B, Dense &C) const
+{
+    typedef typename Dense::size_type size_type2;
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        for (size_type2 col = 0; col != B.nCols(); ++col)
         {
-            for (size_type2 col = 0; col != B.nCols(); ++col)
-            {
-                value_type val = 0;
-                size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-                for (; ind != ind_end; ++ind)
-                    val += B.get(*ind, col);
-                C.set(row, col, val);
-            }
+            value_type val = 0;
+            size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+            for (; ind != ind_end; ++ind)
+                val += B.get(*ind, col);
+            C.set(row, col, val);
         }
     }
+}
 
-    /**
+/**
      */
-    template <typename Dense>
-    inline void denseMatExtract(const Dense &B, Dense &C) const
-    {
-        typedef typename Dense::size_type size_type2;
+template <typename Dense>
+inline void denseMatExtract(const Dense &B, Dense &C) const
+{
+    typedef typename Dense::size_type size_type2;
 
-        ITERATE_ON_ALL_ROWS
+    ITERATE_ON_ALL_ROWS
+    {
+        for (size_type2 col = 0; col != B.nCols(); ++col)
         {
-            for (size_type2 col = 0; col != B.nCols(); ++col)
-            {
-                if (nNonZerosOnRow(row) == 1)
-                    C.set(row, col, B.get(*(ind_[row]), col));
-                else
-                    C.set(row, col, 0);
-            }
+            if (nNonZerosOnRow(row) == 1)
+                C.set(row, col, B.get(*(ind_[row]), col));
+            else
+                C.set(row, col, 0);
         }
     }
+}
 
-    // MATRIX VECTOR PRODUCTS
+// MATRIX VECTOR PRODUCTS
 
-    /**
+/**
      * Computes the dot product of a single row of this SparseMatrix by vector x
      * and puts the result (a scalar) in y.
      *
@@ -9940,40 +9940,40 @@ public:
      * @b Exceptions:
      *  @li If row is not a valid row index.
      */
-    template <typename InputIterator>
-    inline value_type rightVecProd(size_type row, InputIterator x) const
+template <typename InputIterator>
+inline value_type rightVecProd(size_type row, InputIterator x) const
+{
+    { // Pre-conditions
+        assert_valid_row_(row, "rightVecProd for single row");
+    } // End pre-conditions
+
+    const size_type nnzr = nnzr_[row];
+
+    if (nnzr == 0)
+        return 0;
+
+    value_type a, b, val = 0;
+    size_type *ind = ind_begin_(row);
+    size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind_end_(row);
+    value_type *nz = nz_begin_(row);
+
+    while (ind != end1)
     {
-        { // Pre-conditions
-            assert_valid_row_(row, "rightVecProd for single row");
-        } // End pre-conditions
-
-        const size_type nnzr = nnzr_[row];
-
-        if (nnzr == 0)
-            return 0;
-
-        value_type a, b, val = 0;
-        size_type *ind = ind_begin_(row);
-        size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind_end_(row);
-        value_type *nz = nz_begin_(row);
-
-        while (ind != end1)
-        {
-            a = *nz++ * x[*ind++];
-            b = *nz++ * x[*ind++];
-            val += a + b;
-            a = *nz++ * x[*ind++];
-            b = *nz++ * x[*ind++];
-            val += a + b;
-        }
-
-        while (ind != end2)
-            val += *nz++ * x[*ind++];
-
-        return val;
+        a = *nz++ * x[*ind++];
+        b = *nz++ * x[*ind++];
+        val += a + b;
+        a = *nz++ * x[*ind++];
+        b = *nz++ * x[*ind++];
+        val += a + b;
     }
 
-    /**
+    while (ind != end2)
+        val += *nz++ * x[*ind++];
+
+    return val;
+}
+
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * right side and puts the result in vector y:
      *
@@ -9990,17 +9990,17 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecProd(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecProd(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            *y = rightVecProd(row, x);
-            ++y;
-        }
+        *y = rightVecProd(row, x);
+        ++y;
     }
+}
 
-    /**
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * right side and puts the result in vector y:
      *
@@ -10017,33 +10017,33 @@ public:
      * @b Exceptions:
      *  @li If a row index in the range is not a valid row index.
      */
-    template <typename InputIterator, typename InputIterator2,
-              typename OutputIterator>
-    inline void rightVecProd(InputIterator2 begin, InputIterator2 end,
-                             InputIterator x, OutputIterator y) const
-    {
-        { // Pre-conditions
-            assert_valid_row_it_range_(begin, end,
-                                       "rightVecProd for several rows");
-        } // End pre-conditions
+template <typename InputIterator, typename InputIterator2,
+          typename OutputIterator>
+inline void rightVecProd(InputIterator2 begin, InputIterator2 end,
+                         InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_row_it_range_(begin, end,
+                                   "rightVecProd for several rows");
+    } // End pre-conditions
 
-        for (InputIterator2 i = begin; i != end; ++i, ++y)
-            *y = rightVecProd(*i, x);
-    }
+    for (InputIterator2 i = begin; i != end; ++i, ++y)
+        *y = rightVecProd(*i, x);
+}
 
-    /**
+/**
      * Dot product of the given row and the passed in vector. This takes an STL
      * std::vector directly, providing nicer syntax in later algorithm, but it
      * doesn't
      * do anything special beyond computing a dot product.
      */
-    inline value_type rightVecProd(size_type row,
-                                   const std::vector<value_type> &x) const
-    {
-        return rightVecProd(row, x.begin());
-    }
+inline value_type rightVecProd(size_type row,
+                               const std::vector<value_type> &x) const
+{
+    return rightVecProd(row, x.begin());
+}
 
-    /**
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * right side and puts the result in vector y:
      *
@@ -10052,16 +10052,16 @@ public:
      *
      * Can't reuse the exact name 'rightvecprod' because of name collision!
      */
-    inline void rightVecProd(const std::vector<value_type> &x,
-                             std::vector<value_type> &y) const
-    {
-        if (y.size() < nRows())
-            y.resize(nRows());
+inline void rightVecProd(const std::vector<value_type> &x,
+                         std::vector<value_type> &y) const
+{
+    if (y.size() < nRows())
+        y.resize(nRows());
 
-        rightVecProd(x.begin(), y.begin());
-    }
+    rightVecProd(x.begin(), y.begin());
+}
 
-    /**
+/**
      * "Block" right vec prod: produces a matrix, whose values are the result of
      * multiplying each block of this sparse matrix by a subset of vector x.
      * This is in effect treating this matrix as if it were a collection of
@@ -10087,44 +10087,44 @@ public:
      *  @li If block_size <= 0 or block_size > ncols.
      *  @li If ncols % block_size != 0.
      */
-    template <typename InputIterator>
-    inline void blockRightVecProd(size_type block_size, InputIterator x,
-                                  SparseMatrix &C) const
+template <typename InputIterator>
+inline void blockRightVecProd(size_type block_size, InputIterator x,
+                              SparseMatrix &C) const
+{
     {
-        {
-            NTA_ASSERT(0 < block_size && block_size <= nCols())
-                << "blockRightVecProd: Invalid block size: " << block_size
-                << " - Needs to be > 0 and <= nCols = " << nCols();
-            NTA_ASSERT(nCols() % block_size == 0)
-                << "blockRightVecProd: Invalid block size: " << block_size
-                << " - Needs to be a divisor of nCols = " << nCols();
-        }
-
-        const size_type nrows = nRows();
-
-        C.resize(nRows(), nCols() / block_size);
-
-        for (size_type i = 0; i != nrows; ++i)
-        {
-
-            size_type *ind = ind_begin_(i);
-            value_type *nz = nz_begin_(i);
-            size_type block_end = block_size;
-            size_type end = nCols() + block_end;
-            size_type block_idx = 0;
-
-            while (block_end != end)
-            {
-                value_type val = 0;
-                while (*ind < block_end)
-                    val += *nz++ * x[*ind++];
-                block_end += block_size;
-                C.set(i, block_idx++, val);
-            }
-        }
+        NTA_ASSERT(0 < block_size && block_size <= nCols())
+            << "blockRightVecProd: Invalid block size: " << block_size
+            << " - Needs to be > 0 and <= nCols = " << nCols();
+        NTA_ASSERT(nCols() % block_size == 0)
+            << "blockRightVecProd: Invalid block size: " << block_size
+            << " - Needs to be a divisor of nCols = " << nCols();
     }
 
-    /**
+    const size_type nrows = nRows();
+
+    C.resize(nRows(), nCols() / block_size);
+
+    for (size_type i = 0; i != nrows; ++i)
+    {
+
+        size_type *ind = ind_begin_(i);
+        value_type *nz = nz_begin_(i);
+        size_type block_end = block_size;
+        size_type end = nCols() + block_end;
+        size_type block_idx = 0;
+
+        while (block_end != end)
+        {
+            value_type val = 0;
+            while (*ind < block_end)
+                val += *nz++ * x[*ind++];
+            block_end += block_size;
+            C.set(i, block_idx++, val);
+        }
+    }
+}
+
+/**
      * Computes the standard product of vector x by a column of this
      * SparseMatrix and puts the result in y.
      *
@@ -10141,34 +10141,34 @@ public:
      * @b Exceptions:
      *  @li If col is not a valid column index.
      */
-    template <typename InputIterator>
-    inline value_type leftVecProd(size_type col, InputIterator x) const
+template <typename InputIterator>
+inline value_type leftVecProd(size_type col, InputIterator x) const
+{
+    { // Pre-conditions
+        assert_valid_col_(col, "leftVecProd for one col");
+    } // End pre-conditions
+
+    value_type y = 0;
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_(col, "leftVecProd for one col");
-        } // End pre-conditions
 
-        value_type y = 0;
+        value_type x_val = x[row];
 
-        ITERATE_ON_ALL_ROWS
-        {
+        if (isZero_(x_val) || nnzr_[row] == 0)
+            continue;
 
-            value_type x_val = x[row];
+        size_type *p =
+            std::lower_bound(ind_begin_(row), ind_end_(row), col);
 
-            if (isZero_(x_val) || nnzr_[row] == 0)
-                continue;
-
-            size_type *p =
-                std::lower_bound(ind_begin_(row), ind_end_(row), col);
-
-            if (p != ind_end_(row) && *p == col)
-                y += *(nz_begin_(row) + (p - ind_begin_(row))) * x_val;
-        }
-
-        return y;
+        if (p != ind_end_(row) && *p == col)
+            y += *(nz_begin_(row) + (p - ind_begin_(row))) * x_val;
     }
 
-    /**
+    return y;
+}
+
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * left side and puts the result in vector y:
      *
@@ -10186,24 +10186,24 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void leftVecProd(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void leftVecProd(InputIterator x, OutputIterator y) const
+{
+    std::fill(y, y + nCols(), (value_type)0);
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::fill(y, y + nCols(), (value_type)0);
 
-        ITERATE_ON_ALL_ROWS
-        {
+        value_type val = x[row];
 
-            value_type val = x[row];
+        if (isZero_(val))
+            continue;
 
-            if (isZero_(val))
-                continue;
-
-            ITERATE_ON_ROW y[*ind] += *nz * val;
-        }
+        ITERATE_ON_ROW y[*ind] += *nz * val;
     }
+}
 
-    /**
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * left side and puts the result in vector, for some columns only:
      *
@@ -10223,52 +10223,52 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename InputIterator2,
-              typename OutputIterator>
-    inline void leftVecProd(InputIterator2 begin, InputIterator2 end,
-                            InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename InputIterator2,
+          typename OutputIterator>
+inline void leftVecProd(InputIterator2 begin, InputIterator2 end,
+                        InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_col_it_range_(begin, end, "leftVecProd");
+    } // End pre-conditions
+
+    size_type c = 0;
+    for (InputIterator2 i = begin; i != end; ++i, ++c)
+        indb_[*i] = c;
+    std::fill(y, y + c, (value_type)0);
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_col_it_range_(begin, end, "leftVecProd");
-        } // End pre-conditions
 
-        size_type c = 0;
-        for (InputIterator2 i = begin; i != end; ++i, ++c)
-            indb_[*i] = c;
-        std::fill(y, y + c, (value_type)0);
-
-        ITERATE_ON_ALL_ROWS
+        value_type val = x[row];
+        size_type *ind = ind_begin_(row);
+        size_type *ind_end = ind_end_(row);
+        value_type *nz = nz_begin_(row);
+        InputIterator2 j = begin;
+        while (j != end && ind != ind_end)
         {
-
-            value_type val = x[row];
-            size_type *ind = ind_begin_(row);
-            size_type *ind_end = ind_end_(row);
-            value_type *nz = nz_begin_(row);
-            InputIterator2 j = begin;
-            while (j != end && ind != ind_end)
+            size_type col = *j;
+            if (col == *ind)
             {
-                size_type col = *j;
-                if (col == *ind)
-                {
-                    y[indb_[col]] += *nz * val;
-                    ++ind;
-                    ++nz;
-                    ++j;
-                }
-                else if (col < *ind)
-                {
-                    ++j;
-                }
-                else if (*ind < col)
-                {
-                    ++ind;
-                    ++nz;
-                }
+                y[indb_[col]] += *nz * val;
+                ++ind;
+                ++nz;
+                ++j;
+            }
+            else if (col < *ind)
+            {
+                ++j;
+            }
+            else if (*ind < col)
+            {
+                ++ind;
+                ++nz;
             }
         }
     }
+}
 
-    /**
+/**
      * Computes the standard product of vector x by this SparseMatrix on the
      * left side and puts the result in vector y, for some columns only:
      *
@@ -10288,68 +10288,68 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename InputIterator2,
-              typename OutputIterator>
-    inline void leftVecProd_binary(InputIterator2 begin, InputIterator2 end,
-                                   InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename InputIterator2,
+          typename OutputIterator>
+inline void leftVecProd_binary(InputIterator2 begin, InputIterator2 end,
+                               InputIterator x, OutputIterator y) const
+{
+    { // Pre-conditions
+        assert_valid_sorted_index_range_(nCols(), begin, end,
+                                         "leftVecProd_binary");
+    } // End pre-conditions
+
+    size_type c = 0;
+    for (InputIterator2 i = begin; i != end; ++i, ++c)
+        indb_[*i] = c;
+    std::fill(y, y + c, (value_type)0);
+
+    ITERATE_ON_ALL_ROWS
     {
-        { // Pre-conditions
-            assert_valid_sorted_index_range_(nCols(), begin, end,
-                                             "leftVecProd_binary");
-        } // End pre-conditions
 
-        size_type c = 0;
-        for (InputIterator2 i = begin; i != end; ++i, ++c)
-            indb_[*i] = c;
-        std::fill(y, y + c, (value_type)0);
-
-        ITERATE_ON_ALL_ROWS
+        value_type val = x[row];
+        size_type *ind_begin = ind_begin_(row);
+        size_type *ind_end = ind_end_(row);
+        size_type *p = ind_begin;
+        value_type *nz_begin = nz_begin_(row);
+        for (InputIterator2 j = begin; j != end; ++j)
         {
-
-            value_type val = x[row];
-            size_type *ind_begin = ind_begin_(row);
-            size_type *ind_end = ind_end_(row);
-            size_type *p = ind_begin;
-            value_type *nz_begin = nz_begin_(row);
-            for (InputIterator2 j = begin; j != end; ++j)
-            {
-                size_type col = *j;
-                p = std::lower_bound(p, ind_end, col);
-                if (p != ind_end && *p == col)
-                    y[indb_[col]] += *(nz_begin + (p - ind_begin)) * val;
-            }
+            size_type col = *j;
+            p = std::lower_bound(p, ind_end, col);
+            if (p != ind_end && *p == col)
+                y[indb_[col]] += *(nz_begin + (p - ind_begin)) * val;
         }
     }
+}
 
-    /**
+/**
      * Computes dot product of given col and given x, where x is an instance
      * of STL's std::vector (useful in C++).
      */
-    inline value_type leftVecProd(size_type col,
-                                  const std::vector<value_type> &x) const
-    {
-        return leftVecProd(col, x.begin());
-    }
+inline value_type leftVecProd(size_type col,
+                              const std::vector<value_type> &x) const
+{
+    return leftVecProd(col, x.begin());
+}
 
-    /**
+/**
      * Left vec prod of x and this matrix, putting the result into y, where x
      * and
      * y
      * are instances of STL's std::vector (useful in C++).
      */
-    inline void leftVecProd(const std::vector<value_type> &x,
-                            std::vector<value_type> &y) const
-    {
-        if (y.size() < nCols())
-            y.resize(nCols());
+inline void leftVecProd(const std::vector<value_type> &x,
+                        std::vector<value_type> &y) const
+{
+    if (y.size() < nCols())
+        y.resize(nCols());
 
-        leftVecProd(x.begin(), y.begin());
-    }
+    leftVecProd(x.begin(), y.begin());
+}
 
-    // AtNZ operations, i.e. treating the sparse matrix as a 0/1 binary
-    // sparse matrix, never looking at the actual values of the non-zeros.
+// AtNZ operations, i.e. treating the sparse matrix as a 0/1 binary
+// sparse matrix, never looking at the actual values of the non-zeros.
 
-    /**
+/**
      * Computes the product of the values in x corresponding to the non-zeros
      * of each row. Stores the result in y for each row. The operation is:
      *
@@ -10364,28 +10364,28 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecProdAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecProdAtNZ(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
 
-            size_type nnzr = nnzr_[row];
-            size_type *ind = ind_[row];
-            size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
-            value_type val = 1.0;
+        size_type nnzr = nnzr_[row];
+        size_type *ind = ind_[row];
+        size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
+        value_type val = 1.0;
 
-            for (; ind != end1; ind += 4)
-                val *= x[*ind] * x[*(ind + 1)] * x[*(ind + 2)] * x[*(ind + 3)];
+        for (; ind != end1; ind += 4)
+            val *= x[*ind] * x[*(ind + 1)] * x[*(ind + 2)] * x[*(ind + 3)];
 
-            while (ind != end2)
-                val *= x[*ind++];
+        while (ind != end2)
+            val *= x[*ind++];
 
-            *y++ = val;
-        }
+        *y++ = val;
     }
+}
 
-    /**
+/**
      * Computes the product of the values in x corresponding to the non-zeros
      * of each col. Stores the result in y for each col. The operation is:
      *
@@ -10399,23 +10399,23 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void leftVecProdAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void leftVecProdAtNZ(InputIterator x, OutputIterator y) const
+{
+    std::fill(y, y + nCols(), (value_type)1.0);
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::fill(y, y + nCols(), (value_type)1.0);
 
-        ITERATE_ON_ALL_ROWS
-        {
+        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+        value_type val = x[row];
 
-            size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-            value_type val = x[row];
-
-            while (ind != ind_end)
-                y[*ind++] *= val;
-        }
+        while (ind != ind_end)
+            y[*ind++] *= val;
     }
+}
 
-    /**
+/**
      * Adds the values of x corresponding to non-zeros, for each row.
      * The operation is:
      *
@@ -10427,29 +10427,29 @@ public:
      * @param y [OutputIterator<value_type>] output vector (size = number of
      * rows)
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZ(InputIterator x, OutputIterator y) const
+{
+
+    ITERATE_ON_ALL_ROWS
     {
 
-        ITERATE_ON_ALL_ROWS
-        {
+        size_type nnzr = nnzr_[row];
+        size_type *ind = ind_[row];
+        size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
+        value_type val = 0.0;
 
-            size_type nnzr = nnzr_[row];
-            size_type *ind = ind_[row];
-            size_type *end1 = ind + 4 * (nnzr / 4), *end2 = ind + nnzr;
-            value_type val = 0.0;
+        for (; ind != end1; ind += 4)
+            val += x[*ind] + x[*(ind + 1)] + x[*(ind + 2)] + x[*(ind + 3)];
 
-            for (; ind != end1; ind += 4)
-                val += x[*ind] + x[*(ind + 1)] + x[*(ind + 2)] + x[*(ind + 3)];
+        while (ind != end2)
+            val += x[*ind++];
 
-            while (ind != end2)
-                val += x[*ind++];
-
-            *y++ = val;
-        }
+        *y++ = val;
     }
+}
 
-    /**
+/**
      * Adds the values of x corresponding to non-zeros, for each row.
      * The operation is:
      *
@@ -10462,185 +10462,185 @@ public:
      * @param out
      * Output vector (size = number of rows)
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZSparse(InputIterator x_ones_begin,
-                                      InputIterator x_ones_end,
-                                      OutputIterator out_begin) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZSparse(InputIterator x_ones_begin,
+                                  InputIterator x_ones_end,
+                                  OutputIterator out_begin) const
+{
+    { // Pre-conditions
+        assert_valid_col_it_range_(x_ones_begin, x_ones_end,
+                                   "rightVecSumAtNZSparse");
+    } // End pre-conditions
+
+    // One approach would be to walk a sorted list of ones for every row in
+    // the matrix. But x is queried for every nonzero in the matrix, so in
+    // practice it's much faster to create an x dense array and then perform
+    // simple lookups on the dense array.
+    std::fill(indb_, indb_ + nCols(), (size_type)0);
+    for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
     {
-        { // Pre-conditions
-            assert_valid_col_it_range_(x_ones_begin, x_ones_end,
-                                       "rightVecSumAtNZSparse");
-        } // End pre-conditions
-
-        // One approach would be to walk a sorted list of ones for every row in
-        // the matrix. But x is queried for every nonzero in the matrix, so in
-        // practice it's much faster to create an x dense array and then perform
-        // simple lookups on the dense array.
-        std::fill(indb_, indb_ + nCols(), (size_type)0);
-        for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
-        {
-            indb_[*x_one] = 1;
-        }
-
-        OutputIterator out = out_begin;
-
-        ITERATE_ON_ALL_ROWS
-        {
-
-            size_type *ind_begin = ind_[row];
-            size_type *ind_end = ind_begin + nnzr_[row];
-            difference_type sum = 0;
-
-            for (size_type *ind = ind_begin; ind != ind_end; ++ind)
-            {
-                if (indb_[*ind])
-                {
-                    ++sum;
-                }
-            }
-
-            *out++ = sum;
-        }
+        indb_[*x_one] = 1;
     }
 
-    /**
+    OutputIterator out = out_begin;
+
+    ITERATE_ON_ALL_ROWS
+    {
+
+        size_type *ind_begin = ind_[row];
+        size_type *ind_end = ind_begin + nnzr_[row];
+        difference_type sum = 0;
+
+        for (size_type *ind = ind_begin; ind != ind_end; ++ind)
+        {
+            if (indb_[*ind])
+            {
+                ++sum;
+            }
+        }
+
+        *out++ = sum;
+    }
+}
+
+/**
      * Like rightVecSumAtNZ, except that we add to the sum only if the value of
      * the non-zero is > threshold.
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZGtThreshold(InputIterator x, OutputIterator y,
-                                           value_type threshold) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZGtThreshold(InputIterator x, OutputIterator y,
+                                       value_type threshold) const
+{
+
+    ITERATE_ON_ALL_ROWS
     {
 
-        ITERATE_ON_ALL_ROWS
-        {
+        size_type nnzr = nnzr_[row];
+        size_type *ind = ind_[row];
+        value_type *nz = nz_[row];
+        value_type val = 0.0;
 
-            size_type nnzr = nnzr_[row];
-            size_type *ind = ind_[row];
-            value_type *nz = nz_[row];
-            value_type val = 0.0;
+        for (size_type i = 0; i != nnzr; ++i)
+            if (nz[i] > threshold)
+                val += x[ind[i]];
 
-            for (size_type i = 0; i != nnzr; ++i)
-                if (nz[i] > threshold)
-                    val += x[ind[i]];
-
-            *y++ = val;
-        }
+        *y++ = val;
     }
+}
 
-    /**
+/**
      * Like rightVecSumAtNZSparse, except that we add to the sum only if the
      * value of the non-zero is > threshold, and the output is an integer array
      * rather than a float array.
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZGtThresholdSparse(InputIterator x_ones_begin,
-                                                 InputIterator x_ones_end,
-                                                 OutputIterator out_begin,
-                                                 value_type threshold) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZGtThresholdSparse(InputIterator x_ones_begin,
+                                             InputIterator x_ones_end,
+                                             OutputIterator out_begin,
+                                             value_type threshold) const
+{
+    { // Pre-conditions
+        assert_valid_col_it_range_(x_ones_begin, x_ones_end,
+                                   "rightVecSumAtNZGtThresholdSparse");
+    } // End pre-conditions
+
+    std::fill(indb_, indb_ + nCols(), (size_type)0);
+    for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
     {
-        { // Pre-conditions
-            assert_valid_col_it_range_(x_ones_begin, x_ones_end,
-                                       "rightVecSumAtNZGtThresholdSparse");
-        } // End pre-conditions
-
-        std::fill(indb_, indb_ + nCols(), (size_type)0);
-        for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
-        {
-            indb_[*x_one] = 1;
-        }
-
-        OutputIterator out = out_begin;
-
-        ITERATE_ON_ALL_ROWS
-        {
-
-            size_type *ind_begin = ind_[row];
-            size_type *ind_end = ind_begin + nnzr_[row];
-            value_type *nz = nz_[row];
-            difference_type sum = 0;
-
-            for (size_type *ind = ind_begin; ind != ind_end; ++ind)
-            {
-                if (indb_[*ind] && nz[ind - ind_begin] > threshold)
-                {
-                    ++sum;
-                }
-            }
-
-            *out++ = sum;
-        }
+        indb_[*x_one] = 1;
     }
 
-    /**
+    OutputIterator out = out_begin;
+
+    ITERATE_ON_ALL_ROWS
+    {
+
+        size_type *ind_begin = ind_[row];
+        size_type *ind_end = ind_begin + nnzr_[row];
+        value_type *nz = nz_[row];
+        difference_type sum = 0;
+
+        for (size_type *ind = ind_begin; ind != ind_end; ++ind)
+        {
+            if (indb_[*ind] && nz[ind - ind_begin] > threshold)
+            {
+                ++sum;
+            }
+        }
+
+        *out++ = sum;
+    }
+}
+
+/**
      * Like rightVecSumAtNZ, except that we add to the sum only if the value of
      * the non-zero is >= threshold.
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZGteThreshold(InputIterator x, OutputIterator y,
-                                            value_type threshold) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZGteThreshold(InputIterator x, OutputIterator y,
+                                        value_type threshold) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
 
-            size_type nnzr = nnzr_[row];
-            size_type *ind = ind_[row];
-            value_type *nz = nz_[row];
-            value_type val = 0.0;
+        size_type nnzr = nnzr_[row];
+        size_type *ind = ind_[row];
+        value_type *nz = nz_[row];
+        value_type val = 0.0;
 
-            for (size_type i = 0; i != nnzr; ++i)
-                if (nz[i] >= threshold)
-                    val += x[ind[i]];
+        for (size_type i = 0; i != nnzr; ++i)
+            if (nz[i] >= threshold)
+                val += x[ind[i]];
 
-            *y++ = val;
-        }
+        *y++ = val;
     }
+}
 
-    /**
+/**
      * Like rightVecSumAtNZSparse, except that we add to the sum only if the
      * value of the non-zero is >= threshold, and the output is an integer array
      * rather than a float array.
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecSumAtNZGteThresholdSparse(InputIterator x_ones_begin,
-                                                  InputIterator x_ones_end,
-                                                  OutputIterator out_begin,
-                                                  value_type threshold) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecSumAtNZGteThresholdSparse(InputIterator x_ones_begin,
+                                              InputIterator x_ones_end,
+                                              OutputIterator out_begin,
+                                              value_type threshold) const
+{
+    { // Pre-conditions
+        assert_valid_col_it_range_(x_ones_begin, x_ones_end,
+                                   "rightVecSumAtNZGteThresholdSparse");
+    } // End pre-conditions
+
+    std::fill(indb_, indb_ + nCols(), (size_type)0);
+    for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
     {
-        { // Pre-conditions
-            assert_valid_col_it_range_(x_ones_begin, x_ones_end,
-                                       "rightVecSumAtNZGteThresholdSparse");
-        } // End pre-conditions
-
-        std::fill(indb_, indb_ + nCols(), (size_type)0);
-        for (InputIterator x_one = x_ones_begin; x_one != x_ones_end; ++x_one)
-        {
-            indb_[*x_one] = 1;
-        }
-
-        OutputIterator out = out_begin;
-
-        ITERATE_ON_ALL_ROWS
-        {
-
-            size_type *ind_begin = ind_[row];
-            size_type *ind_end = ind_begin + nnzr_[row];
-            value_type *nz = nz_[row];
-            difference_type sum = 0;
-
-            for (size_type *ind = ind_begin; ind != ind_end; ++ind)
-            {
-                if (indb_[*ind] && nz[ind - ind_begin] >= threshold)
-                {
-                    ++sum;
-                }
-            }
-
-            *out++ = sum;
-        }
+        indb_[*x_one] = 1;
     }
 
-    /**
+    OutputIterator out = out_begin;
+
+    ITERATE_ON_ALL_ROWS
+    {
+
+        size_type *ind_begin = ind_[row];
+        size_type *ind_end = ind_begin + nnzr_[row];
+        value_type *nz = nz_[row];
+        difference_type sum = 0;
+
+        for (size_type *ind = ind_begin; ind != ind_end; ++ind)
+        {
+            if (indb_[*ind] && nz[ind - ind_begin] >= threshold)
+            {
+                ++sum;
+            }
+        }
+
+        *out++ = sum;
+    }
+}
+
+/**
      * Adds the values of x corresponding to non-zeros, for each column.
      * The operation is:
      *
@@ -10654,23 +10654,23 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void leftVecSumAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void leftVecSumAtNZ(InputIterator x, OutputIterator y) const
+{
+    std::fill(y, y + nCols(), (value_type)0.0);
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::fill(y, y + nCols(), (value_type)0.0);
 
-        ITERATE_ON_ALL_ROWS
-        {
+        size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
+        value_type val = x[row];
 
-            size_type *ind = ind_begin_(row), *ind_end = ind_end_(row);
-            value_type val = x[row];
-
-            while (ind != ind_end)
-                y[*ind++] += val;
-        }
+        while (ind != ind_end)
+            y[*ind++] += val;
     }
+}
 
-    /**
+/**
      * Finds the max of the values of x corresponding to non-zeros, for each
      * row. The operation is:
      *
@@ -10685,24 +10685,24 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecMaxAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecMaxAtNZ(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+        value_type max_val = -std::numeric_limits<value_type>::max();
+        ITERATE_ON_ROW
         {
-            value_type max_val = -std::numeric_limits<value_type>::max();
-            ITERATE_ON_ROW
-            {
-                if (x[*ind] > max_val)
-                    max_val = x[*ind];
-            }
-            *y++ = max_val != -std::numeric_limits<value_type>::max()
-                       ? max_val
-                       : (value_type)0;
+            if (x[*ind] > max_val)
+                max_val = x[*ind];
         }
+        *y++ = max_val != -std::numeric_limits<value_type>::max()
+                   ? max_val
+                   : (value_type)0;
     }
+}
 
-    /**
+/**
      * Finds the max of the values of x corresponding to non-zeros, for each
      * column.
      * The operation is:
@@ -10717,27 +10717,27 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void leftVecMaxAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void leftVecMaxAtNZ(InputIterator x, OutputIterator y) const
+{
+    std::fill(y, y + nCols(),
+              (value_type)-std::numeric_limits<value_type>::max());
+
+    ITERATE_ON_ALL_ROWS
     {
-        std::fill(y, y + nCols(),
-                  (value_type)-std::numeric_limits<value_type>::max());
-
-        ITERATE_ON_ALL_ROWS
+        ITERATE_ON_ROW
         {
-            ITERATE_ON_ROW
-            {
-                if (x[row] > y[*ind])
-                    y[*ind] = x[row];
-            }
+            if (x[row] > y[*ind])
+                y[*ind] = x[row];
         }
-
-        for (size_type i = 0; i != nCols(); ++i)
-            if (y[i] == (value_type)-std::numeric_limits<value_type>::max())
-                y[i] = 0;
     }
 
-    /**
+    for (size_type i = 0; i != nCols(); ++i)
+        if (y[i] == (value_type)-std::numeric_limits<value_type>::max())
+            y[i] = 0;
+}
+
+/**
      * Computes the product of the values in x corresponding to the non-zeros
      * of each row. Stores the result in y for each row. The operation is:
      *
@@ -10753,37 +10753,37 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rightVecProdAtNZ(InputIterator x, OutputIterator y,
-                                 const value_type &lb) const
+template <typename InputIterator, typename OutputIterator>
+inline void rightVecProdAtNZ(InputIterator x, OutputIterator y,
+                             const value_type &lb) const
+{
+    size_type k, nnzr, end, *ind;
+    double val;
+
+    ITERATE_ON_ALL_ROWS
     {
-        size_type k, nnzr, end, *ind;
-        double val;
 
-        ITERATE_ON_ALL_ROWS
-        {
+        nnzr = nnzr_[row];
+        ind = ind_[row];
+        val = 1;
+        end = 4 * (nnzr / 4);
 
-            nnzr = nnzr_[row];
-            ind = ind_[row];
-            val = 1;
-            end = 4 * (nnzr / 4);
+        for (k = 0; k < end && val > lb; k += 4)
+            val *=
+                x[ind[k]] * x[ind[k + 1]] * x[ind[k + 2]] * x[ind[k + 3]];
 
-            for (k = 0; k < end && val > lb; k += 4)
-                val *=
-                    x[ind[k]] * x[ind[k + 1]] * x[ind[k + 2]] * x[ind[k + 3]];
+        if (val > lb)
+            for (k = end; k != nnzr; ++k)
+                val *= x[ind[k]];
 
-            if (val > lb)
-                for (k = end; k != nnzr; ++k)
-                    val *= x[ind[k]];
-
-            if (val > lb)
-                *y++ = val;
-            else
-                *y++ = lb;
-        }
+        if (val > lb)
+            *y++ = val;
+        else
+            *y++ = lb;
     }
+}
 
-    /**
+/**
      * Returns the max value of vector x corresponding to a non-zero of each
      * row of this SparseMatrix. For each row, this max is stored in y:
      *
@@ -10798,26 +10798,26 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void vecMaxAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void vecMaxAtNZ(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+
+        value_type max_v = -std::numeric_limits<value_type>::max();
+
+        ITERATE_ON_ROW
         {
-
-            value_type max_v = -std::numeric_limits<value_type>::max();
-
-            ITERATE_ON_ROW
-            {
-                value_type a = x[*ind];
-                if (a > max_v)
-                    max_v = a;
-            }
-
-            *y++ = max_v == -std::numeric_limits<value_type>::max() ? 0 : max_v;
+            value_type a = x[*ind];
+            if (a > max_v)
+                max_v = a;
         }
-    }
 
-    /**
+        *y++ = max_v == -std::numeric_limits<value_type>::max() ? 0 : max_v;
+    }
+}
+
+/**
      * Computes the index of the max value of x, where that
      * value is at the index of a non-zero. Does that for each
      * row, stores the resulting index in y for each row:
@@ -10833,36 +10833,36 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void vecArgMaxAtNZ(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void vecArgMaxAtNZ(InputIterator x, OutputIterator y) const
+{
+    size_type j, arg_j = 0;
+    value_type val, max_val;
+
+    ITERATE_ON_ALL_ROWS
     {
-        size_type j, arg_j = 0;
-        value_type val, max_val;
 
-        ITERATE_ON_ALL_ROWS
+        arg_j = 0;
+        max_val = -std::numeric_limits<value_type>::max();
+
+        ITERATE_ON_ROW
         {
-
-            arg_j = 0;
-            max_val = -std::numeric_limits<value_type>::max();
-
-            ITERATE_ON_ROW
+            j = *ind;
+            val = x[j];
+            if (val > max_val)
             {
-                j = *ind;
-                val = x[j];
-                if (val > max_val)
-                {
-                    arg_j = j;
-                    max_val = val;
-                }
+                arg_j = j;
+                max_val = val;
             }
-
-            *y++ = arg_j;
         }
+
+        *y++ = arg_j;
     }
+}
 
-    // End AtNZ operations
+// End AtNZ operations
 
-    /**
+/**
      * Computes the product of all the values in vector x by all the non zero
      * values
      * on each row of this sparse matrix:
@@ -10880,21 +10880,21 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rowVecProd(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void rowVecProd(InputIterator x, OutputIterator y) const
+{
+    typedef typename std::iterator_traits<OutputIterator>::value_type OVT;
+
+    ITERATE_ON_ALL_ROWS
     {
-        typedef typename std::iterator_traits<OutputIterator>::value_type OVT;
-
-        ITERATE_ON_ALL_ROWS
-        {
-            prec_value_type val = (prec_value_type)1.0;
-            ITERATE_ON_ROW val *=
-                ((prec_value_type)*nz) * ((prec_value_type)x[*ind]);
-            *y++ = (OVT)val;
-        }
+        prec_value_type val = (prec_value_type)1.0;
+        ITERATE_ON_ROW val *=
+            ((prec_value_type)*nz) * ((prec_value_type)x[*ind]);
+        *y++ = (OVT)val;
     }
+}
 
-    /**
+/**
      * Computes the product of all the values in vector x by all the non zero
      * values
      * on each row of this sparse matrix:
@@ -10915,19 +10915,19 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void rowVecProd(InputIterator x, OutputIterator y,
-                           const value_type &lb) const
+template <typename InputIterator, typename OutputIterator>
+inline void rowVecProd(InputIterator x, OutputIterator y,
+                       const value_type &lb) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
-        {
-            prec_value_type val = (prec_value_type)1.0;
-            ITERATE_ON_ROW val *= *nz * x[*ind];
-            *y++ = val > lb ? val : lb;
-        }
+        prec_value_type val = (prec_value_type)1.0;
+        ITERATE_ON_ROW val *= *nz * x[*ind];
+        *y++ = val > lb ? val : lb;
     }
+}
 
-    /**
+/**
      * Computes the max prod between each element of vector x and each non-zero
      * of each row of this SparseMatrix. Puts the max for each row in vector y:
      *
@@ -10943,27 +10943,27 @@ public:
      * @b Exceptions:
      *  @li None
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void vecMaxProd(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void vecMaxProd(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+
+        value_type max_v =
+            nnzr_[row] == 0 ? 0 : nz_[row][0] * x[ind_[row][0]];
+
+        ITERATE_ON_ROW
         {
-
-            value_type max_v =
-                nnzr_[row] == 0 ? 0 : nz_[row][0] * x[ind_[row][0]];
-
-            ITERATE_ON_ROW
-            {
-                value_type p = *nz * x[*ind];
-                if (p > max_v)
-                    max_v = p;
-            }
-
-            *y++ = max_v;
+            value_type p = *nz * x[*ind];
+            if (p > max_v)
+                max_v = p;
         }
-    }
 
-    /**
+        *y++ = max_v;
+    }
+}
+
+/**
      * Computes the arg of the max prod between each element of vector x and
      * each non-zero of each row of this SparseMatrix. Puts the max for each row
      * in vector y:
@@ -10983,680 +10983,680 @@ public:
      * TODO: problem doesn't work with matrix that contains negative numbers,
      * because in that case, 0 could be a legit value.
      */
-    template <typename InputIterator, typename OutputIterator>
-    inline void vecArgMaxProd(InputIterator x, OutputIterator y) const
+template <typename InputIterator, typename OutputIterator>
+inline void vecArgMaxProd(InputIterator x, OutputIterator y) const
+{
+    ITERATE_ON_ALL_ROWS
     {
-        ITERATE_ON_ALL_ROWS
+
+        size_type max_i = 0;
+        value_type max_v = -std::numeric_limits<value_type>::max();
+
+        ITERATE_ON_ROW
         {
-
-            size_type max_i = 0;
-            value_type max_v = -std::numeric_limits<value_type>::max();
-
-            ITERATE_ON_ROW
+            value_type p = *nz * x[*ind];
+            if (!isZero_(p) && p >= max_v)
             {
-                value_type p = *nz * x[*ind];
-                if (!isZero_(p) && p >= max_v)
-                {
-                    max_v = p;
-                    max_i = *ind;
-                }
+                max_v = p;
+                max_i = *ind;
             }
-
-            *y++ = max_i;
         }
-    }
 
-    /**
+        *y++ = max_i;
+    }
+}
+
+/**
      * For each row i of this SparseMatrix, finds this row in B, and if it is
      * found
      * as row j of B, puts a 1 at (i, j) in C.
      * Assumes that the rows of B are unique.
      */
-    inline void map(const SparseMatrix &B, SparseMatrix &C) const
+inline void map(const SparseMatrix &B, SparseMatrix &C) const
+{
     {
-        {
-            NTA_ASSERT(C.nRows() == 0);
-            NTA_ASSERT(nCols() == B.nCols());
-            NTA_ASSERT(C.nCols() == B.nRows());
-        }
-
-        nzb_[0] = (value_type)1;
-        bool matched = false;
-
-        for (size_type i = 0; i != this->nRows(); ++i)
-        {
-
-            matched = false;
-            for (size_type i2 = 0; i2 != B.nRows(); ++i2)
-            {
-                if (nnzr_[i] == B.nnzr_[i2])
-                {
-                    size_type j = 0, nnzr = nnzr_[i];
-                    while ((j < nnzr) && (ind_[i][j] == B.ind_[i2][j]) &&
-                           (nearlyEqual(nz_[i][j], B.nz_[i2][j])))
-                        ++j;
-                    if (j == nnzr)
-                    {
-                        indb_[0] = i2;
-                        matched = true;
-                        break;
-                    }
-                }
-            }
-            if (matched)
-                C.addRow(indb_, indb_ + 1, nzb_);
-        }
+        NTA_ASSERT(C.nRows() == 0);
+        NTA_ASSERT(nCols() == B.nCols());
+        NTA_ASSERT(C.nCols() == B.nRows());
     }
 
-    // OUTER PRODUCT
+    nzb_[0] = (value_type)1;
+    bool matched = false;
 
-    /**
+    for (size_type i = 0; i != this->nRows(); ++i)
+    {
+
+        matched = false;
+        for (size_type i2 = 0; i2 != B.nRows(); ++i2)
+        {
+            if (nnzr_[i] == B.nnzr_[i2])
+            {
+                size_type j = 0, nnzr = nnzr_[i];
+                while ((j < nnzr) && (ind_[i][j] == B.ind_[i2][j]) &&
+                       (nearlyEqual(nz_[i][j], B.nz_[i2][j])))
+                    ++j;
+                if (j == nnzr)
+                {
+                    indb_[0] = i2;
+                    matched = true;
+                    break;
+                }
+            }
+        }
+        if (matched)
+            C.addRow(indb_, indb_ + 1, nzb_);
+    }
+}
+
+// OUTER PRODUCT
+
+/**
      * Increments this sparse matrix with outer product of two passed vectors.
      *
      * this += outer(x,y)
      */
-    template <typename InputIterator>
-    inline void
-    incrementWithOuterProduct(InputIterator x_begin, InputIterator x_end,
-                              InputIterator y_begin, InputIterator y_end)
+template <typename InputIterator>
+inline void
+incrementWithOuterProduct(InputIterator x_begin, InputIterator x_end,
+                          InputIterator y_begin, InputIterator y_end)
+{
+    { // Pre-conditions
+        NTA_ASSERT((size_type)(x_end - x_begin) == nRows())
+            << "incrementWithOuterProduct: Wrong size for x vector: "
+            << (size_type)(x_end - x_begin)
+            << " - Should be = nrows = " << nRows();
+        NTA_ASSERT((size_type)(y_end - y_begin) == nCols())
+            << "incrementWithOuterProduct: Wrong size for y vector: "
+            << (size_type)(y_end - y_begin)
+            << " - Should be = ncols = " << nCols();
+    } // End pre-conditions
+
+    std::vector<size_type> ind(nCols());
+    std::vector<value_type> nz(nCols());
+    typename std::vector<size_type>::iterator ind_it = ind.begin();
+    typename std::vector<value_type>::iterator nz_it = nz.begin();
+
+    for (InputIterator y = y_begin; y != y_end; ++y)
     {
-        { // Pre-conditions
-            NTA_ASSERT((size_type)(x_end - x_begin) == nRows())
-                << "incrementWithOuterProduct: Wrong size for x vector: "
-                << (size_type)(x_end - x_begin)
-                << " - Should be = nrows = " << nRows();
-            NTA_ASSERT((size_type)(y_end - y_begin) == nCols())
-                << "incrementWithOuterProduct: Wrong size for y vector: "
-                << (size_type)(y_end - y_begin)
-                << " - Should be = ncols = " << nCols();
-        } // End pre-conditions
-
-        std::vector<size_type> ind(nCols());
-        std::vector<value_type> nz(nCols());
-        typename std::vector<size_type>::iterator ind_it = ind.begin();
-        typename std::vector<value_type>::iterator nz_it = nz.begin();
-
-        for (InputIterator y = y_begin; y != y_end; ++y)
+        value_type val = *y;
+        if (!isZero_(val))
         {
-            value_type val = *y;
-            if (!isZero_(val))
-            {
-                *ind_it++ = (size_type)(y - y_begin);
-                *nz_it++ = val;
-            }
-        }
-
-        typename std::vector<size_type>::iterator ind_end = ind_it;
-
-        for (InputIterator x = x_begin; x != x_end; ++x)
-        {
-            value_type val1 = *x;
-            if (isZero_(val1))
-                continue;
-            size_type row = (size_type)(x - x_begin);
-            ind_it = ind.begin();
-            nz_it = nz.begin();
-            for (; ind_it != ind_end; ++ind_it, ++nz_it)
-                increment(row, *ind_it, val1 * *nz_it);
+            *ind_it++ = (size_type)(y - y_begin);
+            *nz_it++ = val;
         }
     }
 
-    /**
+    typename std::vector<size_type>::iterator ind_end = ind_it;
+
+    for (InputIterator x = x_begin; x != x_end; ++x)
+    {
+        value_type val1 = *x;
+        if (isZero_(val1))
+            continue;
+        size_type row = (size_type)(x - x_begin);
+        ind_it = ind.begin();
+        nz_it = nz.begin();
+        for (; ind_it != ind_end; ++ind_it, ++nz_it)
+            increment(row, *ind_it, val1 * *nz_it);
+    }
+}
+
+/**
      * this += outer(x,y)
      */
-    inline void incrementWithOuterProduct(const std::vector<value_type> &x,
-                                          const std::vector<value_type> &y)
-    {
-        incrementWithOuterProduct(x.begin(), x.end(), y.begin(), y.end());
-    }
+inline void incrementWithOuterProduct(const std::vector<value_type> &x,
+                                      const std::vector<value_type> &y)
+{
+    incrementWithOuterProduct(x.begin(), x.end(), y.begin(), y.end());
+}
 
-    /**
+/**
      * Increments all the elements whose position is in the cross product of the
      * two ranges by val.
      *
      * this += val * (outer(x,y) != 0)
      */
-    template <typename InputIterator>
-    inline void
-    incrementOnOuterProductVal(InputIterator row_begin, InputIterator row_end,
-                               InputIterator col_begin, InputIterator col_end,
-                               const value_type &val)
-    {
-        this->applyOuter(
-            row_begin, row_end, col_begin, col_end,
-            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
-    }
+template <typename InputIterator>
+inline void
+incrementOnOuterProductVal(InputIterator row_begin, InputIterator row_end,
+                           InputIterator col_begin, InputIterator col_end,
+                           const value_type &val)
+{
+    this->applyOuter(
+        row_begin, row_end, col_begin, col_end,
+        std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
+}
 
-    /**
+/**
      * Increments all the elements whose position is in the cross product of the
      * two ranges by val.
      *
      * this += val * (outer(x,y) != 0)
      */
-    inline void incrementOnOuterProductVal(const std::vector<size_type> &rows,
-                                           const std::vector<size_type> &cols,
-                                           const value_type &val = 1.0)
-    {
-        for (size_type i = 0; i != rows.size(); ++i)
-            for (size_type j = 0; j != cols.size(); ++j)
-                set(rows[i], cols[j], get(rows[i], cols[j]) + val);
-    }
+inline void incrementOnOuterProductVal(const std::vector<size_type> &rows,
+                                       const std::vector<size_type> &cols,
+                                       const value_type &val = 1.0)
+{
+    for (size_type i = 0; i != rows.size(); ++i)
+        for (size_type j = 0; j != cols.size(); ++j)
+            set(rows[i], cols[j], get(rows[i], cols[j]) + val);
+}
 
-    /**
+/**
      * Increments the elements whose position is in the cross product of the
      * two ranges with the values from the given matrix.
      *
      * this += other .* (outer(x,y) != 0)
      */
-    template <typename InputIterator, typename Other>
-    inline void
-    incrementOnOuterProductMat(InputIterator row_begin, InputIterator row_end,
-                               InputIterator col_begin, InputIterator col_end,
-                               const Other &other)
+template <typename InputIterator, typename Other>
+inline void
+incrementOnOuterProductMat(InputIterator row_begin, InputIterator row_end,
+                           InputIterator col_begin, InputIterator col_end,
+                           const Other &other)
+{
+    this->applyOuter(row_begin, row_end, col_begin, col_end,
+                     crucian::Plus<value_type>(), other);
+}
+
+// SORT
+
+template <typename StrictWeakOrdering>
+inline void stable_sort_rows(size_type row_begin, size_type row_end,
+                             StrictWeakOrdering o)
+{
+    if (isCompact())
+        decompact();
+
+    const size_type nrows = nRows();
+    std::vector<size_type> sorted(nrows);
+    for (size_type row = 0; row != nrows; ++row)
+        sorted[row] = row;
+    std::stable_sort(sorted.begin(), sorted.end(), o);
+    std::vector<size_type> tmp_nnzr(nrows);
+    std::vector<size_type *> tmp_ind(nrows);
+    std::vector<value_type *> tmp_nz(nrows);
+    for (size_type row = 0; row != nrows; ++row)
     {
-        this->applyOuter(row_begin, row_end, col_begin, col_end,
-                         crucian::Plus<value_type>(), other);
+        tmp_nnzr[row] = nnzr_[sorted[row]];
+        tmp_ind[row] = ind_[sorted[row]];
+        tmp_nz[row] = nz_[sorted[row]];
     }
+    std::copy(tmp_nnzr.begin(), tmp_nnzr.end(), nnzr_);
+    std::copy(tmp_ind.begin(), tmp_ind.end(), ind_);
+    std::copy(tmp_nz.begin(), tmp_nz.end(), nz_);
+}
 
-    // SORT
+private:
+class AscendingNNZ
+{
+public:
+    AscendingNNZ(const SparseMatrix &sm) : sm_(sm) {}
 
-    template <typename StrictWeakOrdering>
-    inline void stable_sort_rows(size_type row_begin, size_type row_end,
-                                 StrictWeakOrdering o)
+    AscendingNNZ(const AscendingNNZ &other) : sm_(other.sm_) {}
+    // AscendingNNZ& operator=(const AscendingNNZ& other)
+    //{ sm_ = other.sm_; return *this; }
+
+    inline bool operator()(const size_type &row1,
+                           const size_type &row2) const
     {
-        if (isCompact())
-            decompact();
-
-        const size_type nrows = nRows();
-        std::vector<size_type> sorted(nrows);
-        for (size_type row = 0; row != nrows; ++row)
-            sorted[row] = row;
-        std::stable_sort(sorted.begin(), sorted.end(), o);
-        std::vector<size_type> tmp_nnzr(nrows);
-        std::vector<size_type *> tmp_ind(nrows);
-        std::vector<value_type *> tmp_nz(nrows);
-        for (size_type row = 0; row != nrows; ++row)
-        {
-            tmp_nnzr[row] = nnzr_[sorted[row]];
-            tmp_ind[row] = ind_[sorted[row]];
-            tmp_nz[row] = nz_[sorted[row]];
-        }
-        std::copy(tmp_nnzr.begin(), tmp_nnzr.end(), nnzr_);
-        std::copy(tmp_ind.begin(), tmp_ind.end(), ind_);
-        std::copy(tmp_nz.begin(), tmp_nz.end(), nz_);
+        return sm_.nNonZerosOnRow(row1) < sm_.nNonZerosOnRow(row2);
     }
 
 private:
-    class AscendingNNZ
-    {
-    public:
-        AscendingNNZ(const SparseMatrix &sm) : sm_(sm) {}
+    const SparseMatrix &sm_;
 
-        AscendingNNZ(const AscendingNNZ &other) : sm_(other.sm_) {}
-        // AscendingNNZ& operator=(const AscendingNNZ& other)
-        //{ sm_ = other.sm_; return *this; }
-
-        inline bool operator()(const size_type &row1,
-                               const size_type &row2) const
-        {
-            return sm_.nNonZerosOnRow(row1) < sm_.nNonZerosOnRow(row2);
-        }
-
-    private:
-        const SparseMatrix &sm_;
-
-        AscendingNNZ();
-    };
+    AscendingNNZ();
+};
 
 public:
-    inline void sortRowsAscendingNNZ()
-    {
-        stable_sort_rows(0, nRows(), AscendingNNZ(*this));
-    }
+inline void sortRowsAscendingNNZ()
+{
+    stable_sort_rows(0, nRows(), AscendingNNZ(*this));
+}
 
-    // PRINT
+// PRINT
 
-    /**
+/**
      * Print mehod. Prints the matrix in a dense representation.
      */
-    inline void print(std::ostream &outStream, size_type precision = 2,
-                      size_type width = 6) const
+inline void print(std::ostream &outStream, size_type precision = 2,
+                  size_type width = 6) const
+{
+    size_type i, j, k;
+    for (i = 0; i != nRows(); ++i)
     {
-        size_type i, j, k;
-        for (i = 0; i != nRows(); ++i)
+        for (j = 0, k = 0; j != nCols(); ++j)
         {
-            for (j = 0, k = 0; j != nCols(); ++j)
-            {
-                outStream.width(width);
-                outStream.precision(precision);
-                outStream << (k < nnzr_[i] && ind_[i][k] == j ? nz_[i][k++] : 0)
-                          << " ";
-            }
-            if (i < nRows() - 1)
-                outStream << std::endl;
+            outStream.width(width);
+            outStream.precision(precision);
+            outStream << (k < nnzr_[i] && ind_[i][k] == j ? nz_[i][k++] : 0)
+                      << " ";
         }
+        if (i < nRows() - 1)
+            outStream << std::endl;
     }
+}
 
-    // SPECIFICS
+// SPECIFICS
 
-    // MANUAL SPECIFICS
+// MANUAL SPECIFICS
 
-    /**
+/**
      * Replaces the non-zeros by the specified value.
      */
-    inline void replaceNZ(const value_type &val = 1.0)
-    {
-        elementNZApply(
-            std::bind(crucian::Assign<value_type>(), std::placeholders::_1, val));
-    }
+inline void replaceNZ(const value_type &val = 1.0)
+{
+    elementNZApply(
+        std::bind(crucian::Assign<value_type>(), std::placeholders::_1, val));
+}
 
-    /**
+/**
      * Returns the product of the non-zeros on the diagonal.
      */
-    inline value_type diagNZProd() const
+inline value_type diagNZProd() const
+{
+    value_type res = 1.0;
+    ITERATE_ON_ALL_ROWS
     {
-        value_type res = 1.0;
-        ITERATE_ON_ALL_ROWS
-        {
-            difference_type offset = col_(row, row);
-            if (offset >= 0)
-                res *= nz_[row][offset];
-        }
-        return res;
+        difference_type offset = col_(row, row);
+        if (offset >= 0)
+            res *= nz_[row][offset];
     }
+    return res;
+}
 
-    /**
+/**
      * Returns the sum of the non-zeros on the diagonal.
      */
-    inline value_type diagSum() const
+inline value_type diagSum() const
+{
+    value_type res = 0.0;
+    ITERATE_ON_ALL_ROWS
     {
-        value_type res = 0.0;
-        ITERATE_ON_ALL_ROWS
-        {
-            difference_type offset = col_(row, row);
-            if (offset >= 0)
-                res += nz_[row][offset];
-        }
-        return res;
+        difference_type offset = col_(row, row);
+        if (offset >= 0)
+            res += nz_[row][offset];
     }
+    return res;
+}
 
-    /**
+/**
      * Returns the sum of the logs of the non-zeros on the diagonal.
      */
-    inline value_type diagNZLogSum() const
+inline value_type diagNZLogSum() const
+{
+    crucian::Log<value_type> nta_log;
+    value_type res = 0.0;
+    ITERATE_ON_ALL_ROWS
     {
-        crucian::Log<value_type> nta_log;
-        value_type res = 0.0;
-        ITERATE_ON_ALL_ROWS
-        {
-            difference_type offset = col_(row, row);
-            if (offset >= 0)
-                res += nta_log(nz_[row][offset]);
-        }
-        return res;
+        difference_type offset = col_(row, row);
+        if (offset >= 0)
+            res += nta_log(nz_[row][offset]);
     }
+    return res;
+}
 
-    /**
+/**
      * Computes the sum of the logs of the NZ for each row.
      */
-    template <typename OutputIterator>
-    inline void logRowSums(OutputIterator out, OutputIterator out_end) const
+template <typename OutputIterator>
+inline void logRowSums(OutputIterator out, OutputIterator out_end) const
+{
     {
-        {
-            NTA_ASSERT((size_type)(out_end - out) == nRows())
-                << "SparseMatrix::logRowSums: Invalid size for output vector";
-        }
-
-        crucian::Log<value_type> log_f;
-
-        ITERATE_ON_ALL_ROWS
-        {
-            value_type s = 0;
-            ITERATE_ON_ROW { s += log_f(*nz); }
-            *out++ = s;
-        }
+        NTA_ASSERT((size_type)(out_end - out) == nRows())
+            << "SparseMatrix::logRowSums: Invalid size for output vector";
     }
 
-    /**
+    crucian::Log<value_type> log_f;
+
+    ITERATE_ON_ALL_ROWS
+    {
+        value_type s = 0;
+        ITERATE_ON_ROW { s += log_f(*nz); }
+        *out++ = s;
+    }
+}
+
+/**
      * Computes the sum of the logs of the NZ for each column.
      */
-    template <typename OutputIterator>
-    inline void logColSums(OutputIterator out, OutputIterator out_end) const
+template <typename OutputIterator>
+inline void logColSums(OutputIterator out, OutputIterator out_end) const
+{
     {
-        {
-            NTA_ASSERT((size_type)(out_end - out) == nCols())
-                << "SparseMatrix::logColSums: Invalid size for output vector";
-        }
-
-        crucian::Log<value_type> log_f;
-
-        crucian::zero(out, out_end);
-
-        ITERATE_ON_ALL_ROWS
-        {
-            ITERATE_ON_ROW { out[*ind] += log_f(*nz); }
-        }
+        NTA_ASSERT((size_type)(out_end - out) == nCols())
+            << "SparseMatrix::logColSums: Invalid size for output vector";
     }
 
-    // GENERATED SPECIFICS
+    crucian::Log<value_type> log_f;
 
-    inline void rowNegate(size_type idx)
+    crucian::zero(out, out_end);
+
+    ITERATE_ON_ALL_ROWS
     {
-        elementRowNZApply(idx, crucian::Negate<value_type>());
+        ITERATE_ON_ROW { out[*ind] += log_f(*nz); }
     }
+}
 
-    inline void colNegate(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Negate<value_type>());
-    }
+// GENERATED SPECIFICS
 
-    inline void negate() { elementNZApply(crucian::Negate<value_type>()); }
+inline void rowNegate(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Negate<value_type>());
+}
 
-    inline void rowAbs(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Abs<value_type>());
-    }
+inline void colNegate(size_type idx)
+{
+    elementColNZApply(idx, crucian::Negate<value_type>());
+}
 
-    inline void colAbs(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Abs<value_type>());
-    }
+inline void negate() { elementNZApply(crucian::Negate<value_type>()); }
 
-    inline void abs() { elementNZApply(crucian::Abs<value_type>()); }
+inline void rowAbs(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Abs<value_type>());
+}
 
-    inline void elementRowSquare(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Square<value_type>());
-    }
+inline void colAbs(size_type idx)
+{
+    elementColNZApply(idx, crucian::Abs<value_type>());
+}
 
-    inline void elementColSquare(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Square<value_type>());
-    }
+inline void abs() { elementNZApply(crucian::Abs<value_type>()); }
 
-    inline void elementSquare() { elementNZApply(crucian::Square<value_type>()); }
+inline void elementRowSquare(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Square<value_type>());
+}
 
-    inline void elementRowCube(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Cube<value_type>());
-    }
+inline void elementColSquare(size_type idx)
+{
+    elementColNZApply(idx, crucian::Square<value_type>());
+}
 
-    inline void elementColCube(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Cube<value_type>());
-    }
+inline void elementSquare() { elementNZApply(crucian::Square<value_type>()); }
 
-    inline void elementCube() { elementNZApply(crucian::Cube<value_type>()); }
+inline void elementRowCube(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Cube<value_type>());
+}
 
-    inline void elementRowNZInverse(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Inverse<value_type>());
-    }
+inline void elementColCube(size_type idx)
+{
+    elementColNZApply(idx, crucian::Cube<value_type>());
+}
 
-    inline void elementColNZInverse(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Inverse<value_type>());
-    }
+inline void elementCube() { elementNZApply(crucian::Cube<value_type>()); }
 
-    inline void elementNZInverse()
-    {
-        elementNZApply(crucian::Inverse<value_type>());
-    }
+inline void elementRowNZInverse(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Inverse<value_type>());
+}
 
-    inline void elementRowSqrt(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Sqrt<value_type>());
-    }
+inline void elementColNZInverse(size_type idx)
+{
+    elementColNZApply(idx, crucian::Inverse<value_type>());
+}
 
-    inline void elementColSqrt(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Sqrt<value_type>());
-    }
+inline void elementNZInverse()
+{
+    elementNZApply(crucian::Inverse<value_type>());
+}
 
-    inline void elementSqrt() { elementNZApply(crucian::Sqrt<value_type>()); }
+inline void elementRowSqrt(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Sqrt<value_type>());
+}
 
-    inline void elementRowNZLog(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Log<value_type>());
-    }
+inline void elementColSqrt(size_type idx)
+{
+    elementColNZApply(idx, crucian::Sqrt<value_type>());
+}
 
-    inline void elementColNZLog(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Log<value_type>());
-    }
+inline void elementSqrt() { elementNZApply(crucian::Sqrt<value_type>()); }
 
-    inline void elementNZLog() { elementNZApply(crucian::Log<value_type>()); }
+inline void elementRowNZLog(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Log<value_type>());
+}
 
-    inline void elementRowNZExp(size_type idx)
-    {
-        elementRowNZApply(idx, crucian::Exp<value_type>());
-    }
+inline void elementColNZLog(size_type idx)
+{
+    elementColNZApply(idx, crucian::Log<value_type>());
+}
 
-    inline void elementColNZExp(size_type idx)
-    {
-        elementColNZApply(idx, crucian::Exp<value_type>());
-    }
+inline void elementNZLog() { elementNZApply(crucian::Log<value_type>()); }
 
-    inline void elementNZExp() { elementNZApply(crucian::Exp<value_type>()); }
+inline void elementRowNZExp(size_type idx)
+{
+    elementRowNZApply(idx, crucian::Exp<value_type>());
+}
 
-    inline void elementRowMultiply(size_type row, const value_type &val)
-    {
-        elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void elementColNZExp(size_type idx)
+{
+    elementColNZApply(idx, crucian::Exp<value_type>());
+}
 
-    template <typename InputIterator>
-    inline void elementRowMultiply(size_type row, InputIterator x)
-    {
-        elementRowNZApply(row, std::multiplies<value_type>(), x);
-    }
+inline void elementNZExp() { elementNZApply(crucian::Exp<value_type>()); }
 
-    template <typename InputIterator, typename OutputIterator>
-    inline void elementRowMultiply(size_type row, InputIterator x,
-                                   OutputIterator y) const
-    {
-        elementRowNZApply(row, std::multiplies<value_type>(), x, y);
-    }
+inline void elementRowMultiply(size_type row, const value_type &val)
+{
+    elementRowNZApply(row, std::bind(crucian::Multiplies<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    inline void elementRowMultiply(size_type row,
-                                   const std::vector<value_type> &x,
-                                   std::vector<value_type> &y) const
-    {
-        elementRowMultiply(row, x.begin(), y.begin());
-    }
+template <typename InputIterator>
+inline void elementRowMultiply(size_type row, InputIterator x)
+{
+    elementRowNZApply(row, std::multiplies<value_type>(), x);
+}
 
-    inline void elementColMultiply(size_type col, const value_type &val)
-    {
-        elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+template <typename InputIterator, typename OutputIterator>
+inline void elementRowMultiply(size_type row, InputIterator x,
+                               OutputIterator y) const
+{
+    elementRowNZApply(row, std::multiplies<value_type>(), x, y);
+}
 
-    template <typename InputIterator>
-    inline void elementColMultiply(size_type col, InputIterator x)
-    {
-        elementColNZApply(col, std::multiplies<value_type>(), x);
-    }
+inline void elementRowMultiply(size_type row,
+                               const std::vector<value_type> &x,
+                               std::vector<value_type> &y) const
+{
+    elementRowMultiply(row, x.begin(), y.begin());
+}
 
-    template <typename InputIterator, typename OutputIterator>
-    inline void elementColMultiply(size_type col, InputIterator x,
-                                   OutputIterator y) const
-    {
-        elementColNZApply(col, std::multiplies<value_type>(), x, y);
-    }
+inline void elementColMultiply(size_type col, const value_type &val)
+{
+    elementColNZApply(col, std::bind(crucian::Multiplies<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    inline void elementColMultiply(size_type col,
-                                   const std::vector<value_type> &x,
-                                   std::vector<value_type> &y) const
-    {
-        elementColMultiply(col, x.begin(), y.begin());
-    }
+template <typename InputIterator>
+inline void elementColMultiply(size_type col, InputIterator x)
+{
+    elementColNZApply(col, std::multiplies<value_type>(), x);
+}
 
-    inline void multiply(const value_type &val)
-    {
-        elementNZApply(std::bind(crucian::Multiplies<value_type>(),
-                                 std::placeholders::_1, val));
-    }
+template <typename InputIterator, typename OutputIterator>
+inline void elementColMultiply(size_type col, InputIterator x,
+                               OutputIterator y) const
+{
+    elementColNZApply(col, std::multiplies<value_type>(), x, y);
+}
 
-    inline void elementRowDivide(size_type idx, const value_type &val)
-    {
-        elementRowNZApply(idx, std::bind(crucian::Divides<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void elementColMultiply(size_type col,
+                               const std::vector<value_type> &x,
+                               std::vector<value_type> &y) const
+{
+    elementColMultiply(col, x.begin(), y.begin());
+}
 
-    inline void elementColDivide(size_type idx, const value_type &val)
-    {
-        elementColNZApply(idx, std::bind(crucian::Divides<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void multiply(const value_type &val)
+{
+    elementNZApply(std::bind(crucian::Multiplies<value_type>(),
+                             std::placeholders::_1, val));
+}
 
-    inline void divide(const value_type &val)
-    {
-        { // Pre-conditions
-            NTA_ASSERT(!isZero_(val)) << "divide: Division by zero";
-        } // End pre-conditions
+inline void elementRowDivide(size_type idx, const value_type &val)
+{
+    elementRowNZApply(idx, std::bind(crucian::Divides<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-        elementNZApply(
-            std::bind(crucian::Divides<value_type>(), std::placeholders::_1, val));
-    }
+inline void elementColDivide(size_type idx, const value_type &val)
+{
+    elementColNZApply(idx, std::bind(crucian::Divides<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    inline void elementRowNZPow(size_type idx, const value_type &val)
-    {
-        elementRowNZApply(idx, std::bind(crucian::Pow<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void divide(const value_type &val)
+{
+    { // Pre-conditions
+        NTA_ASSERT(!isZero_(val)) << "divide: Division by zero";
+    } // End pre-conditions
 
-    inline void elementColNZPow(size_type idx, const value_type &val)
-    {
-        elementColNZApply(idx, std::bind(crucian::Pow<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+    elementNZApply(
+        std::bind(crucian::Divides<value_type>(), std::placeholders::_1, val));
+}
 
-    inline void elementNZPow(const value_type &val)
-    {
-        elementNZApply(
-            std::bind(crucian::Pow<value_type>(), std::placeholders::_1, val));
-    }
+inline void elementRowNZPow(size_type idx, const value_type &val)
+{
+    elementRowNZApply(idx, std::bind(crucian::Pow<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    inline void elementRowNZLogk(size_type idx, const value_type &val)
-    {
-        elementRowNZApply(idx, std::bind(crucian::Logk<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void elementColNZPow(size_type idx, const value_type &val)
+{
+    elementColNZApply(idx, std::bind(crucian::Pow<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    inline void elementColNZLogk(size_type idx, const value_type &val)
-    {
-        elementColNZApply(idx, std::bind(crucian::Logk<value_type>(),
-                                         std::placeholders::_1, val));
-    }
+inline void elementNZPow(const value_type &val)
+{
+    elementNZApply(
+        std::bind(crucian::Pow<value_type>(), std::placeholders::_1, val));
+}
 
-    inline void elementNZLogk(const value_type &val)
-    {
-        elementNZApply(
-            std::bind(crucian::Logk<value_type>(), std::placeholders::_1, val));
-    }
+inline void elementRowNZLogk(size_type idx, const value_type &val)
+{
+    elementRowNZApply(idx, std::bind(crucian::Logk<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    template <typename InputIterator>
-    inline void elementRowAdd(size_type idx, InputIterator x)
-    {
-        elementRowApply(idx, std::plus<value_type>(), x);
-    }
+inline void elementColNZLogk(size_type idx, const value_type &val)
+{
+    elementColNZApply(idx, std::bind(crucian::Logk<value_type>(),
+                                     std::placeholders::_1, val));
+}
 
-    template <typename InputIterator>
-    inline void elementRowSubtract(size_type idx, InputIterator x)
-    {
-        elementRowApply(idx, std::minus<value_type>(), x);
-    }
+inline void elementNZLogk(const value_type &val)
+{
+    elementNZApply(
+        std::bind(crucian::Logk<value_type>(), std::placeholders::_1, val));
+}
 
-    template <typename InputIterator>
-    inline void elementRowDivide(size_type idx, InputIterator x)
-    {
-        elementRowNZApply(idx, std::divides<value_type>(), x);
-    }
+template <typename InputIterator>
+inline void elementRowAdd(size_type idx, InputIterator x)
+{
+    elementRowApply(idx, std::plus<value_type>(), x);
+}
 
-    template <typename InputIterator>
-    inline void elementColAdd(size_type idx, InputIterator x)
-    {
-        elementColApply(idx, std::plus<value_type>(), x);
-    }
+template <typename InputIterator>
+inline void elementRowSubtract(size_type idx, InputIterator x)
+{
+    elementRowApply(idx, std::minus<value_type>(), x);
+}
 
-    template <typename InputIterator>
-    inline void elementColSubtract(size_type idx, InputIterator x)
-    {
-        elementColApply(idx, std::minus<value_type>(), x);
-    }
+template <typename InputIterator>
+inline void elementRowDivide(size_type idx, InputIterator x)
+{
+    elementRowNZApply(idx, std::divides<value_type>(), x);
+}
 
-    template <typename InputIterator>
-    inline void elementColDivide(size_type idx, InputIterator x)
-    {
-        elementColNZApply(idx, std::divides<value_type>(), x);
-    }
+template <typename InputIterator>
+inline void elementColAdd(size_type idx, InputIterator x)
+{
+    elementColApply(idx, std::plus<value_type>(), x);
+}
 
-    inline void rowAdd(size_type idx, const value_type &val)
-    {
-        elementRowApply(idx, std::bind(crucian::Plus<value_type>(),
-                                       std::placeholders::_1, val));
-    }
+template <typename InputIterator>
+inline void elementColSubtract(size_type idx, InputIterator x)
+{
+    elementColApply(idx, std::minus<value_type>(), x);
+}
 
-    inline void colAdd(size_type idx, const value_type &val)
-    {
-        elementColApply(idx, std::bind(crucian::Plus<value_type>(),
-                                       std::placeholders::_1, val));
-    }
+template <typename InputIterator>
+inline void elementColDivide(size_type idx, InputIterator x)
+{
+    elementColNZApply(idx, std::divides<value_type>(), x);
+}
 
-    inline void add(const value_type &val)
-    {
-        elementApply(
-            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
-    }
+inline void rowAdd(size_type idx, const value_type &val)
+{
+    elementRowApply(idx, std::bind(crucian::Plus<value_type>(),
+                                   std::placeholders::_1, val));
+}
 
-    inline void elementNZAdd(const value_type &val)
-    {
-        elementNZApply(
-            std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
-    }
+inline void colAdd(size_type idx, const value_type &val)
+{
+    elementColApply(idx, std::bind(crucian::Plus<value_type>(),
+                                   std::placeholders::_1, val));
+}
 
-    inline void rowSubtract(size_type idx, const value_type &val)
-    {
-        elementRowApply(idx, std::bind(crucian::Minus<value_type>(),
-                                       std::placeholders::_1, val));
-    }
+inline void add(const value_type &val)
+{
+    elementApply(
+        std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
+}
 
-    inline void colSubtract(size_type idx, const value_type &val)
-    {
-        elementColApply(idx, std::bind(crucian::Minus<value_type>(),
-                                       std::placeholders::_1, val));
-    }
+inline void elementNZAdd(const value_type &val)
+{
+    elementNZApply(
+        std::bind(crucian::Plus<value_type>(), std::placeholders::_1, val));
+}
 
-    inline void subtract(const value_type &val)
-    {
-        elementApply(
-            std::bind(crucian::Minus<value_type>(), std::placeholders::_1, val));
-    }
+inline void rowSubtract(size_type idx, const value_type &val)
+{
+    elementRowApply(idx, std::bind(crucian::Minus<value_type>(),
+                                   std::placeholders::_1, val));
+}
 
-    inline void elementNZMultiply(const SparseMatrix &other)
-    {
-        elementMultiply(other);
-    }
+inline void colSubtract(size_type idx, const value_type &val)
+{
+    elementColApply(idx, std::bind(crucian::Minus<value_type>(),
+                                   std::placeholders::_1, val));
+}
 
-    inline void elementNZDivide(const SparseMatrix &other)
-    {
-        elementNZApply(other, crucian::Divides<value_type>());
-    }
+inline void subtract(const value_type &val)
+{
+    elementApply(
+        std::bind(crucian::Minus<value_type>(), std::placeholders::_1, val));
+}
 
-    inline void subtract(const SparseMatrix &other)
-    {
-        elementApply(other, crucian::Minus<value_type>());
-    }
+inline void elementNZMultiply(const SparseMatrix &other)
+{
+    elementMultiply(other);
+}
 
-    // OPERATORS
+inline void elementNZDivide(const SparseMatrix &other)
+{
+    elementNZApply(other, crucian::Divides<value_type>());
+}
 
-    inline void operator+=(const value_type &val) { add(val); }
+inline void subtract(const SparseMatrix &other)
+{
+    elementApply(other, crucian::Minus<value_type>());
+}
 
-    inline void operator-=(const value_type &val) { subtract(val); }
+// OPERATORS
 
-    inline void operator*=(const value_type &val) { multiply(val); }
+inline void operator+=(const value_type &val) { add(val); }
 
-    inline void operator/=(const value_type &val) { divide(val); }
+inline void operator-=(const value_type &val) { subtract(val); }
+
+inline void operator*=(const value_type &val) { multiply(val); }
+
+inline void operator/=(const value_type &val) { divide(val); }
 
 };
 
