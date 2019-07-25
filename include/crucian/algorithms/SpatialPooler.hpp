@@ -62,7 +62,7 @@ namespace crucian
  *     }
  *
  */
-class NUST_API SpatialPooler
+class CRU_API SpatialPooler
 {
 public:
     SpatialPooler();

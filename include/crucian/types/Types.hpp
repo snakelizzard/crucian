@@ -144,31 +144,31 @@ typedef NTA_Size Size;
 
 // Generic helper definitions for shared library support
 #if defined _WIN32 || defined __CYGWIN__
-#define NUST_DLL_IMPORT __declspec(dllimport)
-  #define NUST_DLL_EXPORT __declspec(dllexport)
-  #define NUST_DLL_LOCAL
+#define CRU_DLL_IMPORT __declspec(dllimport)
+  #define CRU_DLL_EXPORT __declspec(dllexport)
+  #define CRU_DLL_LOCAL
 #else
 #if __GNUC__ >= 4
-#define NUST_DLL_IMPORT __attribute__ ((visibility ("default")))
-#define NUST_DLL_EXPORT __attribute__ ((visibility ("default")))
-#define NUST_DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#define CRU_DLL_IMPORT __attribute__ ((visibility ("default")))
+#define CRU_DLL_EXPORT __attribute__ ((visibility ("default")))
+#define CRU_DLL_LOCAL  __attribute__ ((visibility ("hidden")))
 #else
-#define NUST_DLL_IMPORT
-    #define NUST_DLL_EXPORT
-    #define NUST_DLL_LOCAL
+#define CRU_DLL_IMPORT
+    #define CRU_DLL_EXPORT
+    #define CRU_DLL_LOCAL
 #endif
 #endif
 
-#ifdef NUST_DLL
-#ifdef NUST_DLL_EXPORTS
-#define NUST_API NUST_DLL_EXPORT
+#ifdef CRU_DLL
+#ifdef CRU_DLL_EXPORTS
+#define CRU_API CRU_DLL_EXPORT
 #else
-#define NUST_API NUST_DLL_IMPORT
-#endif // NUST_DLL_EXPORTS
-#define NUST_LOCAL NUST_DLL_LOCAL
-#else // NUST_DLL
-#define NUST_API
-#define NUST_LOCAL
-#endif // NUST_DLL
+#define CRU_API CRU_DLL_IMPORT
+#endif // CRU_DLL_EXPORTS
+#define CRU_LOCAL CRU_DLL_LOCAL
+#else // CRU_DLL
+#define CRU_API
+#define CRU_LOCAL
+#endif // CRU_DLL
 
 #endif // NTA_TYPES_HPP

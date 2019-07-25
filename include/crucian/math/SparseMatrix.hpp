@@ -464,9 +464,9 @@ protected:
         ind_ = new size_type *[nrows_max_];
         nz_ = new value_type *[nrows_max_];
 
-        std::fill(nnzr_, nnzr_ + nrows_max_, (size_type)0);
-        std::fill(ind_, ind_ + nrows_max_, (size_type *)nullptr);
-        std::fill(nz_, nz_ + nrows_max_, (value_type *)nullptr);
+        std::fill(nnzr_, nnzr_ + nrows_max_, static_cast<size_type> (0));
+        std::fill(ind_, ind_ + nrows_max_, static_cast<size_type *> (nullptr));
+        std::fill(nz_, nz_ + nrows_max_, static_cast<value_type *> (nullptr));
 
         indb_ = new size_type[ncols];
         nzb_ = new value_type[ncols];
@@ -11665,6 +11665,7 @@ template <typename UI, typename Real_stor, typename I, typename Real_prec,
 SparseMatrix<UI, Real_stor, I, Real_prec, DTZ>::AscendingNNZ::AscendingNNZ()
 {
 }
+
 // end class SparseMatrix
 
 template <typename I, typename F, typename I2, typename F2, typename ZeroTest>

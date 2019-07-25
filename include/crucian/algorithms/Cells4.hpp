@@ -275,7 +275,7 @@ private:
     CBasicActivity<It> _seg;
 };
 
-class NUST_API Cells4
+class CRU_API Cells4
 {
 public:
     typedef Segment::InSynapses InSynapses;

@@ -39,7 +39,7 @@
 #endif
 
 #include <crucian/math/Math.hpp>
-#include <crucian/math/Types.hpp>
+#include <crucian/math/MathTypes.hpp>
 #include <crucian/utils/Random.hpp> // For the official Numenta RNG
 
 namespace crucian
