@@ -29,10 +29,10 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-#include <crucian/algorithms/SpatialPooler.hpp>
-#include <crucian/math/StlIo.hpp>
-#include <crucian/types/Types.hpp>
-#include <crucian/utils/Log.hpp>
+#include <crucian/Log.hpp>
+#include <crucian/SpatialPooler.hpp>
+#include <crucian/StlIo.hpp>
+#include <crucian/Types.hpp>
 
 namespace crucian
 {

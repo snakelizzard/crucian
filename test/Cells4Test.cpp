@@ -28,9 +28,9 @@
 #include <set>
 #include <vector>
 
-#include <crucian/algorithms/Cells4.hpp>
-#include <crucian/algorithms/Segment.hpp>
-#include <crucian/math/ArrayAlgo.hpp> // is_in
+#include <crucian/ArrayAlgo.hpp> // is_in
+#include <crucian/Cells4.hpp>
+#include <crucian/Segment.hpp>
 
 namespace crucian
 {

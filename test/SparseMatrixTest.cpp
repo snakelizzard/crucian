@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-#include <crucian/math/SparseMatrix.hpp>
+#include <crucian/SparseMatrix.hpp>
 
 namespace crucian
 {

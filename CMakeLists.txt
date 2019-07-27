@@ -24,7 +24,7 @@ if (NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 endif ()
 
 add_definitions(${src_compiler_definitions})
-file(GLOB_RECURSE cru_src "include/*.hpp" "src/*.cpp")
+file(GLOB cru_src "include/*.hpp" "src/*.cpp")
 file(GLOB test_src "test/*.cpp")
 
 if (CRU_SHARED)

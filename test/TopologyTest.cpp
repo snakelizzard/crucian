@@ -26,7 +26,7 @@
 
 #include <gtest/gtest.h>
 
-#include <crucian/math/Topology.hpp>
+#include <crucian/Topology.hpp>
 
 namespace crucian
 {

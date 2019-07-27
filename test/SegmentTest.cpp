@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include <set>
 
-#include <crucian/algorithms/Segment.hpp>
+#include <crucian/Segment.hpp>
 
 namespace crucian
 {

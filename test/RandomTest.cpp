@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
-#include <crucian/utils/Random.hpp>
+#include <crucian/Random.hpp>
 
 namespace crucian
 {
