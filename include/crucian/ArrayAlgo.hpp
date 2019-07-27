@@ -3767,14 +3767,15 @@ inline crucian::UInt32 count_gt(crucian::Real32 *begin, crucian::Real32 *end,
         // n1 is the number floats we can process in parallel with xmm
         // n2 is the number of "stragglers" what we will have to do one by one (
         // < 4)
+
+#if defined(NTA_ARCH_64) && !defined(NTA_OS_WINDOWS)
+
         NTA_UIntPtr x_addr = reinterpret_cast<NTA_UIntPtr>(
             begin); // 8 bytes on 64 bits platforms
         crucian::Real32 *start =
             (x_addr % 16 == 0)
-                ? begin
-                : reinterpret_cast<crucian::Real32 *>(16 * (x_addr / 16 + 1));
-
-#if defined(NTA_ARCH_64) && !defined(NTA_OS_WINDOWS)
+            ? begin
+            : reinterpret_cast<crucian::Real32 *>(16 * (x_addr / 16 + 1));
 
         crucian::Real32 count = 0;
         int n0 = static_cast<int>(start - begin);

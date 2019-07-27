@@ -262,6 +262,9 @@ private:
     CBasicActivity<It> _seg;
 };
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+
 class CRU_API Cells4
 {
 public:
@@ -1157,6 +1160,8 @@ public:
     //-----------------------------------------------------------------------
     void stats() const { }
 };
+
+#pragma clang diagnostic pop
 
 //-----------------------------------------------------------------------
 #ifndef SWIG

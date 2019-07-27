@@ -36,11 +36,11 @@
 #include <crucian/SparseMatrix.hpp>
 #include <crucian/Types.hpp>
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
-
 namespace crucian
 {
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 
 /**
  * CLA spatial pooler implementation in C++.
@@ -79,6 +79,8 @@ public:
                   Real minPctOverlapDutyCycles = 0.001,
                   UInt dutyCyclePeriod = 1000, Real boostStrength = 0.0,
                   Int seed = 1, UInt spVerbosity = 0, bool wrapAround = true);
+
+    virtual ~SpatialPooler() = default;
 
     /**
     Initialize the spatial pooler using the given parameters.
@@ -1294,7 +1296,9 @@ protected:
     Random rng_;
 };
 
+#pragma clang diagnostic pop
+
 } // namespace crucian
+
 #endif // NTA_spatial_pooler_HPP
 
-#pragma clang diagnostic pop

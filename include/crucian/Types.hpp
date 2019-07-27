@@ -171,4 +171,6 @@ typedef NTA_Size Size;
 #define CRU_LOCAL
 #endif // CRU_DLL
 
+#define CRU_NUSED(x) (void)x
+
 #endif // NTA_TYPES_HPP

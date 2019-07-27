@@ -58,6 +58,9 @@ inline bool INVARIANT(bool cond, const char *msg)
         NTA_INFO << msg;
         return false;
     }
+#else
+    CRU_NUSED(cond);
+    CRU_NUSED(msg);
 #endif
     return true;
 }
