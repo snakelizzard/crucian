@@ -66,15 +66,14 @@ class CRU_API SpatialPooler
 {
 public:
     SpatialPooler();
-
-    SpatialPooler(const std::vector<UInt>& inputDimensions,
-                  const std::vector<UInt>& columnDimensions, UInt potentialRadius = 16,
+    SpatialPooler(std::vector<UInt> inputDimensions,
+                  std::vector<UInt> columnDimensions, UInt potentialRadius = 16,
                   Real potentialPct = 0.5, bool globalInhibition = true,
                   Real localAreaDensity = -1.0,
                   UInt numActiveColumnsPerInhArea = 10,
-                  UInt stimulusThreshold = 0, Real synPermInactiveDec = 0.008f,
-                  Real synPermActiveInc = 0.05f, Real synPermConnected = 0.1f,
-                  Real minPctOverlapDutyCycles = 0.001f,
+                  UInt stimulusThreshold = 0, Real synPermInactiveDec = 0.008,
+                  Real synPermActiveInc = 0.05, Real synPermConnected = 0.1,
+                  Real minPctOverlapDutyCycles = 0.001,
                   UInt dutyCyclePeriod = 1000, Real boostStrength = 0.0,
                   Int seed = 1, UInt spVerbosity = 0, bool wrapAround = true);
 
@@ -198,15 +197,16 @@ public:
           neighbors for the purpose of mapping inputs to columns.
 
      */
-    void initialize(
-        const std::vector<UInt>& inputDimensions, const std::vector<UInt>& columnDimensions,
-        UInt potentialRadius = 16, Real potentialPct = 0.5,
-        bool globalInhibition = true, Real localAreaDensity = -1.0,
-        UInt numActiveColumnsPerInhArea = 10, UInt stimulusThreshold = 0,
-        Real synPermInactiveDec = 0.01f, Real synPermActiveInc = 0.1f,
-        Real synPermConnected = 0.1f, Real minPctOverlapDutyCycles = 0.001f,
-        UInt dutyCyclePeriod = 1000, Real boostStrength = 0.0, Int seed = 1,
-        UInt spVerbosity = 0, bool wrapAround = true);
+    void initialize(std::vector<UInt> inputDimensions,
+                    std::vector<UInt> columnDimensions,
+                    UInt potentialRadius = 16, Real potentialPct = 0.5,
+                    bool globalInhibition = true, Real localAreaDensity = -1.0,
+                    UInt numActiveColumnsPerInhArea = 10,
+                    UInt stimulusThreshold = 0, Real synPermInactiveDec = 0.01,
+                    Real synPermActiveInc = 0.1, Real synPermConnected = 0.1,
+                    Real minPctOverlapDutyCycles = 0.001,
+                    UInt dutyCyclePeriod = 1000, Real boostStrength = 0.0,
+                    Int seed = 1, UInt spVerbosity = 0, bool wrapAround = true);
 
     /**
     This is the main workshorse method of the SpatialPooler class. This
@@ -239,7 +239,7 @@ public:
           multi-dimensional, activeVector represents a flattened array
           of outputs.
      */
-    void compute(UInt inputVector[], bool learn, UInt activeVector[]);
+    virtual void compute(UInt inputVector[], bool learn, UInt activeVector[]);
 
     /**
      Removes the set of columns who have never been active from the set
@@ -258,7 +258,7 @@ public:
 
      * @returns Integer version number.
      */
-    UInt version() const;
+    virtual UInt version() const { return version_; };
 
     /**
     Save (serialize) the current state of the spatial pooler to the
@@ -266,7 +266,7 @@ public:
 
     @param fd A valid file descriptor.
      */
-    void save(std::ostream &outStream) const;
+    virtual void save(std::ostream &outStream) const;
 
     /**
     Load (deserialize) and initialize the spatial pooler from the
@@ -274,7 +274,7 @@ public:
 
     @param inStream A valid istream.
      */
-    void load(std::istream &inStream);
+    virtual void load(std::istream &inStream);
 
     /**
     Returns the number of bytes that a save operation would result in.
@@ -283,7 +283,7 @@ public:
 
     @returns Integer number of bytes
      */
-    UInt persistentSize() const;
+    virtual UInt persistentSize() const;
 
     /**
     Returns the dimensions of the columns in the region.
@@ -326,7 +326,6 @@ public:
     @param potentialRadius integer number of potential raduis.
     */
     void setPotentialRadius(UInt potentialRadius);
-
     /**
     Returns the potential percent.
 
@@ -407,7 +406,6 @@ public:
     @returns (positive) integer of inhibition radius/
     */
     UInt getInhibitionRadius() const;
-
     /**
     Sets the inhibition radius.
 
@@ -508,7 +506,6 @@ public:
     @returns integer of update period.
     */
     UInt getUpdatePeriod() const;
-
     /**
     Sets the update period.
 
@@ -522,7 +519,6 @@ public:
     @returns real number of the permanence trim threshold.
     */
     Real getSynPermTrimThreshold() const;
-
     /**
     Sets the permanence trim threshold.
 
@@ -538,7 +534,6 @@ public:
     inputs.
     */
     Real getSynPermActiveInc() const;
-
     /**
     Sets the permanence increment amount for active synapses
     inputs.
@@ -555,7 +550,6 @@ public:
     synapses.
     */
     Real getSynPermInactiveDec() const;
-
     /**
     Returns the permanence decrement amount for inactive synapses.
 
@@ -572,7 +566,6 @@ public:
     that have not been recently active.
     */
     Real getSynPermBelowStimulusInc() const;
-
     /**
     Sets the permanence increment amount for columns that have not been
     recently active.
@@ -591,7 +584,6 @@ public:
     that qualifies a synapse as being connected.
     */
     Real getSynPermConnected() const;
-
     /**
     Sets the permanence amount that qualifies a synapse as
     being connected.
@@ -608,7 +600,6 @@ public:
     @returns real number of the max permanence amount.
     */
     Real getSynPermMax() const;
-
     /**
     Sets the maximum permanence amount a synapse can
     achieve.
@@ -625,7 +616,6 @@ public:
     @returns real number of the minimum tolerated overlaps.
     */
     Real getMinPctOverlapDutyCycles() const;
-
     /**
     Sets the minimum tolerated overlaps, given as percent of
     neighbors overlap score.
@@ -642,7 +632,6 @@ public:
     @param boostFactors real array to store boost factors of all columns.
     */
     void getBoostFactors(Real boostFactors[]) const;
-
     /**
     Sets the boost factors for all columns. 'boostFactors' size must
     match the number of columns.
@@ -659,7 +648,6 @@ public:
     columns.
     */
     void getOverlapDutyCycles(Real overlapDutyCycles[]) const;
-
     /**
     Sets the overlap duty cycles for all columns. 'overlapDutyCycles'
     size must match the number of columns.
@@ -677,7 +665,6 @@ public:
     columns.
     */
     void getActiveDutyCycles(Real activeDutyCycles[]) const;
-
     /**
     Sets the activity duty cycles for all columns. 'activeDutyCycles'
     size must match the number of columns.
@@ -695,7 +682,6 @@ public:
     columns.
     */
     void getMinOverlapDutyCycles(Real minOverlapDutyCycles[]) const;
-
     /**
     Sets the minimum overlap duty cycles for all columns.
     '_minOverlapDutyCycles' size must match the number of columns.
@@ -714,7 +700,6 @@ public:
     @param potential integer array of potential mapping for the selected column.
     */
     void getPotential(UInt column, UInt potential[]) const;
-
     /**
     Sets the potential mapping for a given column. 'potential' size
     must match the number of inputs.
@@ -735,7 +720,6 @@ public:
     column.
     */
     void getPermanence(UInt column, Real permanence[]) const;
-
     /**
     Sets the permanence values for a given column. 'permanence' size
     must match the number of inputs.
@@ -786,7 +770,7 @@ public:
     // Implementation methods. all methods below this line are
     // NOT part of the public API
 
-    static void toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n);
+    void toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n);
 
     void boostOverlaps_(std::vector<UInt> &overlaps,
                         std::vector<Real> &boostedOverlaps);
@@ -860,7 +844,6 @@ public:
     that is initialized in a connected state.
     */
     Real initPermConnected_();
-
     /**
         Returns a randomly generated permanence value for a synapses that is to
        be initialized in a non-connected state.
@@ -886,7 +869,6 @@ public:
     */
     std::vector<Real> initPermanence_(std::vector<UInt> &potential,
                                       Real connectedPct);
-
     void clip_(std::vector<Real> &perm, bool trim);
 
     /**
@@ -921,9 +903,7 @@ public:
     */
     void updatePermanencesForColumn_(std::vector<Real> &perm, UInt column,
                                      bool raisePerm = true);
-
     UInt countConnected_(std::vector<Real> &perm);
-
     UInt raisePermanencesToThreshold_(std::vector<Real> &perm,
                                       std::vector<UInt> &potential);
 
@@ -948,14 +928,13 @@ public:
        input bits which are turned on.
     */
     void calculateOverlap_(UInt inputVector[], std::vector<UInt> &overlap);
-
     void calculateOverlapPct_(std::vector<UInt> &overlaps,
                               std::vector<Real> &overlapPct);
 
     bool isWinner_(Real score, std::vector<std::pair<UInt, Real>> &winners,
                    UInt numWinners);
 
-    static void addToWinners_(UInt index, Real score,
+    void addToWinners_(UInt index, Real score,
                        std::vector<std::pair<UInt, Real>> &winners);
 
     /**
@@ -1045,7 +1024,7 @@ public:
         @param  activeColumns  an int vector containing the indices of the
        columns that survived inhibition.
               */
-    void adaptSynapses_(const UInt inputVector[], std::vector<UInt> &activeColumns);
+    void adaptSynapses_(UInt inputVector[], std::vector<UInt> &activeColumns);
 
     /**
         This method increases the permanence values of synapses of columns whose
@@ -1176,7 +1155,7 @@ public:
     @param activeArray  An int array containing the indices of the active
     columns, the sprase set of columns which survived inhibition
     */
-    void updateDutyCycles_(std::vector<UInt> &overlaps, const UInt activeArray[]);
+    void updateDutyCycles_(std::vector<UInt> &overlaps, UInt activeArray[]);
 
     /**
       Update the boost factors for all columns. The boost factors are used to
@@ -1254,12 +1233,11 @@ public:
     /**
      Print the given UInt array in a nice format
     */
-    static void printState(std::vector<UInt> &state);
-
+    void printState(std::vector<UInt> &state);
     /**
     Print the given Real array in a nice format
     */
-    static void printState(std::vector<Real> &state);
+    void printState(std::vector<Real> &state);
 
 protected:
     UInt numInputs_;
@@ -1313,6 +1291,5 @@ protected:
     Random rng_;
 };
 
-} // end namespace crucian
-
+} // namespace crucian
 #endif // NTA_spatial_pooler_HPP

@@ -69,9 +69,7 @@ namespace crucian
 {
 
 class Cell;
-
 class Cells4;
-
 class SegmentUpdate;
 
 /**
@@ -136,7 +134,6 @@ public:
         _size = 0;
         _dimension = 0;
     }
-
     ~CBasicActivity()
     {
         if (_counter != nullptr)
@@ -144,7 +141,6 @@ public:
         if (_nonzero != nullptr)
             delete[] _nonzero;
     }
-
     void initialize(UInt n)
     {
         if (_counter != nullptr)
@@ -157,9 +153,7 @@ public:
         _size = 0;
         _dimension = n;
     }
-
     UInt get(UInt cellIdx) { return _counter[cellIdx]; }
-
     void add(UInt cellIdx, UInt incr)
     {
         // currently unused, but may need to resurrect
@@ -167,7 +161,6 @@ public:
             _nonzero[_size++] = cellIdx;
         _counter[cellIdx] += incr;
     }
-
     It increment(UInt cellIdx) // use typename here
     {
         // In the learning phase, the activity count appears never to
@@ -176,11 +169,10 @@ public:
             return ++_counter[cellIdx];
         _counter[cellIdx] =
             1; // without this, the inefficient compiler reloads the value from
-        // memory, increments it and stores it back
+               // memory, increments it and stores it back
         _nonzero[_size++] = cellIdx;
         return 1;
     }
-
     void max(UInt cellIdx, It val) // use typename here
     {
         const It curr = _counter[cellIdx]; // use typename here
@@ -191,7 +183,6 @@ public:
                 _nonzero[_size++] = cellIdx;
         }
     }
-
     void reset()
     {
 #define REPORT_ACTIVITY_STATISTICS 0
@@ -251,19 +242,15 @@ public:
         _cell.initialize(_MAX_CELLS);
         _seg.initialize(_MAX_CELLS * _MAX_SEGS);
     }
-
     UInt get(UInt cellIdx) { return _cell.get(cellIdx); }
-
     UInt get(UInt cellIdx, UInt segIdx)
     {
         return _seg.get(cellIdx * _MAX_SEGS + segIdx);
     }
-
     void increment(UInt cellIdx, UInt segIdx)
     {
         _cell.max(cellIdx, _seg.increment(cellIdx * _MAX_SEGS + segIdx));
     }
-
     void reset()
     {
         _cell.reset();
@@ -284,7 +271,7 @@ public:
     static const UInt VERSION = 2;
 
 private:
-    crucian::Random _rng;
+    Random _rng;
 
     //-----------------------------------------------------------------------
     /**
@@ -319,18 +306,18 @@ private:
     Int _maxSegmentsPerCell;
     Int _maxSynapsesPerSegment;
     bool _checkSynapseConsistency; // If true, will perform time
-    // consuming invariance checks.
+                                   // consuming invariance checks.
 
     //-----------------------------------------------------------------------
     /**
      * Internal variables.
      */
-    bool _resetCalled; // True if reset() was called since the
-    // last call to compute.
+    bool _resetCalled;     // True if reset() was called since the
+                           // last call to compute.
     Real _avgInputDensity; // Average no. of non-zero inputs
     UInt _pamCounter;      // pamCounter gets reset to pamLength
-    // whenever we detect that the learning
-    // state is making good predictions
+                           // whenever we detect that the learning
+                           // state is making good predictions
     UInt _version;
 
     //-----------------------------------------------------------------------
@@ -357,8 +344,8 @@ private:
     Real *_colConfidenceT;
     Real *_colConfidenceT1;
     bool _ownsMemory; // If true, this class is responsible
-    // for managing memory of above
-    // eight arrays.
+                      // for managing memory of above
+                      // eight arrays.
 
     CStateIndexed _learnActiveStateT;
     CStateIndexed _learnActiveStateT1;
@@ -408,8 +395,8 @@ public:
     explicit Cells4(UInt nColumns = 0, UInt nCellsPerCol = 0,
            UInt activationThreshold = 1, UInt minThreshold = 1,
            UInt newSynapseCount = 1, UInt segUpdateValidDuration = 1,
-           Real permInitial = .5, Real permConnected = .8f, Real permMax = 1,
-           Real permDec = .1f, Real permInc = .1f, Real globalDecay = 0,
+           Real permInitial = .5, Real permConnected = .8, Real permMax = 1,
+           Real permDec = .1, Real permInc = .1, Real globalDecay = 0,
            bool doPooling = false, int seed = -1, bool initFromCpp = false,
            bool checkSynapseConsistency = false);
 
@@ -420,9 +407,9 @@ public:
     void initialize(UInt nColumns = 0, UInt nCellsPerCol = 0,
                     UInt activationThreshold = 1, UInt minThreshold = 1,
                     UInt newSynapseCount = 1, UInt segUpdateValidDuration = 1,
-                    Real permInitial = .5f, Real permConnected = .8f,
-                    Real permMax = 1, Real permDec = .1f, Real permInc = .1f,
-                    Real globalDecay = .1f, bool doPooling = false,
+                    Real permInitial = .5, Real permConnected = .8,
+                    Real permMax = 1, Real permDec = .1, Real permInc = .1,
+                    Real globalDecay = .1, bool doPooling = false,
                     bool initFromCpp = false,
                     bool checkSynapseConsistency = false);
 
@@ -431,7 +418,6 @@ public:
 
     //----------------------------------------------------------------------
     bool operator==(const Cells4 &other) const;
-
     inline bool operator!=(const Cells4 &other) const
     {
         return !operator==(other);
@@ -510,39 +496,22 @@ public:
      * Accessors for getting various member variables
      */
     UInt nSegments() const;
-
     UInt nCells() const { return _nCells; }
-
     UInt nColumns() const { return _nColumns; }
-
     UInt nCellsPerCol() const { return _nCellsPerCol; }
-
     UInt getMinThreshold() const { return _minThreshold; }
-
     Real getPermConnected() const { return _permConnected; }
-
     UInt getVerbosity() const { return _verbosity; }
-
     UInt getMaxAge() const { return _maxAge; }
-
     UInt getPamLength() const { return _pamLength; }
-
     UInt getMaxInfBacktrack() const { return _maxInfBacktrack; }
-
     UInt getMaxLrnBacktrack() const { return _maxLrnBacktrack; }
-
     UInt getPamCounter() const { return _pamCounter; }
-
     UInt getMaxSeqLength() const { return _maxSeqLength; }
-
     Real getAvgLearnedSeqLength() const { return _avgLearnedSeqLength; }
-
     UInt getNLrnIterations() const { return _nLrnIterations; }
-
     Int getMaxSegmentsPerCell() const { return _maxSegmentsPerCell; }
-
     Int getMaxSynapsesPerSegment() const { return _maxSynapsesPerSegment; }
-
     bool getCheckSynapseConsistency() const { return _checkSynapseConsistency; }
 
     //----------------------------------------------------------------------
@@ -550,15 +519,10 @@ public:
      * Accessors for setting various member variables
      */
     void setMaxInfBacktrack(UInt t) { _maxInfBacktrack = t; }
-
     void setMaxLrnBacktrack(UInt t) { _maxLrnBacktrack = t; }
-
     void setVerbosity(UInt v) { _verbosity = v; }
-
     void setMaxAge(UInt a) { _maxAge = a; }
-
     void setMaxSeqLength(UInt v) { _maxSeqLength = v; }
-
     void setCheckSynapseConsistency(bool val)
     {
         _checkSynapseConsistency = val;
@@ -569,7 +533,7 @@ public:
         if (maxSegs != -1)
         {
             NTA_CHECK(maxSegs > 0);
-            NTA_CHECK(_globalDecay == 0.0f);
+            NTA_CHECK(_globalDecay == 0.0);
             NTA_CHECK(_maxAge == 0);
         }
         _maxSegmentsPerCell = maxSegs;
@@ -580,7 +544,7 @@ public:
         if (maxSyns != -1)
         {
             NTA_CHECK(maxSyns > 0);
-            NTA_CHECK(_globalDecay == 0.0f);
+            NTA_CHECK(_globalDecay == 0.0);
             NTA_CHECK(_maxAge == 0);
         }
         _maxSynapsesPerSegment = maxSyns;
@@ -686,7 +650,6 @@ public:
      */
     std::pair<UInt, UInt> getBestMatchingCellT(UInt colIdx, const CState &state,
                                                UInt minThreshold);
-
     std::pair<UInt, UInt>
     getBestMatchingCellT1(UInt colIdx, const CState &state, UInt minThreshold);
 
@@ -702,11 +665,8 @@ public:
      * known offender is TP.py.
      */
     void computeForwardPropagation(CStateIndexed &state);
-
 #if SOME_STATES_NOT_INDEXED
-
     void computeForwardPropagation(CState &state);
-
 #endif
 
     //----------------------------------------------------------------------
@@ -974,7 +934,7 @@ public:
      * each cell
      *
      */
-    void processSegmentUpdates(const Real *input, const CState &predictedState);
+    void processSegmentUpdates(Real *input, const CState &predictedState);
 
     //----------------------------------------------------------------------
     /**
@@ -1098,20 +1058,20 @@ public:
         // TODO: this won't scale!
         std::stringstream tmp;
         this->save(tmp);
-        return static_cast<UInt>(tmp.str().size());
+        return tmp.str().size();
     }
 
     //----------------------------------------------------------------------
     /**
      * Save the state to the given file
      */
-    void saveToFile(const std::string& filePath) const;
+    void saveToFile(std::string filePath) const;
 
     //----------------------------------------------------------------------
     /**
      * Load the state from the given file
      */
-    void loadFromFile(const std::string& filePath);
+    void loadFromFile(std::string filePath);
 
     //----------------------------------------------------------------------
     void save(std::ostream &outStream) const;
@@ -1135,7 +1095,7 @@ public:
     //----------------------------------------------------------------------
 
     // Set the Cell class segment order
-    static void setCellSegmentOrder(bool matchPythonOrder);
+    void setCellSegmentOrder(bool matchPythonOrder);
 
     //----------------------------------------------------------------------
     /**
@@ -1153,9 +1113,7 @@ public:
      *
      */
     void _rebalance();
-
     void rebuildOutSynapses();
-
     void trimOldSegments(UInt age);
 
     //----------------------------------------------------------------------
@@ -1163,11 +1121,8 @@ public:
      * Various debugging helpers
      */
     void printStates();
-
-    void printState(const UInt *state);
-
-    static void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
-
+    void printState(UInt *state);
+    void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
     void dumpSegmentUpdates();
 
     //-----------------------------------------------------------------------
@@ -1176,6 +1131,17 @@ public:
      * list.
      */
     std::vector<UInt> getNonEmptySegList(UInt colIdx, UInt cellIdxInCol);
+
+    //-----------------------------------------------------------------------
+    /**
+     * Dump timing results to stdout
+     */
+    void dumpTiming();
+
+    //-----------------------------------------------------------------------
+    // Reset all timers to 0
+    //-----------------------------------------------------------------------
+    void resetTimers();
 
     //-----------------------------------------------------------------------
     // Invariants
@@ -1195,14 +1161,12 @@ public:
 
 //-----------------------------------------------------------------------
 #ifndef SWIG
-
 std::ostream &operator<<(std::ostream &outStream, const Cells4 &cells);
-
 #endif
 
 //-----------------------------------------------------------------------
 
-} // end namespace crucian
+} // namespace crucian
 
 //-----------------------------------------------------------------------
 #endif // NTA_Cells4_HPP

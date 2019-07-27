@@ -30,7 +30,6 @@ namespace crucian
 {
 
 class Cells4;
-
 //--------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------
 /**
@@ -46,8 +45,7 @@ private:
     UInt _dstSegIdx; // index in _segActivity
 
 public:
-    OutSynapse(UInt dstCellIdx = static_cast<UInt>(-1),
-               UInt dstSegIdx = static_cast<UInt>(-1)
+    explicit OutSynapse(UInt dstCellIdx = (UInt)-1, UInt dstSegIdx = (UInt)-1
                // Cells4* cells =NULL
                )
         : _dstCellIdx(dstCellIdx), _dstSegIdx(dstSegIdx)
@@ -56,20 +54,7 @@ public:
         // NTA_ASSERT(invariants(cells));
     }
 
-    OutSynapse(const OutSynapse &o)
-        : _dstCellIdx(o._dstCellIdx), _dstSegIdx(o._dstSegIdx)
-    {
-    }
-
-    OutSynapse &operator=(const OutSynapse &o)
-    {
-        _dstCellIdx = o._dstCellIdx;
-        _dstSegIdx = o._dstSegIdx;
-        return *this;
-    }
-
     UInt dstCellIdx() const { return _dstCellIdx; }
-
     UInt dstSegIdx() const { return _dstSegIdx; }
 
     /**

@@ -68,7 +68,7 @@ UInt Cell::getFreeSegment(const Segment::InSynapses &synapses,
     {
         // for unit tests where segment order matters
 
-        segIdx = static_cast<UInt>(_segments.size());
+        segIdx = _segments.size();
         _segments.resize(_segments.size() + 1);
     }
     else
@@ -82,7 +82,7 @@ UInt Cell::getFreeSegment(const Segment::InSynapses &synapses,
 
         if (_freeSegments.empty())
         {
-            segIdx = static_cast<UInt>(_segments.size());
+            segIdx = _segments.size();
             // TODO: Should we grow by larger amounts here?
             _segments.resize(_segments.size() + 1);
         }
@@ -140,14 +140,13 @@ void Cell::load(std::istream &inStream)
     _segments.resize(n);
     _freeSegments.resize(0);
 
-    for (UInt i = 0; i != n; ++i)
+    for (UInt i = 0; i != (UInt)n; ++i)
     {
         _segments[i].load(inStream);
         if (_segments[i].empty())
             _freeSegments.push_back(i);
     }
 }
-
 bool Cell::operator==(const Cell &other) const
 {
     if (_freeSegments != other._freeSegments)

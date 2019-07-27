@@ -21,10 +21,7 @@
  */
 
 #include <algorithm>
-#include <assert.h>
 #include <cstring>
-#include <iomanip>
-#include <iostream>
 #include <limits> // numeric_limits
 #include <map>
 #include <set>
@@ -35,12 +32,32 @@
 #include <crucian/algorithms/Cells4.hpp>
 #include <crucian/algorithms/SegmentUpdate.hpp>
 #include <crucian/math/ArrayAlgo.hpp> // is_in
-#include <crucian/math/StlIo.hpp>     // binary_save
 #include <crucian/utils/Log.hpp>
 #include <crucian/utils/Random.hpp>
 
 namespace crucian
 {
+
+// Comment or uncomment to turn on timing
+//#define CELLS4_TIMING
+
+// Various timers and instrumentation contingent on above flag
+#ifdef CELLS4_TIMING
+
+#define TIMER(code) (code)
+
+static nupic::Timer computeTimer, inferenceTimer, learningTimer;
+static nupic::Timer learnPhase1Timer, learnPhase2Timer, learnBacktrackTimer;
+static nupic::Timer infPhase1Timer, infPhase2Timer, infBacktrackTimer;
+static nupic::Timer forwardLearnPropTimer, forwardInfPropTimer;
+static nupic::Timer getNewCellTimer, adaptSegmentTimer;
+static nupic::Timer chooseCellsTimer;
+
+#else
+
+#define TIMER(code)
+
+#endif
 
 Cells4::Cells4(UInt nColumns, UInt nCellsPerCol, UInt activationThreshold,
                UInt minThreshold, UInt newSynapseCount,
@@ -218,13 +235,11 @@ void Cells4::addOutSynapses(UInt dstCellIdx, UInt dstSegIdx, It newSynapse,
     }
 }
 
-template void Cells4::addOutSynapses(crucian::UInt, crucian::UInt,
-                                     std::set<crucian::UInt>::const_iterator,
-                                     std::set<crucian::UInt>::const_iterator);
-
-template void Cells4::addOutSynapses(crucian::UInt, crucian::UInt,
-                                     std::vector<crucian::UInt>::const_iterator,
-                                     std::vector<crucian::UInt>::const_iterator);
+template void Cells4::addOutSynapses(UInt, UInt, std::set<UInt>::const_iterator,
+                                     std::set<UInt>::const_iterator);
+template void Cells4::addOutSynapses(UInt, UInt,
+                                     std::vector<UInt>::const_iterator,
+                                     std::vector<UInt>::const_iterator);
 
 //--------------------------------------------------------------------------------
 /**
@@ -265,6 +280,8 @@ void Cells4::inferBacktrack(const std::vector<UInt> &activeColumns)
     if (_prevInfPatterns.empty())
         return;
 
+    TIMER(infBacktrackTimer.start());
+
     // This is an easy to use label for the current time step
     UInt currentTimeStepsOffset = _prevInfPatterns.size() - 1;
 
@@ -286,7 +303,7 @@ void Cells4::inferBacktrack(const std::vector<UInt> &activeColumns)
     // Let's go back in time and replay the recent inputs from start cells and
     // see if we can lock onto this current set of inputs that way. A detailed
     // description is in TP.py
-    bool inSequence;
+    bool inSequence = false;
     Real candConfidence = -1;
     Int candStartOffset = -1;
     UInt startOffset = 0;
@@ -434,6 +451,9 @@ void Cells4::inferBacktrack(const std::vector<UInt> &activeColumns)
 
     // Restore the original predicted state
     _infPredictedStateT1 = _infPredictedBackup;
+
+    // Turn off timer
+    TIMER(infBacktrackTimer.stop());
 }
 
 //--------------------------------------------------------------------------------
@@ -532,7 +552,10 @@ bool Cells4::learnBacktrackFrom(UInt startOffset, bool readOnly)
             std::cout << "\n";
         }
 
+        // Call learnPhase2, but turn off backtrack timer to help isolate timing
+        TIMER(learnBacktrackTimer.stop());
         learnPhase2(readOnly);
+        TIMER(learnBacktrackTimer.start());
     } // offset < numPrevPatterns
 
     return inSequence;
@@ -550,7 +573,7 @@ UInt Cells4::learnBacktrack()
     // The current input is always at the end of self._prevInfPatterns (at
     // index -1), and is not a valid startingOffset to evaluate.
     UInt numPrevPatterns =
-        (_prevLrnPatterns.empty() ? 0 : _prevLrnPatterns.size() - 1);
+        (_prevLrnPatterns.size() == 0 ? 0 : _prevLrnPatterns.size() - 1);
     if (numPrevPatterns <= 0)
     {
         if (_verbosity >= 3)
@@ -647,6 +670,7 @@ UInt Cells4::learnBacktrack()
  */
 UInt Cells4::getCellForNewSegment(UInt colIdx)
 {
+    TIMER(getNewCellTimer.start());
     UInt candidateCellIdx = 0;
 
     // Not fixed size CLA, just choose a cell randomly
@@ -661,6 +685,7 @@ UInt Cells4::getCellForNewSegment(UInt colIdx)
         {
             candidateCellIdx = 0;
         }
+        TIMER(getNewCellTimer.stop());
         return getCellIdx(colIdx, candidateCellIdx);
     }
 
@@ -703,6 +728,7 @@ UInt Cells4::getCellForNewSegment(UInt colIdx)
                       << "] chosen for new segment, # of segs is "
                       << _cells[candidateCellIdx].size() << "\n";
         }
+        TIMER(getNewCellTimer.stop());
         return candidateCellIdx;
     }
 
@@ -753,6 +779,8 @@ UInt Cells4::getCellForNewSegment(UInt colIdx)
     cleanUpdatesList(candidateCellIdx, candidateSegmentIdx);
     _cells[candidateCellIdx].releaseSegment(candidateSegmentIdx);
 
+    TIMER(getNewCellTimer.stop());
+
     return candidateCellIdx;
 }
 
@@ -763,6 +791,8 @@ UInt Cells4::getCellForNewSegment(UInt colIdx)
  */
 bool Cells4::learnPhase1(const std::vector<UInt> &activeColumns, bool readOnly)
 {
+    TIMER(learnPhase1Timer.start());
+
     // Save previous active state (where?) and start out on a clean slate
     _learnActiveStateT.resetAll();
 
@@ -860,6 +890,9 @@ bool Cells4::learnPhase1(const std::vector<UInt> &activeColumns, bool readOnly)
         }
     } // for each active column
 
+    // Turn off timer before we return
+    TIMER(learnPhase1Timer.stop());
+
     //----------------------------------------------------------------------
     // Determine if we are out of sequence or not and reset our PAM counter
     // if we are in sequence
@@ -872,7 +905,13 @@ bool Cells4::learnPhase1(const std::vector<UInt> &activeColumns, bool readOnly)
  */
 void Cells4::learnPhase2(bool readOnly)
 {
+    // Compute number of active synapses per segment based on forward
+    // propagation
+    TIMER(forwardLearnPropTimer.start());
     computeForwardPropagation(_learnActiveStateT);
+    TIMER(forwardLearnPropTimer.stop());
+
+    TIMER(learnPhase2Timer.start());
 
     // Clear out predicted state to start with
     _learnPredictedStateT.resetAll();
@@ -907,6 +946,9 @@ void Cells4::learnPhase2(bool readOnly)
             // Leave out pooling logic for now
         }
     }
+
+    // Turn off timer before we return
+    TIMER(learnPhase2Timer.stop());
 }
 
 //--------------------------------------------------------------------------------
@@ -1003,7 +1045,9 @@ void Cells4::updateLearningState(const std::vector<UInt> &activeColumns,
         UInt backsteps = 0;
         if (!_resetCalled)
         {
+            TIMER(learnBacktrackTimer.start());
             backsteps = learnBacktrack();
+            TIMER(learnBacktrackTimer.stop());
         }
 
         // Start over in the current time step if reset was called, or we
@@ -1115,6 +1159,7 @@ void Cells4::updateInferenceState(const std::vector<UInt> &activeColumns)
 bool Cells4::inferPhase1(const std::vector<UInt> &activeColumns,
                          bool useStartCells)
 {
+    TIMER(infPhase1Timer.start());
     //---------------------------------------------------------------------------
     // Initialize current active state to 0 to start
     _infActiveStateT.resetAll();
@@ -1167,6 +1212,7 @@ bool Cells4::inferPhase1(const std::vector<UInt> &activeColumns,
         }
     }
 
+    TIMER(infPhase1Timer.stop());
     // Did we predict this input well enough?
     return (useStartCells ||
             (numPredictedColumns >= 0.50 * activeColumns.size()));
@@ -1182,8 +1228,11 @@ bool Cells4::inferPhase2()
 {
     // Compute number of active synapses per segment based on forward
     // propagation
+    TIMER(forwardInfPropTimer.start());
     computeForwardPropagation(_infActiveStateT);
+    TIMER(forwardInfPropTimer.stop());
 
+    TIMER(infPhase2Timer.start());
     //---------------------------------------------------------------------------
     // Initialize to 0 to start
     _infPredictedStateT.resetAll();
@@ -1260,6 +1309,9 @@ bool Cells4::inferPhase2()
             _cellConfidenceT[i] /= sumColConfidence;
     }
 
+    // Turn off timer before we return
+    TIMER(infPhase2Timer.stop());
+
     //---------------------------------------------------------------------------
     // Are we predicting the required minimum number of columns?
     return (numPredictedCols >= (0.5 * _avgInputDensity));
@@ -1272,18 +1324,35 @@ bool Cells4::inferPhase2()
 void Cells4::compute(Real *input, Real *output, bool doInference,
                      bool doLearning)
 {
+    TIMER(computeTimer.start());
     NTA_CHECK(doInference || doLearning);
 
     if (doLearning)
         _nLrnIterations++;
     ++_nIterations;
 
+#ifdef CELLS4_TIMING
+    if (_nIterations % 1000 == 0)
+    {
+        std::cout << "\n=================\n_nIterations = " << _nIterations
+                  << "\n";
+        dumpTiming();
+        resetTimers();
+    }
+
+    if (_verbosity >= 3)
+    {
+        std::cout << "\n==== CPP Iteration: " << _nIterations
+                  << " =====" << std::endl;
+    }
+#endif
+
     // Create array of active bottom up column indices for later use
     static std::vector<UInt> activeColumns;
     activeColumns.clear(); // purge residual data
     for (UInt i = 0; i != _nColumns; ++i)
     {
-        if (nearlyZero(input[i]))
+        if (input[i])
             activeColumns.push_back(i);
     }
 
@@ -1324,14 +1393,18 @@ void Cells4::compute(Real *input, Real *output, bool doInference,
     // Update the inference state
     if (doInference)
     {
+        TIMER(inferenceTimer.start());
         updateInferenceState(activeColumns);
+        TIMER(inferenceTimer.stop());
     }
 
     //---------------------------------------------------------------------------
     // Update the learning state
     if (doLearning)
     {
+        TIMER(learningTimer.start());
         updateLearningState(activeColumns, input);
+        TIMER(learningTimer.stop());
 
         // Apply age-based global decay
         applyGlobalDecay();
@@ -1411,41 +1484,41 @@ void Cells4::compute(Real *input, Real *output, bool doInference,
         UInt64 eightStates = *(UInt64 *)(_infPredictedStateT.arrayPtr() + i);
         if (eightStates != 0)
         {
-            if ((eightStates & 0x00000000000000ffu) != 0)
+            if ((eightStates & 0x00000000000000ff) != 0)
                 output[i + 0] = 1.0;
-            if ((eightStates & 0x000000000000ff00u) != 0)
+            if ((eightStates & 0x000000000000ff00) != 0)
                 output[i + 1] = 1.0;
-            if ((eightStates & 0x0000000000ff0000u) != 0)
+            if ((eightStates & 0x0000000000ff0000) != 0)
                 output[i + 2] = 1.0;
-            if ((eightStates & 0x00000000ff000000u) != 0)
+            if ((eightStates & 0x00000000ff000000) != 0)
                 output[i + 3] = 1.0;
-            if ((eightStates & 0x000000ff00000000u) != 0)
+            if ((eightStates & 0x000000ff00000000) != 0)
                 output[i + 4] = 1.0;
-            if ((eightStates & 0x0000ff0000000000u) != 0)
+            if ((eightStates & 0x0000ff0000000000) != 0)
                 output[i + 5] = 1.0;
-            if ((eightStates & 0x00ff000000000000u) != 0)
+            if ((eightStates & 0x00ff000000000000) != 0)
                 output[i + 6] = 1.0;
-            if ((eightStates & 0xff00000000000000u) != 0)
+            if ((eightStates & 0xff00000000000000) != 0)
                 output[i + 7] = 1.0;
         }
         eightStates = *(UInt64 *)(_infActiveStateT.arrayPtr() + i);
         if (eightStates != 0)
         {
-            if ((eightStates & 0x00000000000000ffu) != 0)
+            if ((eightStates & 0x00000000000000ff) != 0)
                 output[i + 0] = 1.0;
-            if ((eightStates & 0x000000000000ff00u) != 0)
+            if ((eightStates & 0x000000000000ff00) != 0)
                 output[i + 1] = 1.0;
-            if ((eightStates & 0x0000000000ff0000u) != 0)
+            if ((eightStates & 0x0000000000ff0000) != 0)
                 output[i + 2] = 1.0;
-            if ((eightStates & 0x00000000ff000000u) != 0)
+            if ((eightStates & 0x00000000ff000000) != 0)
                 output[i + 3] = 1.0;
-            if ((eightStates & 0x000000ff00000000u) != 0)
+            if ((eightStates & 0x000000ff00000000) != 0)
                 output[i + 4] = 1.0;
-            if ((eightStates & 0x0000ff0000000000u) != 0)
+            if ((eightStates & 0x0000ff0000000000) != 0)
                 output[i + 5] = 1.0;
-            if ((eightStates & 0x00ff000000000000u) != 0)
+            if ((eightStates & 0x00ff000000000000) != 0)
                 output[i + 6] = 1.0;
-            if ((eightStates & 0xff00000000000000u) != 0)
+            if ((eightStates & 0xff00000000000000) != 0)
                 output[i + 7] = 1.0;
         }
     }
@@ -1478,6 +1551,7 @@ void Cells4::compute(Real *input, Real *output, bool doInference,
     {
         NTA_CHECK(invariants(true));
     }
+    TIMER(computeTimer.stop());
 }
 
 //--------------------------------------------------------------------------------
@@ -1507,8 +1581,7 @@ void Cells4::_updateAvgLearnedSeqLength(UInt prevSeqLength)
 /**
  * Go through the list of accumulated segment updates and process them.
  */
-void Cells4::processSegmentUpdates(const Real *input,
-                                   const CState &predictedState)
+void Cells4::processSegmentUpdates(Real *input, const CState &predictedState)
 {
     static std::vector<UInt> delUpdates;
     delUpdates.clear(); // purge residual data
@@ -1713,6 +1786,7 @@ void Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
  */
 void Cells4::adaptSegment(const SegmentUpdate &update)
 {
+    TIMER(adaptSegmentTimer.start());
     {
         // consistency checks:
         // update synapses need to be sorted and unique
@@ -1731,6 +1805,7 @@ void Cells4::adaptSegment(const SegmentUpdate &update)
         // deleted.
         if (_cells[cellIdx][segIdx].empty())
         {
+            TIMER(adaptSegmentTimer.stop());
             return;
         }
 
@@ -1866,32 +1941,34 @@ void Cells4::adaptSegment(const SegmentUpdate &update)
         {
             synapses.push_back(InSynapse(update[i], _permInitial));
         }
-        UInt newSegIdx = _cells[cellIdx].getFreeSegment(
+        UInt segIdx = _cells[cellIdx].getFreeSegment(
             synapses, _initSegFreq, update.isSequenceSegment(), _permConnected,
             _nLrnIterations);
 
         // Initialize the new segment's last active iteration and frequency
         // related counts
-        _cells[cellIdx][newSegIdx]._lastActiveIteration = _nLrnIterations;
-        _cells[cellIdx][newSegIdx]._positiveActivations = 1;
-        _cells[cellIdx][newSegIdx]._totalActivations = 1;
+        _cells[cellIdx][segIdx]._lastActiveIteration = _nLrnIterations;
+        _cells[cellIdx][segIdx]._positiveActivations = 1;
+        _cells[cellIdx][segIdx]._totalActivations = 1;
 
         if (_verbosity >= 3)
         {
             std::cout << "New segment for cell ";
             printCell(cellIdx, _nCellsPerCol);
             std::cout << "cellIdx = " << cellIdx << ", ";
-            _cells[cellIdx][newSegIdx].print(std::cout, _nCellsPerCol);
+            _cells[cellIdx][segIdx].print(std::cout, _nCellsPerCol);
             std::cout << std::endl;
         }
 
-        addOutSynapses(cellIdx, newSegIdx, update.begin(), update.end());
+        addOutSynapses(cellIdx, segIdx, update.begin(), update.end());
     }
 
     if (_checkSynapseConsistency)
     {
         NTA_CHECK(invariants());
     }
+
+    TIMER(adaptSegmentTimer.stop());
 }
 
 // Rebalance segment lists for each cell
@@ -2121,7 +2198,7 @@ void Cells4::save(std::ostream &outStream) const
 /**
  * Save the state to the given file
  */
-void Cells4::saveToFile(const std::string &filePath) const
+void Cells4::saveToFile(std::string filePath) const
 {
     std::ofstream outStream(filePath.c_str(),
                             std::ios_base::out | std::ios_base::binary);
@@ -2140,7 +2217,7 @@ void Cells4::saveToFile(const std::string &filePath) const
 /**
  * Load the state from the given file
  */
-void Cells4::loadFromFile(const std::string &filePath)
+void Cells4::loadFromFile(std::string filePath)
 {
     std::ifstream outStream(filePath.c_str(),
                             std::ios_base::in | std::ios_base::binary);
@@ -2154,7 +2231,7 @@ void Cells4::loadFromFile(const std::string &filePath)
  */
 void Cells4::load(std::istream &inStream)
 {
-    std::string tag;
+    std::string tag = "";
     inStream >> tag;
     // If the checkpoint starts with "cellsV4" then it is the original,
     // otherwise the version is a UInt.
@@ -2288,8 +2365,10 @@ void Cells4::load(std::istream &inStream)
  */
 bool Cells4::invariants(bool verbose) const
 {
-    std::set<std::string> back_map;
-    std::set<std::string> forward_map;
+    using namespace std;
+
+    set<string> back_map;
+    set<string> forward_map;
 
     bool consistent = true;
 
@@ -2321,7 +2400,7 @@ bool Cells4::invariants(bool verbose) const
             for (UInt k = 0; k != seg.size(); ++k)
             {
 
-                std::stringstream buf;
+                stringstream buf;
                 buf << i << '.' << j << '.' << seg[k].srcCellIdx();
 
                 if (is_in(buf.str(), back_map))
@@ -2342,7 +2421,7 @@ bool Cells4::invariants(bool verbose) const
 
             const OutSynapse &syn = _outSynapses[i][j];
 
-            std::stringstream buf;
+            stringstream buf;
             buf << syn.dstCellIdx() << '.' << syn.dstSegIdx() << '.' << i;
 
             if (is_in(buf.str(), forward_map))
@@ -2740,6 +2819,7 @@ void Cells4::chooseCellsToLearnFrom(UInt cellIdx, UInt segIdx, UInt nSynToAdd,
     // bail out if no cells requested
     if (nSynToAdd == 0)
         return;
+    TIMER(chooseCellsTimer.start());
 
     // start with a sorted vector of all the cells that are on in the current
     // state
@@ -2779,6 +2859,7 @@ void Cells4::chooseCellsToLearnFrom(UInt cellIdx, UInt segIdx, UInt nSynToAdd,
     // bail out if there are no cells left to process
     if (nbrCells == 0)
     {
+        TIMER(chooseCellsTimer.stop()); // turn off timer
         return;
     }
 
@@ -2817,6 +2898,9 @@ void Cells4::chooseCellsToLearnFrom(UInt cellIdx, UInt segIdx, UInt nSynToAdd,
     // sort the new additions with any prior elements
     if (fSortNeeded)
         std::sort(srcCells.begin(), srcCells.end());
+
+    // Turn off timer
+    TIMER(chooseCellsTimer.stop());
 }
 
 std::pair<UInt, UInt> Cells4::trimSegments(Real minPermanence, UInt minNumSyns)
@@ -2874,7 +2958,7 @@ std::pair<UInt, UInt> Cells4::trimSegments(Real minPermanence, UInt minNumSyns)
 // Debugging helpers
 //----------------------------------------------------------------------
 
-void Cells4::printState(const UInt *state)
+void Cells4::printState(UInt *state)
 {
     for (UInt i = 0; i != nCellsPerCol(); ++i)
     {
@@ -2892,68 +2976,73 @@ void Cells4::printState(const UInt *state)
 void Cells4::printStates()
 {
     // Print out active state for debugging
-    std::cout << "TP10X: Active  T-1      \t T\n";
-    for (UInt i = 0; i != nCellsPerCol(); ++i)
+    if (true)
     {
-        for (UInt c = 0; c != nColumns(); ++c)
+        std::cout << "TP10X: Active  T-1      \t T\n";
+        for (UInt i = 0; i != nCellsPerCol(); ++i)
         {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_infActiveStateT1.isSet(cellIdx) ? 1 : 0);
-        }
-        std::cout << "  ";
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_infActiveStateT1.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << "  ";
 
-        for (UInt c = 0; c != nColumns(); ++c)
-        {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_infActiveStateT.isSet(cellIdx) ? 1 : 0);
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_infActiveStateT.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
-    }
-    std::cout << "TP10X: Predicted T-1      \t T\n";
-    for (UInt i = 0; i != nCellsPerCol(); ++i)
-    {
-        for (UInt c = 0; c != nColumns(); ++c)
-        {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_infPredictedStateT1.isSet(cellIdx) ? 1 : 0);
-        }
-        std::cout << "  ";
 
-        for (UInt c = 0; c != nColumns(); ++c)
+        std::cout << "TP10X: Predicted T-1      \t T\n";
+        for (UInt i = 0; i != nCellsPerCol(); ++i)
         {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_infPredictedStateT.isSet(cellIdx) ? 1 : 0);
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "TP10X: Learn  T-1      \t\t T\n";
-    for (UInt i = 0; i != nCellsPerCol(); ++i)
-    {
-        for (UInt c = 0; c != nColumns(); ++c)
-        {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_learnActiveStateT1.isSet(cellIdx) ? 1 : 0);
-        }
-        std::cout << "  ";
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_infPredictedStateT1.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << "  ";
 
-        for (UInt c = 0; c != nColumns(); ++c)
-        {
-            if (c > 0 && c % 10 == 0)
-                std::cout << ' ';
-            UInt cellIdx = c * nCellsPerCol() + i;
-            std::cout << (_learnActiveStateT.isSet(cellIdx) ? 1 : 0);
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_infPredictedStateT.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
+
+        std::cout << "TP10X: Learn  T-1      \t\t T\n";
+        for (UInt i = 0; i != nCellsPerCol(); ++i)
+        {
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_learnActiveStateT1.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << "  ";
+
+            for (UInt c = 0; c != nColumns(); ++c)
+            {
+                if (c > 0 && c % 10 == 0)
+                    std::cout << ' ';
+                UInt cellIdx = c * nCellsPerCol() + i;
+                std::cout << (_learnActiveStateT.isSet(cellIdx) ? 1 : 0);
+            }
+            std::cout << std::endl;
+        }
     }
 }
 
@@ -3175,9 +3264,9 @@ void Cells4::computeForwardPropagation(CState &state)
     for (i = 0; i < multipleOf8; i += 8)
     {
         UInt64 eightStates = *(UInt64 *)(state.arrayPtr() + i);
-        for (int k = 0; eightStates != 0 && k < 8; eightStates >>= 8u, k++)
+        for (int k = 0; eightStates != 0 && k < 8; eightStates >>= 8, k++)
         {
-            if ((eightStates & 0xffu) != 0)
+            if ((eightStates & 0xff) != 0)
             {
                 std::vector<OutSynapse> &os = _outSynapses[i + k];
                 for (UInt j = 0; j != os.size(); ++j)
@@ -3241,7 +3330,88 @@ void Cells4::computeForwardPropagation(CState &state)
     }
 #endif // NTA_ARCH_32/64
 }
-
 #endif // SOME_STATES_NOT_INDEXED
+
+//--------------------------------------------------------------------------------
+// Dump detailed Cells4 timing report to stdout
+//--------------------------------------------------------------------------------
+void Cells4::dumpTiming()
+{
+#ifdef CELLS4_TIMING
+    Real64 learnTime = learningTimer.getElapsed(),
+           inferenceTime = inferenceTimer.getElapsed();
+
+    std::cout << "Total time in compute:   " << computeTimer.toString() << "\n";
+    std::cout << "Total time in learning:  " << learningTimer.toString()
+              << "\n";
+    std::cout << "Total time in inference: " << inferenceTimer.toString()
+              << "\n";
+
+    std::cout << "\n\nLearning breakdown:" << std::endl;
+    std::cout << "Phase 1: " << learnPhase1Timer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * learnPhase1Timer.getElapsed() / learnTime << "%\n";
+    std::cout << "Phase 2: " << learnPhase2Timer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * learnPhase2Timer.getElapsed() / learnTime << "%\n";
+    std::cout << "Backtrack: " << learnBacktrackTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * learnBacktrackTimer.getElapsed() / learnTime << "%\n";
+    std::cout << "Forward prop: " << forwardLearnPropTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * forwardLearnPropTimer.getElapsed() / learnTime
+              << "%\n";
+    std::cout << "getCellForNewSegment: " << getNewCellTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * getNewCellTimer.getElapsed() / learnTime << "%\n";
+    std::cout << "chooseCells: " << chooseCellsTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * chooseCellsTimer.getElapsed() / learnTime << "%\n";
+    std::cout << "adaptSegment: " << adaptSegmentTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * adaptSegmentTimer.getElapsed() / learnTime << "%\n";
+    std::cout << "Note: % is percentage of learning time\n";
+
+    std::cout << "\n\nInference breakdown:" << std::endl;
+    std::cout << "Phase 1: " << infPhase1Timer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * infPhase1Timer.getElapsed() / inferenceTime << "%\n";
+    std::cout << "Phase 2: " << infPhase2Timer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * infPhase2Timer.getElapsed() / inferenceTime << "%\n";
+    std::cout << "Backtrack: " << infBacktrackTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * infBacktrackTimer.getElapsed() / inferenceTime
+              << "%\n";
+    std::cout << "Forward prop: " << forwardInfPropTimer.toString() << " "
+              << std::setprecision(3)
+              << 100.0 * forwardInfPropTimer.getElapsed() / inferenceTime
+              << "%\n";
+    std::cout << "Note: % is percentage of inference time\n";
+
+#endif
+}
+
+//--------------------------------------------------------------------------------
+// Reset timers and counters to 0
+//--------------------------------------------------------------------------------
+void Cells4::resetTimers()
+{
+#ifdef CELLS4_TIMING
+    computeTimer.reset();
+    inferenceTimer.reset();
+    learningTimer.reset();
+    learnPhase1Timer.reset();
+    learnPhase2Timer.reset();
+    learnBacktrackTimer.reset();
+    forwardLearnPropTimer.reset();
+    infPhase1Timer.reset();
+    infPhase2Timer.reset();
+    infBacktrackTimer.reset();
+    forwardInfPropTimer.reset();
+    getNewCellTimer.reset();
+    chooseCellsTimer.reset();
+#endif
+}
 
 } // namespace crucian

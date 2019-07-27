@@ -72,7 +72,7 @@ public:
      * iterate, indices less than size() might contain indices of empty
      * segments.
      */
-    UInt size() const { return static_cast<UInt>(_segments.size()); }
+    UInt size() const { return _segments.size(); }
 
     //--------------------------------------------------------------------------------
     /**
@@ -82,7 +82,7 @@ public:
     UInt nSegments() const
     {
         NTA_ASSERT(_freeSegments.size() <= _segments.size());
-        return static_cast<UInt>(_segments.size() - _freeSegments.size());
+        return _segments.size() - _freeSegments.size();
     }
 
     //--------------------------------------------------------------------------------
@@ -115,7 +115,6 @@ public:
 
     //----------------------------------------------------------------------
     bool operator==(const Cell &other) const;
-
     inline bool operator!=(const Cell &other) const
     {
         return !operator==(other);
@@ -257,7 +256,7 @@ public:
     {
         std::stringstream buff;
         this->save(buff);
-        return static_cast<UInt>(buff.str().size());
+        return buff.str().size();
     }
 
     //----------------------------------------------------------------------

@@ -26,7 +26,6 @@
 #include <vector>
 
 #include <crucian/types/Types.hpp>
-#include <crucian/utils/Log.hpp>
 
 namespace crucian
 {
@@ -55,10 +54,10 @@ private:
     UInt _timeStamp;             // controls obsolescence of update
     std::vector<UInt> _synapses; // contains source cell indices
     bool _phase1Flag;            // If true, this update was created
-    // during Phase 1 of compute
-    bool _weaklyPredicting; // Set true if segment only reaches
-                            // activationThreshold when including
-                            // unconnected synapses.
+                                 // during Phase 1 of compute
+    bool _weaklyPredicting;      // Set true if segment only reaches
+                                 // activationThreshold when including
+                                 // unconnected synapses.
 
 public:
     SegmentUpdate();
@@ -86,10 +85,8 @@ public:
         NTA_ASSERT(invariants());
         return *this;
     }
-
     //---------------------------------------------------------------------
     bool operator==(const SegmentUpdate &other) const;
-
     inline bool operator!=(const SegmentUpdate &other) const
     {
         return !operator==(other);
@@ -97,27 +94,16 @@ public:
 
     //---------------------------------------------------------------------
     bool isSequenceSegment() const { return _sequenceSegment; }
-
     UInt cellIdx() const { return _cellIdx; }
-
     UInt segIdx() const { return _segIdx; }
-
     UInt timeStamp() const { return _timeStamp; }
-
     UInt operator[](UInt idx) const { return _synapses[idx]; }
-
     const_iterator begin() const { return _synapses.begin(); }
-
     const_iterator end() const { return _synapses.end(); }
-
-    UInt size() const { return static_cast<UInt>(_synapses.size()); }
-
+    UInt size() const { return _synapses.size(); }
     bool empty() const { return _synapses.empty(); }
-
-    bool isNewSegment() const { return _segIdx == static_cast<UInt>(-1); }
-
+    bool isNewSegment() const { return _segIdx == (UInt)-1; }
     bool isPhase1Segment() const { return _phase1Flag; }
-
     bool isWeaklyPredicting() const { return _weaklyPredicting; }
 
     //---------------------------------------------------------------------
@@ -170,7 +156,7 @@ public:
         else
         {
             NTA_CHECK(nCellsPerCol > 0);
-            UInt col = static_cast<UInt>(_cellIdx / nCellsPerCol);
+            UInt col = (UInt)(_cellIdx / nCellsPerCol);
             UInt cell = _cellIdx - col * nCellsPerCol;
             outStream << "cell: "
                       << "[" << col << "," << cell << "]  ";
@@ -187,14 +173,12 @@ public:
 
 //--------------------------------------------------------------------------------
 #ifndef SWIG
-
 inline std::ostream &operator<<(std::ostream &outStream,
                                 const SegmentUpdate &update)
 {
     update.print(outStream);
     return outStream;
 }
-
 #endif
 
 } // namespace crucian

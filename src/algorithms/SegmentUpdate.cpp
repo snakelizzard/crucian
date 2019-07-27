@@ -28,9 +28,9 @@ namespace crucian
 {
 
 SegmentUpdate::SegmentUpdate()
-    : _sequenceSegment(false), _cellIdx(static_cast<UInt>(-1)),
-      _segIdx(static_cast<UInt>(-1)), _timeStamp(static_cast<UInt>(-1)),
-      _synapses(), _phase1Flag(false), _weaklyPredicting(false)
+    : _sequenceSegment(false), _cellIdx((UInt)-1), _segIdx((UInt)-1),
+      _timeStamp((UInt)-1), _synapses(), _phase1Flag(false),
+      _weaklyPredicting(false)
 {
 }
 
@@ -66,7 +66,7 @@ bool SegmentUpdate::invariants(Cells4 *cells) const
     {
 
         ok &= _cellIdx < cells->nCells();
-        if (_segIdx != static_cast<UInt>(-1))
+        if (_segIdx != (UInt)-1)
             ok &= _segIdx < cells->__nSegmentsOnCell(_cellIdx);
 
         if (!_synapses.empty())

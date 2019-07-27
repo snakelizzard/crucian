@@ -26,8 +26,9 @@
 #include <fstream>
 #include <ostream>
 
-#include <crucian/math/Math.hpp>
 #include <crucian/types/Types.hpp>
+
+//--------------------------------------------------------------------------------
 
 namespace crucian
 {
@@ -46,40 +47,25 @@ private:
     Real _permanence;
 
 public:
-    inline InSynapse() : _srcCellIdx(static_cast<UInt>(-1)), _permanence(0) {}
+    inline InSynapse() : _srcCellIdx((UInt)-1), _permanence(0) {}
 
     inline InSynapse(UInt srcCellIdx, Real permanence)
         : _srcCellIdx(srcCellIdx), _permanence(permanence)
     {
     }
 
-    inline InSynapse(const InSynapse &o)
-        : _srcCellIdx(o._srcCellIdx), _permanence(o._permanence)
-    {
-    }
-
-    inline InSynapse &operator=(const InSynapse &o)
-    {
-        _srcCellIdx = o._srcCellIdx;
-        _permanence = o._permanence;
-        return *this;
-    }
-
     inline bool operator==(const InSynapse &other) const
     {
         return _srcCellIdx == other._srcCellIdx &&
-               nearlyEqual(_permanence, other._permanence);
+               _permanence == other._permanence;
     }
-
     inline bool operator!=(const InSynapse &other) const
     {
         return !operator==(other);
     }
 
     inline UInt srcCellIdx() const { return _srcCellIdx; }
-
     const inline Real &permanence() const { return _permanence; }
-
     inline Real &permanence() { return _permanence; }
 
     inline void print(std::ostream &outStream) const;
@@ -87,9 +73,7 @@ public:
 
 //--------------------------------------------------------------------------------
 #ifndef SWIG
-
 std::ostream &operator<<(std::ostream &outStream, const InSynapse &s);
-
 #endif
 
 } // namespace crucian

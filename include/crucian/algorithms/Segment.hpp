@@ -98,22 +98,18 @@ public:
         _fMemoryAllocatedByPython = false;
         _version = VERSION;
     }
-
     ~CState()
     {
         if (!_fMemoryAllocatedByPython && _pData != nullptr)
             delete[] _pData;
     }
-
     CState &operator=(const CState &o)
     {
-        NTA_ASSERT(_nCells ==
-                   o._nCells); // _nCells should be static, since it is
-        // the same size for all CStates
+        NTA_ASSERT(_nCells == o._nCells); // _nCells should be static, since it
+                                          // is the same size for all CStates
         memcpy(_pData, o._pData, _nCells);
         return *this;
     }
-
     bool operator==(const CState &other) const
     {
         if (_version != other._version || _nCells != other._nCells ||
@@ -127,12 +123,10 @@ public:
         }
         return _pData == other._pData;
     }
-
     inline bool operator!=(const CState &other) const
     {
         return !operator==(other);
     }
-
     bool initialize(const UInt nCells)
     {
         if (_nCells != 0) // if already initialized
@@ -144,7 +138,6 @@ public:
         memset(_pData, 0, _nCells);
         return true;
     }
-
     void usePythonMemory(Byte *pData, const UInt nCells)
     {
         // delete a prior allocation
@@ -156,13 +149,9 @@ public:
         _pData = pData;
         _fMemoryAllocatedByPython = true;
     }
-
     bool isSet(const UInt cellIdx) const { return _pData[cellIdx] != 0; }
-
-    virtual void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
-
-    virtual void resetAll() { memset(_pData, 0, _nCells); }
-
+    void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
+    void resetAll() { memset(_pData, 0, _nCells); }
     Byte *arrayPtr() const
     {
         // We expose the data array to Python.  For objects in derived
@@ -171,8 +160,7 @@ public:
         // inconsistent.
         return _pData;
     }
-
-    virtual void print(std::ostream &outStream) const
+    void print(std::ostream &outStream) const
     {
         outStream << version() << " " << _fMemoryAllocatedByPython << " "
                   << _nCells << std::endl;
@@ -183,7 +171,7 @@ public:
         outStream << std::endl << "end" << std::endl;
     }
 
-    virtual void load(std::istream &inStream)
+    void load(std::istream &inStream)
     {
         UInt version;
         inStream >> version;
@@ -197,8 +185,7 @@ public:
         inStream >> token;
         NTA_CHECK(token == "end");
     }
-
-    virtual UInt version() const { return _version; }
+    UInt version() const { return _version; }
 
 protected:
     UInt _version;
@@ -206,7 +193,6 @@ protected:
     Byte *_pData; // protected in C++, but exposed to the Python code
     bool _fMemoryAllocatedByPython;
 };
-
 /**
  * Add an index to CState so that we can find all On cells without
  * a sequential search of the entire array.
@@ -218,24 +204,23 @@ public:
 
     CStateIndexed() : CState()
     {
-        _versionIdx = VERSION;
+        _version = VERSION;
         _countOn = 0;
         _isSorted = true;
     }
 
     CStateIndexed &operator=(const CStateIndexed &o)
     {
-        NTA_ASSERT(_nCells ==
-                   o._nCells); // _nCells should be static, since it is
-        // the same size for all CStates
+        NTA_ASSERT(_nCells == o._nCells); // _nCells should be static, since it
+                                          // is the same size for all CStates
         // Is it faster to reset only the old nonzero indices and set only the
         // new ones?
         std::vector<UInt>::const_iterator iterOn;
         // reset the old On cells
-        for (iterOn = _cellsOn.cbegin(); iterOn != _cellsOn.cend(); ++iterOn)
+        for (iterOn = _cellsOn.begin(); iterOn != _cellsOn.end(); ++iterOn)
             _pData[*iterOn] = 0;
         // set the new On cells
-        for (iterOn = o._cellsOn.cbegin(); iterOn != o._cellsOn.cend(); ++iterOn)
+        for (iterOn = o._cellsOn.begin(); iterOn != o._cellsOn.end(); ++iterOn)
             _pData[*iterOn] = 1;
         // use the new On tracker
         _cellsOn = o._cellsOn;
@@ -243,10 +228,9 @@ public:
         _isSorted = o._isSorted;
         return *this;
     }
-
     bool operator==(const CStateIndexed &other) const
     {
-        if (_versionIdx != other._versionIdx || _countOn != other._countOn ||
+        if (_version != other._version || _countOn != other._countOn ||
             _isSorted != other._isSorted)
         {
             return false;
@@ -257,12 +241,10 @@ public:
         }
         return CState::operator==(other);
     }
-
     inline bool operator!=(const CStateIndexed &other) const
     {
         return !operator==(other);
     }
-
     std::vector<UInt> cellsOn(bool fSorted = false)
     {
         // It's better for the caller to ask us to sort, rather than
@@ -275,7 +257,6 @@ public:
         }
         return _cellsOn; // returns a copy that can be modified
     }
-
     void set(const UInt cellIdx)
     {
         if (!isSet(cellIdx))
@@ -287,7 +268,6 @@ public:
             _countOn++; // count the On cell; more efficient than .size()?
         }
     }
-
     void resetAll()
     {
         // Is it faster just to zero the _cellsOn indices?
@@ -299,7 +279,6 @@ public:
         _countOn = 0;
         _isSorted = true;
     }
-
     void print(std::ostream &outStream) const
     {
         outStream << version() << " " << _fMemoryAllocatedByPython << " "
@@ -316,7 +295,6 @@ public:
         }
         outStream << "end" << std::endl;
     }
-
     void load(std::istream &inStream)
     {
         UInt version;
@@ -341,11 +319,10 @@ public:
         inStream >> token;
         NTA_CHECK(token == "end");
     }
-
-    UInt version() const { return _versionIdx; }
+    UInt version() const { return _version; }
 
 private:
-    UInt _versionIdx;
+    UInt _version;
     std::vector<UInt> _cellsOn;
     UInt _countOn;  // how many cells are On
     bool _isSorted; // avoid unnecessary sorting
@@ -358,9 +335,9 @@ const UInt _dutyCycleTiers[] = {0,     100,   320,    1000,  3200,
 
 // This is the alpha used in each tier. dutyCycleAlphas[n] is used when
 /// iterationIdx > dutyCycleTiers[n]
-const Real _dutyCycleAlphas[] = {0.0f,      0.0032f,    0.0010f,
-                                 0.00032f,  0.00010f,   0.000032f,
-                                 0.000010f, 0.0000032f, 0.0000010f};
+const Real _dutyCycleAlphas[] = {0.0,      0.0032,    0.0010,
+                                 0.00032,  0.00010,   0.000032,
+                                 0.000010, 0.0000032, 0.0000010};
 
 //-----------------------------------------------------------------------
 // Forward declarations
@@ -384,15 +361,14 @@ public:
     // Variables representing various metrics of segment activity
     UInt _totalActivations;    // Total number of times segment was active
     UInt _positiveActivations; // Total number of times segment was
-    // positively reinforced
+                               // positively reinforced
     UInt _lastActiveIteration; // The last iteration on which the segment
-    // became active (used in learning only)
+                               // became active (used in learning only)
 
     Real _lastPosDutyCycle;
     UInt _lastPosDutyCycleIteration;
 
     bool operator==(const Segment &o) const;
-
     inline bool operator!=(const Segment &o) const { return !operator==(o); }
 
 private:
@@ -439,7 +415,7 @@ public:
         static UInt highWaterSize = 0;
         if (highWaterSize < _synapses.size())
         {
-            highWaterSize = static_cast<UInt>(_synapses.size());
+            highWaterSize = _synapses.size();
             indices.reserve(highWaterSize);
         }
         indices.clear(); // purge residual data
@@ -487,25 +463,15 @@ public:
      * Various accessors
      */
     inline bool empty() const { return _synapses.empty(); }
-
-    inline UInt size() const { return static_cast<UInt>(_synapses.size()); }
-
+    inline UInt size() const { return _synapses.size(); }
     inline bool isSequenceSegment() const { return _seqSegFlag; }
-
     inline Real &frequency() { return _frequency; }
-
     inline Real getFrequency() const { return _frequency; }
-
     inline UInt nConnected() const { return _nConnected; }
-
     inline UInt getTotalActivations() const { return _totalActivations; }
-
     inline UInt getPositiveActivations() const { return _positiveActivations; }
-
     inline UInt getLastActiveIteration() const { return _lastActiveIteration; }
-
     inline Real getLastPosDutyCycle() const { return _lastPosDutyCycle; }
-
     inline UInt getLastPosDutyCycleIteration() const
     {
         return _lastPosDutyCycleIteration;
@@ -519,10 +485,10 @@ public:
      */
     inline bool has(UInt srcCellIdx) const
     {
-        NTA_ASSERT(srcCellIdx != static_cast<UInt>(-1));
+        NTA_ASSERT(srcCellIdx != (UInt)-1);
 
         UInt lo = 0;
-        UInt hi = static_cast<UInt>(_synapses.size());
+        UInt hi = _synapses.size();
         while (lo < hi)
         {
             const UInt test = (lo + hi) / 2;
@@ -698,8 +664,8 @@ public:
      *
      * TODO: have synapses be 2 pointers, to avoid copies in adaptSegments
      */
-    template <typename T2>
-    // this blocks swig wrapping which doesn't happen right
+    template <
+        typename T2> // this blocks swig wrapping which doesn't happen right
     inline void updateSynapses(const std::vector<T2> &synapses, Real delta,
                                Real permMax, Real permConnected,
                                std::vector<T2> &removed)
@@ -730,8 +696,8 @@ public:
 
                 setPermanence(i1, newPerm);
 
-                UInt wasConnected = static_cast<UInt>(oldPerm >= permConnected);
-                UInt isConnected = static_cast<UInt>(newPerm >= permConnected);
+                int wasConnected = (int)(oldPerm >= permConnected);
+                int isConnected = (int)(newPerm >= permConnected);
 
                 _nConnected += isConnected - wasConnected;
 
@@ -880,7 +846,7 @@ public:
     {
         std::stringstream buff;
         this->save(buff);
-        return static_cast<UInt>(buff.str().size());
+        return buff.str().size();
     }
 
     //----------------------------------------------------------------------
@@ -920,18 +886,14 @@ public:
 
 //-----------------------------------------------------------------------
 #ifndef SWIG
-
 std::ostream &operator<<(std::ostream &outStream, const Segment &seg);
-
 std::ostream &operator<<(std::ostream &outStream, const CState &cstate);
-
 std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate);
-
 #endif
 
 //-----------------------------------------------------------------------
 
-} // end namespace crucian
+} // namespace crucian
 
 //-----------------------------------------------------------------------
 #endif // NTA_SEGMENT_HPP

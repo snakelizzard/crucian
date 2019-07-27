@@ -21,19 +21,15 @@
  */
 
 #include <algorithm> // sort
-#include <assert.h>
 #include <iomanip>
 #include <iostream>
 #include <map>
 #include <set>
-#include <sstream>
 #include <vector>
 
 #include <crucian/algorithms/Segment.hpp>
 #include <crucian/math/ArrayAlgo.hpp> // is_in
-#include <crucian/math/StlIo.hpp>     // binary_save
 #include <crucian/utils/Log.hpp>
-#include <crucian/utils/Random.hpp>
 
 namespace crucian
 {
@@ -45,7 +41,7 @@ namespace crucian
  */
 void printSynapse(UInt srcCellIdx, UInt nCellsPerCol)
 {
-    UInt col = static_cast<UInt>(srcCellIdx / nCellsPerCol);
+    UInt col = (UInt)(srcCellIdx / nCellsPerCol);
     UInt cell = srcCellIdx - col * nCellsPerCol;
     std::cout << "[" << col << "," << cell << "]  ";
 }
@@ -54,9 +50,9 @@ void printSynapse(UInt srcCellIdx, UInt nCellsPerCol)
 Segment::Segment(InSynapses _s, Real frequency, bool seqSegFlag,
                  Real permConnected, UInt iteration)
     : _totalActivations(1), _positiveActivations(1), _lastActiveIteration(0),
-      _lastPosDutyCycle(1.0f / iteration),
-      _lastPosDutyCycleIteration(iteration), _seqSegFlag(seqSegFlag),
-      _frequency(frequency), _synapses(std::move(_s)), _nConnected(0)
+      _lastPosDutyCycle(1.0 / iteration), _lastPosDutyCycleIteration(iteration),
+      _seqSegFlag(seqSegFlag), _frequency(frequency), _synapses(std::move(_s)),
+      _nConnected(0)
 {
     for (UInt i = 0; i != _synapses.size(); ++i)
         if (_synapses[i].permanence() >= permConnected)
@@ -91,10 +87,9 @@ bool Segment::operator==(const Segment &other) const
     if (_totalActivations != other._totalActivations ||
         _positiveActivations != other._positiveActivations ||
         _lastActiveIteration != other._lastActiveIteration ||
-        nearlyEqual(_lastPosDutyCycle, other._lastPosDutyCycle) ||
+        _lastPosDutyCycle != other._lastPosDutyCycle ||
         _lastPosDutyCycleIteration != other._lastPosDutyCycleIteration ||
-        _seqSegFlag != other._seqSegFlag ||
-        nearlyEqual(_frequency, other._frequency) ||
+        _seqSegFlag != other._seqSegFlag || _frequency != other._frequency ||
         _nConnected != other._nConnected)
     {
         return false;
@@ -154,7 +149,7 @@ Real Segment::dutyCycle(UInt iteration, bool active, bool readOnly)
     // For tier 0, compute it from total number of positive activations seen
     if (iteration <= _dutyCycleTiers[1])
     {
-        dutyCycle = static_cast<Real>(_positiveActivations) / iteration;
+        dutyCycle = ((Real)_positiveActivations) / iteration;
         if (!readOnly)
         {
             _lastPosDutyCycleIteration = iteration;
@@ -182,9 +177,7 @@ Real Segment::dutyCycle(UInt iteration, bool active, bool readOnly)
     }
 
     // Update duty cycle
-    dutyCycle = static_cast<Real>(pow(static_cast<Real64>(1.0f - alpha),
-                                      static_cast<Real64>(age))) *
-                _lastPosDutyCycle;
+    dutyCycle = pow((Real64)(1.0 - alpha), (Real64)age) * _lastPosDutyCycle;
     if (active)
         dutyCycle += alpha;
 
@@ -200,6 +193,7 @@ Real Segment::dutyCycle(UInt iteration, bool active, bool readOnly)
 
 UInt Segment::computeActivity(const CState &activities, Real permConnected,
                               bool connectedSynapsesOnly) const
+
 {
     {
         NTA_ASSERT(invariants());
@@ -254,8 +248,7 @@ void Segment::decaySynapses(Real decay, std::vector<UInt> &removed,
     for (UInt i = 0; i != _synapses.size(); ++i)
     {
 
-        UInt wasConnected =
-            static_cast<UInt>(_synapses[i].permanence() >= permConnected);
+        int wasConnected = (int)(_synapses[i].permanence() >= permConnected);
 
         if (_synapses[i].permanence() < decay)
         {
@@ -268,8 +261,7 @@ void Segment::decaySynapses(Real decay, std::vector<UInt> &removed,
             _synapses[i].permanence() -= decay;
         }
 
-        UInt isConnected =
-            static_cast<UInt>(_synapses[i].permanence() >= permConnected);
+        int isConnected = (int)(_synapses[i].permanence() >= permConnected);
 
         _nConnected += isConnected - wasConnected;
     }

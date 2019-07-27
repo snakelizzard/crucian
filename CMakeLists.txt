@@ -46,9 +46,4 @@ if (CRU_TEST)
     add_executable(tests ${test_src})
     target_link_libraries(tests GTest::GTest GTest::Main ${PROJECT_NAME})
     target_include_directories(tests PUBLIC "include")
-    add_custom_target(tests_unit
-                      COMMAND tests
-                      DEPENDS tests
-                      COMMENT "Executing tests"
-                      VERBATIM)
 endif()
