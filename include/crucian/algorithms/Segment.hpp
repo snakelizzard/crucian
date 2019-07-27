@@ -150,8 +150,8 @@ public:
         _fMemoryAllocatedByPython = true;
     }
     bool isSet(const UInt cellIdx) const { return _pData[cellIdx] != 0; }
-    void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
-    void resetAll() { memset(_pData, 0, _nCells); }
+    virtual void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
+    virtual void resetAll() { memset(_pData, 0, _nCells); }
     Byte *arrayPtr() const
     {
         // We expose the data array to Python.  For objects in derived
@@ -160,7 +160,8 @@ public:
         // inconsistent.
         return _pData;
     }
-    void print(std::ostream &outStream) const
+
+    virtual void print(std::ostream &outStream) const
     {
         outStream << version() << " " << _fMemoryAllocatedByPython << " "
                   << _nCells << std::endl;
@@ -171,7 +172,7 @@ public:
         outStream << std::endl << "end" << std::endl;
     }
 
-    void load(std::istream &inStream)
+    virtual void load(std::istream &inStream)
     {
         UInt version;
         inStream >> version;
@@ -185,7 +186,7 @@ public:
         inStream >> token;
         NTA_CHECK(token == "end");
     }
-    UInt version() const { return _version; }
+    virtual UInt version() const { return _version; }
 
 protected:
     UInt _version;
@@ -257,7 +258,7 @@ public:
         }
         return _cellsOn; // returns a copy that can be modified
     }
-    void set(const UInt cellIdx)
+    void set(const UInt cellIdx) override
     {
         if (!isSet(cellIdx))
         {
@@ -268,7 +269,7 @@ public:
             _countOn++; // count the On cell; more efficient than .size()?
         }
     }
-    void resetAll()
+    void resetAll() override
     {
         // Is it faster just to zero the _cellsOn indices?
         std::vector<UInt>::iterator iterOn;
@@ -279,7 +280,7 @@ public:
         _countOn = 0;
         _isSorted = true;
     }
-    void print(std::ostream &outStream) const
+    void print(std::ostream &outStream) const override
     {
         outStream << version() << " " << _fMemoryAllocatedByPython << " "
                   << _nCells << std::endl;
@@ -295,7 +296,7 @@ public:
         }
         outStream << "end" << std::endl;
     }
-    void load(std::istream &inStream)
+    void load(std::istream &inStream) override
     {
         UInt version;
         inStream >> version;
@@ -319,7 +320,7 @@ public:
         inStream >> token;
         NTA_CHECK(token == "end");
     }
-    UInt version() const { return _version; }
+    UInt version() const override { return _version; }
 
 private:
     UInt _version;
@@ -842,14 +843,7 @@ public:
     //----------------------------------------------------------------------
     // PERSISTENCE
     //----------------------------------------------------------------------
-    inline UInt persistentSize() const
-    {
-        std::stringstream buff;
-        this->save(buff);
-        return buff.str().size();
-    }
 
-    //----------------------------------------------------------------------
     inline void save(std::ostream &outStream) const
     {
         NTA_ASSERT(invariants());

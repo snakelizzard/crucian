@@ -33,6 +33,9 @@
 #include <crucian/math/Math.hpp>
 #include <crucian/math/Topology.hpp>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+
 namespace crucian
 {
 
@@ -57,7 +60,6 @@ static Real round5_(const Real f)
 
 class CoordinateConverter2D
 {
-
 public:
     CoordinateConverter2D(UInt nrows, UInt ncols)
         : // TODO param nrows is unused
@@ -66,7 +68,6 @@ public:
     }
     UInt toRow(UInt index) { return index / ncols_; };
     UInt toCol(UInt index) { return index % ncols_; };
-    UInt toIndex(UInt row, UInt col) { return row * ncols_ + col; };
 
 private:
     UInt ncols_;
@@ -74,7 +75,6 @@ private:
 
 class CoordinateConverterND
 {
-
 public:
     explicit CoordinateConverterND(std::vector<UInt> &dimensions)
     {
@@ -90,7 +90,7 @@ public:
     void toCoord(UInt index, std::vector<UInt> &coord)
     {
         coord.clear();
-        for (UInt i = 0; i < bounds_.size(); i++)
+        for (size_t i = 0; i < bounds_.size(); i++)
         {
             coord.push_back((index / bounds_[i]) % dimensions_[i]);
         }
@@ -99,7 +99,7 @@ public:
     UInt toIndex(std::vector<UInt> &coord)
     {
         UInt index = 0;
-        for (UInt i = 0; i < coord.size(); i++)
+        for (size_t i = 0; i < coord.size(); i++)
         {
             index += coord[i] * bounds_[i];
         }
@@ -117,13 +117,16 @@ SpatialPooler::SpatialPooler()
     version_ = 2;
 }
 
-SpatialPooler::SpatialPooler(
-    std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
-    UInt potentialRadius, Real potentialPct, bool globalInhibition,
-    Real localAreaDensity, UInt numActiveColumnsPerInhArea,
-    UInt stimulusThreshold, Real synPermInactiveDec, Real synPermActiveInc,
-    Real synPermConnected, Real minPctOverlapDutyCycles, UInt dutyCyclePeriod,
-    Real boostStrength, Int seed, UInt spVerbosity, bool wrapAround)
+SpatialPooler::SpatialPooler(const std::vector<UInt> &inputDimensions,
+                             const std::vector<UInt> &columnDimensions,
+                             UInt potentialRadius, Real potentialPct,
+                             bool globalInhibition, Real localAreaDensity,
+                             UInt numActiveColumnsPerInhArea,
+                             UInt stimulusThreshold, Real synPermInactiveDec,
+                             Real synPermActiveInc, Real synPermConnected,
+                             Real minPctOverlapDutyCycles, UInt dutyCyclePeriod,
+                             Real boostStrength, Int seed, UInt spVerbosity,
+                             bool wrapAround)
     : SpatialPooler::SpatialPooler()
 {
     initialize(inputDimensions, columnDimensions, potentialRadius, potentialPct,
@@ -402,13 +405,16 @@ const std::vector<Real> &SpatialPooler::getBoostedOverlaps() const
     return boostedOverlaps_;
 }
 
-void SpatialPooler::initialize(
-    std::vector<UInt> inputDimensions, std::vector<UInt> columnDimensions,
-    UInt potentialRadius, Real potentialPct, bool globalInhibition,
-    Real localAreaDensity, UInt numActiveColumnsPerInhArea,
-    UInt stimulusThreshold, Real synPermInactiveDec, Real synPermActiveInc,
-    Real synPermConnected, Real minPctOverlapDutyCycles, UInt dutyCyclePeriod,
-    Real boostStrength, Int seed, UInt spVerbosity, bool wrapAround)
+void SpatialPooler::initialize(const std::vector<UInt> &inputDimensions,
+                               const std::vector<UInt> &columnDimensions,
+                               UInt potentialRadius, Real potentialPct,
+                               bool globalInhibition, Real localAreaDensity,
+                               UInt numActiveColumnsPerInhArea,
+                               UInt stimulusThreshold, Real synPermInactiveDec,
+                               Real synPermActiveInc, Real synPermConnected,
+                               Real minPctOverlapDutyCycles,
+                               UInt dutyCyclePeriod, Real boostStrength,
+                               Int seed, UInt spVerbosity, bool wrapAround)
 {
 
     numInputs_ = 1;
@@ -434,7 +440,7 @@ void SpatialPooler::initialize(
                (localAreaDensity > 0 && localAreaDensity <= 0.5));
     NTA_ASSERT(potentialPct > 0 && potentialPct <= 1);
 
-    seed_((UInt64)(seed < 0 ? rand() : seed));
+    seed_((UInt64)(seed < 0 ? random() : seed));
 
     potentialRadius_ =
         potentialRadius > numInputs_ ? numInputs_ : potentialRadius;
@@ -555,7 +561,7 @@ void SpatialPooler::toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n)
 void SpatialPooler::boostOverlaps_(std::vector<UInt> &overlaps,
                                    std::vector<Real> &boosted)
 {
-    for (UInt i = 0; i < numColumns_; i++)
+    for (size_t i = 0; i < numColumns_; i++)
     {
         boosted[i] = overlaps[i] * boostFactors_[i];
     }
@@ -569,7 +575,7 @@ UInt SpatialPooler::mapColumn_(UInt column)
 
     std::vector<UInt> inputCoords;
     inputCoords.reserve(columnCoords.size());
-    for (UInt i = 0; i < columnCoords.size(); i++)
+    for (size_t i = 0; i < columnCoords.size(); i++)
     {
         const Real inputCoord =
             ((Real)columnCoords[i] + 0.5) *
@@ -683,7 +689,7 @@ void SpatialPooler::updatePermanencesForColumn_(std::vector<Real> &perm,
     }
 
     numConnected = 0;
-    for (UInt i = 0; i < perm.size(); ++i)
+    for (size_t i = 0; i < perm.size(); ++i)
     {
         if (perm[i] >= synPermConnected_ - PERMANENCE_EPSILON)
         {
@@ -811,7 +817,7 @@ void SpatialPooler::updateMinDutyCyclesLocal_()
 }
 
 void SpatialPooler::updateDutyCycles_(std::vector<UInt> &overlaps,
-                                      UInt activeArray[])
+                                      const UInt activeArray[])
 {
     std::vector<UInt> newOverlapVal(numColumns_, 0);
     std::vector<UInt> newActiveVal(numColumns_, 0);
@@ -907,7 +913,7 @@ Real SpatialPooler::avgConnectedSpanForColumnND_(UInt column)
     for (auto &elem : connectedSparse)
     {
         conv.toCoord(elem, columnCoord);
-        for (UInt j = 0; j < columnCoord.size(); j++)
+        for (size_t j = 0; j < columnCoord.size(); j++)
         {
             maxCoord[j] = std::max(maxCoord[j], columnCoord[j]);
             minCoord[j] = std::min(minCoord[j], columnCoord[j]);
@@ -915,7 +921,7 @@ Real SpatialPooler::avgConnectedSpanForColumnND_(UInt column)
     }
 
     UInt totalSpan = 0;
-    for (UInt j = 0; j < inputDimensions_.size(); j++)
+    for (size_t j = 0; j < inputDimensions_.size(); j++)
     {
         totalSpan += maxCoord[j] - minCoord[j] + 1;
     }
@@ -923,7 +929,7 @@ Real SpatialPooler::avgConnectedSpanForColumnND_(UInt column)
     return (Real)totalSpan / inputDimensions_.size();
 }
 
-void SpatialPooler::adaptSynapses_(UInt inputVector[],
+void SpatialPooler::adaptSynapses_(const UInt inputVector[],
                                    std::vector<UInt> &activeColumns)
 {
     std::vector<Real> permChanges(numInputs_, -1 * synPermInactiveDec_);
@@ -935,7 +941,7 @@ void SpatialPooler::adaptSynapses_(UInt inputVector[],
         }
     }
 
-    for (UInt i = 0; i < activeColumns.size(); i++)
+    for (size_t i = 0; i < activeColumns.size(); i++)
     {
         UInt column = activeColumns[i];
         std::vector<UInt> potential;
@@ -980,9 +986,11 @@ void SpatialPooler::updateDutyCyclesHelper_(std::vector<Real> &dutyCycles,
 {
     NTA_ASSERT(period >= 1);
     NTA_ASSERT(dutyCycles.size() == newValues.size());
-    for (UInt i = 0; i < dutyCycles.size(); i++)
+    for (size_t i = 0; i < dutyCycles.size(); i++)
     {
-        dutyCycles[i] = (dutyCycles[i] * (period - 1) + newValues[i]) / period;
+        dutyCycles[i] =
+            (dutyCycles[i] * static_cast<Real>(period - 1) + newValues[i]) /
+            period;
     }
 }
 
@@ -1128,12 +1136,7 @@ bool SpatialPooler::isWinner_(Real score,
         return true;
     }
 
-    if (score >= winners[numWinners - 1].second)
-    {
-        return true;
-    }
-
-    return false;
+    return score >= winners[numWinners - 1].second;
 }
 
 void SpatialPooler::addToWinners_(UInt index, Real score,
@@ -1580,3 +1583,4 @@ void SpatialPooler::printState(std::vector<Real> &state)
 }
 
 } // namespace crucian
+#pragma clang diagnostic pop

@@ -121,13 +121,6 @@ public:
     }
 
     //--------------------------------------------------------------------------------
-    Segment &getSegment(UInt segIdx)
-    {
-        NTA_ASSERT(segIdx < _segments.size());
-        return _segments[segIdx];
-    }
-
-    //--------------------------------------------------------------------------------
     /**
      * Returns an empty segment to use, either from list of already
      * allocated ones that have been previously "freed" (but we kept
@@ -194,7 +187,7 @@ public:
         UInt bestIdx = 0;     // Segment with highest totalActivations
         UInt maxActivity = 0; // Value of highest totalActivations
 
-        for (UInt i = 0; i < _segments.size(); ++i)
+        for (size_t i = 0; i < _segments.size(); ++i)
         {
             if (!_segments[i].empty() &&
                 (_segments[i].getTotalActivations() > maxActivity))
@@ -248,16 +241,6 @@ public:
      * TODO: write
      */
     bool invariants(Cells4 * = nullptr) const { return true; }
-
-    //----------------------------------------------------------------------
-    // PERSISTENCE
-    //----------------------------------------------------------------------
-    UInt persistentSize() const
-    {
-        std::stringstream buff;
-        this->save(buff);
-        return buff.str().size();
-    }
 
     //----------------------------------------------------------------------
     void save(std::ostream &outStream) const;

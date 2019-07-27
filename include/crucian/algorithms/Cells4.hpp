@@ -381,7 +381,6 @@ private:
      * Internal data structures used for speed optimization.
      */
     std::vector<OutSynapses> _outSynapses;
-    UInt _nIterationsSinceRebalance;
     CCellSegActivity<UChar> _learnActivity;
 // _inferActivity and _learnActivity use identical data
 // structures, and their use does not overlap
@@ -934,7 +933,7 @@ public:
      * each cell
      *
      */
-    void processSegmentUpdates(Real *input, const CState &predictedState);
+    void processSegmentUpdates(const Real *input, const CState &predictedState);
 
     //----------------------------------------------------------------------
     /**
@@ -1065,13 +1064,13 @@ public:
     /**
      * Save the state to the given file
      */
-    void saveToFile(std::string filePath) const;
+    void saveToFile(const std::string& filePath) const;
 
     //----------------------------------------------------------------------
     /**
      * Load the state from the given file
      */
-    void loadFromFile(std::string filePath);
+    void loadFromFile(const std::string& filePath);
 
     //----------------------------------------------------------------------
     void save(std::ostream &outStream) const;
@@ -1095,7 +1094,7 @@ public:
     //----------------------------------------------------------------------
 
     // Set the Cell class segment order
-    void setCellSegmentOrder(bool matchPythonOrder);
+    static void setCellSegmentOrder(bool matchPythonOrder);
 
     //----------------------------------------------------------------------
     /**
@@ -1121,8 +1120,8 @@ public:
      * Various debugging helpers
      */
     void printStates();
-    void printState(UInt *state);
-    void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
+    void printState(const UInt *state);
+    static void dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns);
     void dumpSegmentUpdates();
 
     //-----------------------------------------------------------------------
@@ -1136,12 +1135,12 @@ public:
     /**
      * Dump timing results to stdout
      */
-    void dumpTiming();
+    static void dumpTiming();
 
     //-----------------------------------------------------------------------
     // Reset all timers to 0
     //-----------------------------------------------------------------------
-    void resetTimers();
+    static void resetTimers();
 
     //-----------------------------------------------------------------------
     // Invariants

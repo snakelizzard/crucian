@@ -36,6 +36,9 @@
 #include <crucian/math/SparseMatrix.hpp>
 #include <crucian/types/Types.hpp>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+
 namespace crucian
 {
 
@@ -66,10 +69,10 @@ class CRU_API SpatialPooler
 {
 public:
     SpatialPooler();
-    SpatialPooler(std::vector<UInt> inputDimensions,
-                  std::vector<UInt> columnDimensions, UInt potentialRadius = 16,
-                  Real potentialPct = 0.5, bool globalInhibition = true,
-                  Real localAreaDensity = -1.0,
+    SpatialPooler(const std::vector<UInt> &inputDimensions,
+                  const std::vector<UInt> &columnDimensions,
+                  UInt potentialRadius = 16, Real potentialPct = 0.5,
+                  bool globalInhibition = true, Real localAreaDensity = -1.0,
                   UInt numActiveColumnsPerInhArea = 10,
                   UInt stimulusThreshold = 0, Real synPermInactiveDec = 0.008,
                   Real synPermActiveInc = 0.05, Real synPermConnected = 0.1,
@@ -197,8 +200,8 @@ public:
           neighbors for the purpose of mapping inputs to columns.
 
      */
-    void initialize(std::vector<UInt> inputDimensions,
-                    std::vector<UInt> columnDimensions,
+    void initialize(const std::vector<UInt> &inputDimensions,
+                    const std::vector<UInt> &columnDimensions,
                     UInt potentialRadius = 16, Real potentialPct = 0.5,
                     bool globalInhibition = true, Real localAreaDensity = -1.0,
                     UInt numActiveColumnsPerInhArea = 10,
@@ -770,7 +773,7 @@ public:
     // Implementation methods. all methods below this line are
     // NOT part of the public API
 
-    void toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n);
+    static void toDense_(std::vector<UInt> &sparse, UInt dense[], UInt n);
 
     void boostOverlaps_(std::vector<UInt> &overlaps,
                         std::vector<Real> &boostedOverlaps);
@@ -934,7 +937,7 @@ public:
     bool isWinner_(Real score, std::vector<std::pair<UInt, Real>> &winners,
                    UInt numWinners);
 
-    void addToWinners_(UInt index, Real score,
+    static void addToWinners_(UInt index, Real score,
                        std::vector<std::pair<UInt, Real>> &winners);
 
     /**
@@ -1024,7 +1027,7 @@ public:
         @param  activeColumns  an int vector containing the indices of the
        columns that survived inhibition.
               */
-    void adaptSynapses_(UInt inputVector[], std::vector<UInt> &activeColumns);
+    void adaptSynapses_(const UInt inputVector[], std::vector<UInt> &activeColumns);
 
     /**
         This method increases the permanence values of synapses of columns whose
@@ -1155,7 +1158,7 @@ public:
     @param activeArray  An int array containing the indices of the active
     columns, the sprase set of columns which survived inhibition
     */
-    void updateDutyCycles_(std::vector<UInt> &overlaps, UInt activeArray[]);
+    void updateDutyCycles_(std::vector<UInt> &overlaps, const UInt activeArray[]);
 
     /**
       Update the boost factors for all columns. The boost factors are used to
@@ -1233,11 +1236,11 @@ public:
     /**
      Print the given UInt array in a nice format
     */
-    void printState(std::vector<UInt> &state);
+    static void printState(std::vector<UInt> &state);
     /**
     Print the given Real array in a nice format
     */
-    void printState(std::vector<Real> &state);
+    static void printState(std::vector<Real> &state);
 
 protected:
     UInt numInputs_;
@@ -1293,3 +1296,5 @@ protected:
 
 } // namespace crucian
 #endif // NTA_spatial_pooler_HPP
+
+#pragma clang diagnostic pop

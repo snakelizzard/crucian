@@ -24,10 +24,9 @@
  * Implementation of unit tests for Segment
  */
 
+#include <gtest/gtest.h>
 #include <set>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include <crucian/algorithms/Cells4.hpp>
 #include <crucian/algorithms/Segment.hpp>
@@ -39,193 +38,208 @@ namespace crucian
 template <class InputIterator>
 std::vector<UInt> _getOrderedSrcCellIndexesForSrcCells(const Segment &segment,
                                                        InputIterator first,
-                                                       InputIterator last) {
-  std::vector<UInt> result;
+                                                       InputIterator last)
+{
+    std::vector<UInt> result;
 
-  const std::set<UInt> srcCellsSet(first, last);
+    const std::set<UInt> srcCellsSet(first, last);
 
-  for (UInt i = 0; i < segment.size(); ++i) {
-    UInt srcCellIdx = segment[i].srcCellIdx();
-    if (is_in(srcCellIdx, srcCellsSet)) {
-      result.push_back(srcCellIdx);
+    for (UInt i = 0; i < segment.size(); ++i)
+    {
+        UInt srcCellIdx = segment[i].srcCellIdx();
+        if (is_in(srcCellIdx, srcCellsSet))
+        {
+            result.push_back(srcCellIdx);
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 template <class InputIterator>
 std::vector<UInt> _getOrderedSynapseIndexesForSrcCells(const Segment &segment,
                                                        InputIterator first,
-                                                       InputIterator last) {
-  std::vector<UInt> result;
+                                                       InputIterator last)
+{
+    std::vector<UInt> result;
 
-  const std::set<UInt> srcCellsSet(first, last);
+    const std::set<UInt> srcCellsSet(first, last);
 
-  for (UInt i = 0; i < segment.size(); ++i) {
-    UInt srcCellIdx = segment[i].srcCellIdx();
-    if (is_in(srcCellIdx, srcCellsSet)) {
-      result.push_back(i);
+    for (UInt i = 0; i < segment.size(); ++i)
+    {
+        UInt srcCellIdx = segment[i].srcCellIdx();
+        if (is_in(srcCellIdx, srcCellsSet))
+        {
+            result.push_back(i);
+        }
     }
-  }
 
-  return result;
+    return result;
 }
 
 /**
  * Simple comparison function that does the easy checks. It can be expanded to
  * cover more of the attributes of Cells4 in the future.
  */
-bool checkCells4Attributes(const Cells4 &c1, const Cells4 &c2) {
-  if (c1.nSegments() != c2.nSegments() || c1.nCells() != c2.nCells() ||
-      c1.nColumns() != c2.nColumns() ||
-      c1.nCellsPerCol() != c2.nCellsPerCol() ||
-      c1.getMinThreshold() != c2.getMinThreshold() ||
-      c1.getPermConnected() != c2.getPermConnected() ||
-      c1.getVerbosity() != c2.getVerbosity() ||
-      c1.getMaxAge() != c2.getMaxAge() ||
-      c1.getPamLength() != c2.getPamLength() ||
-      c1.getMaxInfBacktrack() != c2.getMaxInfBacktrack() ||
-      c1.getMaxLrnBacktrack() != c2.getMaxLrnBacktrack() ||
+//bool checkCells4Attributes(const Cells4 &c1, const Cells4 &c2)
+//{
+//    if (c1.nSegments() != c2.nSegments() || c1.nCells() != c2.nCells() ||
+//        c1.nColumns() != c2.nColumns() ||
+//        c1.nCellsPerCol() != c2.nCellsPerCol() ||
+//        c1.getMinThreshold() != c2.getMinThreshold() ||
+//        c1.getPermConnected() != c2.getPermConnected() ||
+//        c1.getVerbosity() != c2.getVerbosity() ||
+//        c1.getMaxAge() != c2.getMaxAge() ||
+//        c1.getPamLength() != c2.getPamLength() ||
+//        c1.getMaxInfBacktrack() != c2.getMaxInfBacktrack() ||
+//        c1.getMaxLrnBacktrack() != c2.getMaxLrnBacktrack() ||
+//
+//        c1.getPamCounter() != c2.getPamCounter() ||
+//        c1.getMaxSeqLength() != c2.getMaxSeqLength() ||
+//        c1.getAvgLearnedSeqLength() != c2.getAvgLearnedSeqLength() ||
+//        c1.getNLrnIterations() != c2.getNLrnIterations() ||
+//
+//        c1.getMaxSegmentsPerCell() != c2.getMaxSegmentsPerCell() ||
+//        c1.getMaxSynapsesPerSegment() != c2.getMaxSynapsesPerSegment() ||
+//        c1.getCheckSynapseConsistency() != c2.getCheckSynapseConsistency())
+//    {
+//        return false;
+//    }
+//    return true;
+//}
 
-      c1.getPamCounter() != c2.getPamCounter() ||
-      c1.getMaxSeqLength() != c2.getMaxSeqLength() ||
-      c1.getAvgLearnedSeqLength() != c2.getAvgLearnedSeqLength() ||
-      c1.getNLrnIterations() != c2.getNLrnIterations() ||
+TEST(Cells4Test, pickleSerialization)
+{
+    Cells4 cells(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, -1, true,
+                 false);
+    std::vector<Real> input1(10, 0.0);
+    input1[1] = 1.0;
+    input1[4] = 1.0;
+    input1[5] = 1.0;
+    input1[9] = 1.0;
+    std::vector<Real> input2(10, 0.0);
+    input2[0] = 1.0;
+    input2[2] = 1.0;
+    input2[5] = 1.0;
+    input2[6] = 1.0;
+    std::vector<Real> input3(10, 0.0);
+    input3[1] = 1.0;
+    input3[3] = 1.0;
+    input3[6] = 1.0;
+    input3[7] = 1.0;
+    std::vector<Real> input4(10, 0.0);
+    input4[2] = 1.0;
+    input4[4] = 1.0;
+    input4[7] = 1.0;
+    input4[8] = 1.0;
+    std::vector<Real> output(10 * 2);
+    for (UInt i = 0; i < 10; ++i)
+    {
+        cells.compute(&input1.front(), &output.front(), true, true);
+        cells.compute(&input2.front(), &output.front(), true, true);
+        cells.compute(&input3.front(), &output.front(), true, true);
+        cells.compute(&input4.front(), &output.front(), true, true);
+        cells.reset();
+    }
 
-      c1.getMaxSegmentsPerCell() != c2.getMaxSegmentsPerCell() ||
-      c1.getMaxSynapsesPerSegment() != c2.getMaxSynapsesPerSegment() ||
-      c1.getCheckSynapseConsistency() != c2.getCheckSynapseConsistency()) {
-    return false;
-  }
-  return true;
-}
+    Cells4 secondCells;
+    {
+        std::stringstream ss;
+        cells.save(ss);
+        ss.seekg(0);
+        secondCells.load(ss);
+    }
+    ASSERT_TRUE(cells == secondCells);
 
-TEST(Cells4Test, pickleSerialization) {
-  Cells4 cells(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, -1, true,
-               false);
-  std::vector<Real> input1(10, 0.0);
-  input1[1] = 1.0;
-  input1[4] = 1.0;
-  input1[5] = 1.0;
-  input1[9] = 1.0;
-  std::vector<Real> input2(10, 0.0);
-  input2[0] = 1.0;
-  input2[2] = 1.0;
-  input2[5] = 1.0;
-  input2[6] = 1.0;
-  std::vector<Real> input3(10, 0.0);
-  input3[1] = 1.0;
-  input3[3] = 1.0;
-  input3[6] = 1.0;
-  input3[7] = 1.0;
-  std::vector<Real> input4(10, 0.0);
-  input4[2] = 1.0;
-  input4[4] = 1.0;
-  input4[7] = 1.0;
-  input4[8] = 1.0;
-  std::vector<Real> output(10 * 2);
-  for (UInt i = 0; i < 10; ++i) {
+    std::vector<Real> secondOutput(10 * 2);
+    cells.compute(&input1.front(), &output.front(), true, true);
+    secondCells.compute(&input1.front(), &secondOutput.front(), true, true);
+    ASSERT_TRUE(cells == secondCells);
+
+    for (UInt i = 0; i < 10; ++i)
+    {
+        ASSERT_EQ(output[i], secondOutput[i])
+            << "Outputs differ at index " << i;
+    }
+
+    // Check serialization of cells4 before calling reset
     cells.compute(&input1.front(), &output.front(), true, true);
     cells.compute(&input2.front(), &output.front(), true, true);
     cells.compute(&input3.front(), &output.front(), true, true);
     cells.compute(&input4.front(), &output.front(), true, true);
-    cells.reset();
-  }
 
-  Cells4 secondCells;
-  {
-    std::stringstream ss;
-    cells.save(ss);
-    ss.seekg(0);
-    secondCells.load(ss);
-  }
-  ASSERT_TRUE(cells == secondCells);
+    Cells4 secondCellsNoReset;
+    {
+        std::stringstream ss;
+        cells.save(ss);
+        ss.seekg(0);
+        secondCellsNoReset.load(ss);
+    }
+    ASSERT_TRUE(cells == secondCellsNoReset);
 
-  std::vector<Real> secondOutput(10 * 2);
-  cells.compute(&input1.front(), &output.front(), true, true);
-  secondCells.compute(&input1.front(), &secondOutput.front(), true, true);
-  ASSERT_TRUE(cells == secondCells);
+    cells.compute(&input1.front(), &output.front(), true, true);
+    secondCellsNoReset.compute(&input1.front(), &secondOutput.front(), true,
+                               true);
+    ASSERT_TRUE(cells == secondCellsNoReset);
 
-  for (UInt i = 0; i < 10; ++i) {
-    ASSERT_EQ(output[i], secondOutput[i]) << "Outputs differ at index " << i;
-  }
-
-  // Check serialization of cells4 before calling reset
-  cells.compute(&input1.front(), &output.front(), true, true);
-  cells.compute(&input2.front(), &output.front(), true, true);
-  cells.compute(&input3.front(), &output.front(), true, true);
-  cells.compute(&input4.front(), &output.front(), true, true);
-
-  Cells4 secondCellsNoReset;
-  {
-    std::stringstream ss;
-    cells.save(ss);
-    ss.seekg(0);
-    secondCellsNoReset.load(ss);
-  }
-  ASSERT_TRUE(cells == secondCellsNoReset);
-
-  cells.compute(&input1.front(), &output.front(), true, true);
-  secondCellsNoReset.compute(&input1.front(), &secondOutput.front(), true,
-                             true);
-  ASSERT_TRUE(cells == secondCellsNoReset);
-
-  for (UInt i = 0; i < 10; ++i) {
-    ASSERT_EQ(output[i], secondOutput[i]) << "Outputs differ at index " << i;
-  }
+    for (UInt i = 0; i < 10; ++i)
+    {
+        ASSERT_EQ(output[i], secondOutput[i])
+            << "Outputs differ at index " << i;
+    }
 }
 
 /*
  * Test Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment.
  */
-TEST(Cells4Test, generateListsOfSynapsesToAdjustForAdaptSegment) {
-  Segment segment;
+TEST(Cells4Test, generateListsOfSynapsesToAdjustForAdaptSegment)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{99, 88, 77, 66, 55, 44, 33, 22, 11, 0};
+    const std::set<UInt> srcCells{99, 88, 77, 66, 55, 44, 33, 22, 11, 0};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{222, 111, 77, 55, 22, 0};
+    std::set<UInt> synapsesSet{222, 111, 77, 55, 22, 0};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{99, 88, 66, 44, 33, 11};
-  const std::set<UInt> expectedActiveSrcCellSet{77, 55, 22, 0};
-  const std::set<UInt> expectedSynapsesSet{222, 111};
+    const std::set<UInt> expectedInactiveSrcCellSet{99, 88, 66, 44, 33, 11};
+    const std::set<UInt> expectedActiveSrcCellSet{77, 55, 22, 0};
+    const std::set<UInt> expectedSynapsesSet{222, 111};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /*
@@ -233,53 +247,54 @@ TEST(Cells4Test, generateListsOfSynapsesToAdjustForAdaptSegment) {
  * synapes, but no active synapses.
  */
 TEST(Cells4Test,
-     generateListsOfSynapsesToAdjustForAdaptSegmentWithOnlyNewSynapses) {
-  Segment segment;
+     generateListsOfSynapsesToAdjustForAdaptSegmentWithOnlyNewSynapses)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{99, 88, 77, 66, 55};
+    const std::set<UInt> srcCells{99, 88, 77, 66, 55};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{222, 111};
+    std::set<UInt> synapsesSet{222, 111};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{99, 88, 77, 66, 55};
-  const std::set<UInt> expectedActiveSrcCellSet{};
-  const std::set<UInt> expectedSynapsesSet{222, 111};
+    const std::set<UInt> expectedInactiveSrcCellSet{99, 88, 77, 66, 55};
+    const std::set<UInt> expectedActiveSrcCellSet{};
+    const std::set<UInt> expectedSynapsesSet{222, 111};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /*
@@ -287,53 +302,54 @@ TEST(Cells4Test,
  * synapses, but no new synapses.
  */
 TEST(Cells4Test,
-     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutNewSynapses) {
-  Segment segment;
+     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutNewSynapses)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{99, 88, 77, 66, 55};
+    const std::set<UInt> srcCells{99, 88, 77, 66, 55};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{88, 66};
+    std::set<UInt> synapsesSet{88, 66};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{99, 77, 55};
-  const std::set<UInt> expectedActiveSrcCellSet{88, 66};
-  const std::set<UInt> expectedSynapsesSet{};
+    const std::set<UInt> expectedInactiveSrcCellSet{99, 77, 55};
+    const std::set<UInt> expectedActiveSrcCellSet{88, 66};
+    const std::set<UInt> expectedSynapsesSet{};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /*
@@ -341,53 +357,54 @@ TEST(Cells4Test,
  * new synapses, but no inactive synapses.
  */
 TEST(Cells4Test,
-     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutInactiveSynapses) {
-  Segment segment;
+     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutInactiveSynapses)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{88, 77, 66};
+    const std::set<UInt> srcCells{88, 77, 66};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{222, 111, 88, 77, 66};
+    std::set<UInt> synapsesSet{222, 111, 88, 77, 66};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{};
-  const std::set<UInt> expectedActiveSrcCellSet{88, 77, 66};
-  const std::set<UInt> expectedSynapsesSet{222, 111};
+    const std::set<UInt> expectedInactiveSrcCellSet{};
+    const std::set<UInt> expectedActiveSrcCellSet{88, 77, 66};
+    const std::set<UInt> expectedSynapsesSet{222, 111};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /*
@@ -395,53 +412,54 @@ TEST(Cells4Test,
  * synapses, and only new synapses.
  */
 TEST(Cells4Test,
-     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutInitialSynapses) {
-  Segment segment;
+     generateListsOfSynapsesToAdjustForAdaptSegmentWithoutInitialSynapses)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{};
+    const std::set<UInt> srcCells{};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{222, 111};
+    std::set<UInt> synapsesSet{222, 111};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{};
-  const std::set<UInt> expectedActiveSrcCellSet{};
-  const std::set<UInt> expectedSynapsesSet{222, 111};
+    const std::set<UInt> expectedInactiveSrcCellSet{};
+    const std::set<UInt> expectedActiveSrcCellSet{};
+    const std::set<UInt> expectedSynapsesSet{222, 111};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /*
@@ -449,111 +467,114 @@ TEST(Cells4Test,
  * update set.
  */
 TEST(Cells4Test,
-     generateListsOfSynapsesToAdjustForAdaptSegmentWithEmptySynapseSet) {
-  Segment segment;
+     generateListsOfSynapsesToAdjustForAdaptSegmentWithEmptySynapseSet)
+{
+    Segment segment;
 
-  const std::set<UInt> srcCells{88, 77, 66};
+    const std::set<UInt> srcCells{88, 77, 66};
 
-  segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
+    segment.addSynapses(srcCells, 0.8 /*initStrength*/, 0.5 /*permConnected*/);
 
-  std::set<UInt> synapsesSet{};
+    std::set<UInt> synapsesSet{};
 
-  std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
-  std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
-  std::vector<UInt> activeSynapseIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> inactiveSynapseIdxs{(UInt)-1};
+    std::vector<UInt> activeSrcCellIdxs{(UInt)-1};
+    std::vector<UInt> activeSynapseIdxs{(UInt)-1};
 
-  const std::set<UInt> expectedInactiveSrcCellSet{88, 77, 66};
-  const std::set<UInt> expectedActiveSrcCellSet{};
-  const std::set<UInt> expectedSynapsesSet{};
+    const std::set<UInt> expectedInactiveSrcCellSet{88, 77, 66};
+    const std::set<UInt> expectedActiveSrcCellSet{};
+    const std::set<UInt> expectedSynapsesSet{};
 
-  const std::vector<UInt> expectedInactiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedInactiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedInactiveSrcCellSet.begin(),
-                                           expectedInactiveSrcCellSet.end());
+    const std::vector<UInt> expectedInactiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedInactiveSrcCellSet.begin(),
+                                             expectedInactiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSrcCellIdxs =
-      _getOrderedSrcCellIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSrcCellIdxs =
+        _getOrderedSrcCellIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  const std::vector<UInt> expectedActiveSynapseIdxs =
-      _getOrderedSynapseIndexesForSrcCells(segment,
-                                           expectedActiveSrcCellSet.begin(),
-                                           expectedActiveSrcCellSet.end());
+    const std::vector<UInt> expectedActiveSynapseIdxs =
+        _getOrderedSynapseIndexesForSrcCells(segment,
+                                             expectedActiveSrcCellSet.begin(),
+                                             expectedActiveSrcCellSet.end());
 
-  Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
-      segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
-      activeSrcCellIdxs, activeSynapseIdxs);
+    Cells4::_generateListsOfSynapsesToAdjustForAdaptSegment(
+        segment, synapsesSet, inactiveSrcCellIdxs, inactiveSynapseIdxs,
+        activeSrcCellIdxs, activeSynapseIdxs);
 
-  ASSERT_EQ(expectedSynapsesSet, synapsesSet);
-  ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
-  ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
-  ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
-  ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
+    ASSERT_EQ(expectedSynapsesSet, synapsesSet);
+    ASSERT_EQ(expectedInactiveSrcCellIdxs, inactiveSrcCellIdxs);
+    ASSERT_EQ(expectedInactiveSynapseIdxs, inactiveSynapseIdxs);
+    ASSERT_EQ(expectedActiveSrcCellIdxs, activeSrcCellIdxs);
+    ASSERT_EQ(expectedActiveSynapseIdxs, activeSynapseIdxs);
 }
 
 /**
  * Test operator '=='
  */
-TEST(Cells4Test, testEqualsOperator) {
-  Cells4 cells1(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, 42, true,
-                false);
-  Cells4 cells2(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, 42, true,
-                false);
-  ASSERT_TRUE(cells1 == cells2);
-  std::vector<Real> input1(10, 0.0);
-  input1[1] = 1.0;
-  input1[4] = 1.0;
-  input1[5] = 1.0;
-  input1[9] = 1.0;
-  std::vector<Real> input2(10, 0.0);
-  input2[0] = 1.0;
-  input2[2] = 1.0;
-  input2[5] = 1.0;
-  input2[6] = 1.0;
-  std::vector<Real> input3(10, 0.0);
-  input3[1] = 1.0;
-  input3[3] = 1.0;
-  input3[6] = 1.0;
-  input3[7] = 1.0;
-  std::vector<Real> input4(10, 0.0);
-  input4[2] = 1.0;
-  input4[4] = 1.0;
-  input4[7] = 1.0;
-  input4[8] = 1.0;
-  std::vector<Real> output(10 * 2);
-  for (UInt i = 0; i < 10; ++i) {
-    cells1.compute(&input1.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 != cells2);
-    cells2.compute(&input1.front(), &output.front(), true, true);
+TEST(Cells4Test, testEqualsOperator)
+{
+    Cells4 cells1(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, 42, true,
+                  false);
+    Cells4 cells2(10, 2, 1, 1, 1, 1, 0.5, 0.8, 1, 0.1, 0.1, 0, false, 42, true,
+                  false);
     ASSERT_TRUE(cells1 == cells2);
+    std::vector<Real> input1(10, 0.0);
+    input1[1] = 1.0;
+    input1[4] = 1.0;
+    input1[5] = 1.0;
+    input1[9] = 1.0;
+    std::vector<Real> input2(10, 0.0);
+    input2[0] = 1.0;
+    input2[2] = 1.0;
+    input2[5] = 1.0;
+    input2[6] = 1.0;
+    std::vector<Real> input3(10, 0.0);
+    input3[1] = 1.0;
+    input3[3] = 1.0;
+    input3[6] = 1.0;
+    input3[7] = 1.0;
+    std::vector<Real> input4(10, 0.0);
+    input4[2] = 1.0;
+    input4[4] = 1.0;
+    input4[7] = 1.0;
+    input4[8] = 1.0;
+    std::vector<Real> output(10 * 2);
+    for (UInt i = 0; i < 10; ++i)
+    {
+        cells1.compute(&input1.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 != cells2);
+        cells2.compute(&input1.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 == cells2);
 
-    cells1.compute(&input2.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 != cells2);
-    cells2.compute(&input2.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 == cells2);
+        cells1.compute(&input2.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 != cells2);
+        cells2.compute(&input2.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 == cells2);
 
-    cells1.compute(&input3.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 != cells2);
-    cells2.compute(&input3.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 == cells2);
+        cells1.compute(&input3.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 != cells2);
+        cells2.compute(&input3.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 == cells2);
 
-    cells1.compute(&input4.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 != cells2);
-    cells2.compute(&input4.front(), &output.front(), true, true);
-    ASSERT_TRUE(cells1 == cells2);
+        cells1.compute(&input4.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 != cells2);
+        cells2.compute(&input4.front(), &output.front(), true, true);
+        ASSERT_TRUE(cells1 == cells2);
 
-    cells1.reset();
-    ASSERT_TRUE(cells1 != cells2);
-    cells2.reset();
-    ASSERT_TRUE(cells1 == cells2);
-  }
+        cells1.reset();
+        ASSERT_TRUE(cells1 != cells2);
+        cells2.reset();
+        ASSERT_TRUE(cells1 == cells2);
+    }
 }
 
 } // namespace crucian

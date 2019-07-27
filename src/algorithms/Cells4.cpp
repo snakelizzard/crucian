@@ -35,6 +35,10 @@
 #include <crucian/utils/Log.hpp>
 #include <crucian/utils/Random.hpp>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+#pragma ide diagnostic ignored "EmptyDeclOrStmt"
+
 namespace crucian
 {
 
@@ -65,7 +69,7 @@ Cells4::Cells4(UInt nColumns, UInt nCellsPerCol, UInt activationThreshold,
                Real permConnected, Real permMax, Real permDec, Real permInc,
                Real globalDecay, bool doPooling, int seed, bool initFromCpp,
                bool checkSynapseConsistency)
-    : _rng(seed < 0 ? rand() : seed)
+    : _rng(seed < 0 ? random() : seed)
 {
     _version = VERSION;
     initialize(nColumns, nCellsPerCol, activationThreshold, minThreshold,
@@ -303,10 +307,10 @@ void Cells4::inferBacktrack(const std::vector<UInt> &activeColumns)
     // Let's go back in time and replay the recent inputs from start cells and
     // see if we can lock onto this current set of inputs that way. A detailed
     // description is in TP.py
-    bool inSequence = false;
+    bool inSequence;
     Real candConfidence = -1;
     Int candStartOffset = -1;
-    UInt startOffset = 0;
+    size_t startOffset = 0;
     for (; startOffset < _prevInfPatterns.size(); startOffset++)
     {
 
@@ -327,7 +331,7 @@ void Cells4::inferBacktrack(const std::vector<UInt> &activeColumns)
         // Play through starting from time t-startOffset
         inSequence = false;
         Real totalConfidence = 0;
-        for (UInt offset = startOffset; offset < _prevInfPatterns.size();
+        for (size_t offset = startOffset; offset < _prevInfPatterns.size();
              offset++)
         {
             // If we are about to set the active columns for the current time
@@ -573,7 +577,7 @@ UInt Cells4::learnBacktrack()
     // The current input is always at the end of self._prevInfPatterns (at
     // index -1), and is not a valid startingOffset to evaluate.
     UInt numPrevPatterns =
-        (_prevLrnPatterns.size() == 0 ? 0 : _prevLrnPatterns.size() - 1);
+        (_prevLrnPatterns.empty() ? 0 : _prevLrnPatterns.size() - 1);
     if (numPrevPatterns <= 0)
     {
         if (_verbosity >= 3)
@@ -1484,41 +1488,41 @@ void Cells4::compute(Real *input, Real *output, bool doInference,
         UInt64 eightStates = *(UInt64 *)(_infPredictedStateT.arrayPtr() + i);
         if (eightStates != 0)
         {
-            if ((eightStates & 0x00000000000000ff) != 0)
+            if ((eightStates & 0x00000000000000ffu) != 0)
                 output[i + 0] = 1.0;
-            if ((eightStates & 0x000000000000ff00) != 0)
+            if ((eightStates & 0x000000000000ff00u) != 0)
                 output[i + 1] = 1.0;
-            if ((eightStates & 0x0000000000ff0000) != 0)
+            if ((eightStates & 0x0000000000ff0000u) != 0)
                 output[i + 2] = 1.0;
-            if ((eightStates & 0x00000000ff000000) != 0)
+            if ((eightStates & 0x00000000ff000000u) != 0)
                 output[i + 3] = 1.0;
-            if ((eightStates & 0x000000ff00000000) != 0)
+            if ((eightStates & 0x000000ff00000000u) != 0)
                 output[i + 4] = 1.0;
-            if ((eightStates & 0x0000ff0000000000) != 0)
+            if ((eightStates & 0x0000ff0000000000u) != 0)
                 output[i + 5] = 1.0;
-            if ((eightStates & 0x00ff000000000000) != 0)
+            if ((eightStates & 0x00ff000000000000u) != 0)
                 output[i + 6] = 1.0;
-            if ((eightStates & 0xff00000000000000) != 0)
+            if ((eightStates & 0xff00000000000000u) != 0)
                 output[i + 7] = 1.0;
         }
         eightStates = *(UInt64 *)(_infActiveStateT.arrayPtr() + i);
         if (eightStates != 0)
         {
-            if ((eightStates & 0x00000000000000ff) != 0)
+            if ((eightStates & 0x00000000000000ffu) != 0)
                 output[i + 0] = 1.0;
-            if ((eightStates & 0x000000000000ff00) != 0)
+            if ((eightStates & 0x000000000000ff00u) != 0)
                 output[i + 1] = 1.0;
-            if ((eightStates & 0x0000000000ff0000) != 0)
+            if ((eightStates & 0x0000000000ff0000u) != 0)
                 output[i + 2] = 1.0;
-            if ((eightStates & 0x00000000ff000000) != 0)
+            if ((eightStates & 0x00000000ff000000u) != 0)
                 output[i + 3] = 1.0;
-            if ((eightStates & 0x000000ff00000000) != 0)
+            if ((eightStates & 0x000000ff00000000u) != 0)
                 output[i + 4] = 1.0;
-            if ((eightStates & 0x0000ff0000000000) != 0)
+            if ((eightStates & 0x0000ff0000000000u) != 0)
                 output[i + 5] = 1.0;
-            if ((eightStates & 0x00ff000000000000) != 0)
+            if ((eightStates & 0x00ff000000000000u) != 0)
                 output[i + 6] = 1.0;
-            if ((eightStates & 0xff00000000000000) != 0)
+            if ((eightStates & 0xff00000000000000u) != 0)
                 output[i + 7] = 1.0;
         }
     }
@@ -1581,7 +1585,8 @@ void Cells4::_updateAvgLearnedSeqLength(UInt prevSeqLength)
 /**
  * Go through the list of accumulated segment updates and process them.
  */
-void Cells4::processSegmentUpdates(Real *input, const CState &predictedState)
+void Cells4::processSegmentUpdates(const Real *input,
+                                   const CState &predictedState)
 {
     static std::vector<UInt> delUpdates;
     delUpdates.clear(); // purge residual data
@@ -1941,26 +1946,26 @@ void Cells4::adaptSegment(const SegmentUpdate &update)
         {
             synapses.push_back(InSynapse(update[i], _permInitial));
         }
-        UInt segIdx = _cells[cellIdx].getFreeSegment(
+        UInt si = _cells[cellIdx].getFreeSegment(
             synapses, _initSegFreq, update.isSequenceSegment(), _permConnected,
             _nLrnIterations);
 
         // Initialize the new segment's last active iteration and frequency
         // related counts
-        _cells[cellIdx][segIdx]._lastActiveIteration = _nLrnIterations;
-        _cells[cellIdx][segIdx]._positiveActivations = 1;
-        _cells[cellIdx][segIdx]._totalActivations = 1;
+        _cells[cellIdx][si]._lastActiveIteration = _nLrnIterations;
+        _cells[cellIdx][si]._positiveActivations = 1;
+        _cells[cellIdx][si]._totalActivations = 1;
 
         if (_verbosity >= 3)
         {
             std::cout << "New segment for cell ";
             printCell(cellIdx, _nCellsPerCol);
             std::cout << "cellIdx = " << cellIdx << ", ";
-            _cells[cellIdx][segIdx].print(std::cout, _nCellsPerCol);
+            _cells[cellIdx][si].print(std::cout, _nCellsPerCol);
             std::cout << std::endl;
         }
 
-        addOutSynapses(cellIdx, segIdx, update.begin(), update.end());
+        addOutSynapses(cellIdx, si, update.begin(), update.end());
     }
 
     if (_checkSynapseConsistency)
@@ -1975,7 +1980,6 @@ void Cells4::adaptSegment(const SegmentUpdate &update)
 void Cells4::_rebalance()
 {
     std::cout << "Rebalancing\n";
-    _nIterationsSinceRebalance = _nLrnIterations;
 
     for (auto &cell : _cells)
     {
@@ -2198,7 +2202,7 @@ void Cells4::save(std::ostream &outStream) const
 /**
  * Save the state to the given file
  */
-void Cells4::saveToFile(std::string filePath) const
+void Cells4::saveToFile(const std::string &filePath) const
 {
     std::ofstream outStream(filePath.c_str(),
                             std::ios_base::out | std::ios_base::binary);
@@ -2217,7 +2221,7 @@ void Cells4::saveToFile(std::string filePath) const
 /**
  * Load the state from the given file
  */
-void Cells4::loadFromFile(std::string filePath)
+void Cells4::loadFromFile(const std::string &filePath)
 {
     std::ifstream outStream(filePath.c_str(),
                             std::ios_base::in | std::ios_base::binary);
@@ -2231,7 +2235,7 @@ void Cells4::loadFromFile(std::string filePath)
  */
 void Cells4::load(std::istream &inStream)
 {
-    std::string tag = "";
+    std::string tag;
     inStream >> tag;
     // If the checkpoint starts with "cellsV4" then it is the original,
     // otherwise the version is a UInt.
@@ -2592,9 +2596,6 @@ void Cells4::initialize(UInt nColumns, UInt nCellsPerCol,
     allocateState(_colConfidenceCandidate, _nColumns);
     allocateState(_tmpInputBuffer, _nColumns);
 
-    // Internal timings and states used for optimization
-    _nIterationsSinceRebalance = 0;
-
     _checkSynapseConsistency = checkSynapseConsistency;
     if (_checkSynapseConsistency)
         std::cout
@@ -2696,7 +2697,8 @@ std::pair<UInt, UInt> Cells4::getBestMatchingCellT(UInt colIdx,
         NTA_ASSERT(colIdx < nColumns());
     }
 
-    int start = colIdx * _nCellsPerCol, end = start + _nCellsPerCol;
+    int start = static_cast<int>(colIdx * _nCellsPerCol),
+        end = static_cast<int>(start + _nCellsPerCol);
     UInt best_cell = UInt(-1);
     UInt best_seg = UInt(-1);
     UInt best_activity = minThreshold > 0 ? minThreshold - 1 : 0;
@@ -2958,7 +2960,7 @@ std::pair<UInt, UInt> Cells4::trimSegments(Real minPermanence, UInt minNumSyns)
 // Debugging helpers
 //----------------------------------------------------------------------
 
-void Cells4::printState(UInt *state)
+void Cells4::printState(const UInt *state)
 {
     for (UInt i = 0; i != nCellsPerCol(); ++i)
     {
@@ -2976,73 +2978,68 @@ void Cells4::printState(UInt *state)
 void Cells4::printStates()
 {
     // Print out active state for debugging
-    if (true)
+    std::cout << "TP10X: Active  T-1      \t T\n";
+    for (UInt i = 0; i != nCellsPerCol(); ++i)
     {
-        std::cout << "TP10X: Active  T-1      \t T\n";
-        for (UInt i = 0; i != nCellsPerCol(); ++i)
+        for (UInt c = 0; c != nColumns(); ++c)
         {
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_infActiveStateT1.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << "  ";
-
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_infActiveStateT.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << std::endl;
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_infActiveStateT1.isSet(cellIdx) ? 1 : 0);
         }
+        std::cout << "  ";
 
-        std::cout << "TP10X: Predicted T-1      \t T\n";
-        for (UInt i = 0; i != nCellsPerCol(); ++i)
+        for (UInt c = 0; c != nColumns(); ++c)
         {
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_infPredictedStateT1.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << "  ";
-
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_infPredictedStateT.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << std::endl;
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_infActiveStateT.isSet(cellIdx) ? 1 : 0);
         }
-
-        std::cout << "TP10X: Learn  T-1      \t\t T\n";
-        for (UInt i = 0; i != nCellsPerCol(); ++i)
+        std::cout << std::endl;
+    }
+    std::cout << "TP10X: Predicted T-1      \t T\n";
+    for (UInt i = 0; i != nCellsPerCol(); ++i)
+    {
+        for (UInt c = 0; c != nColumns(); ++c)
         {
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_learnActiveStateT1.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << "  ";
-
-            for (UInt c = 0; c != nColumns(); ++c)
-            {
-                if (c > 0 && c % 10 == 0)
-                    std::cout << ' ';
-                UInt cellIdx = c * nCellsPerCol() + i;
-                std::cout << (_learnActiveStateT.isSet(cellIdx) ? 1 : 0);
-            }
-            std::cout << std::endl;
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_infPredictedStateT1.isSet(cellIdx) ? 1 : 0);
         }
+        std::cout << "  ";
+
+        for (UInt c = 0; c != nColumns(); ++c)
+        {
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_infPredictedStateT.isSet(cellIdx) ? 1 : 0);
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "TP10X: Learn  T-1      \t\t T\n";
+    for (UInt i = 0; i != nCellsPerCol(); ++i)
+    {
+        for (UInt c = 0; c != nColumns(); ++c)
+        {
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_learnActiveStateT1.isSet(cellIdx) ? 1 : 0);
+        }
+        std::cout << "  ";
+
+        for (UInt c = 0; c != nColumns(); ++c)
+        {
+            if (c > 0 && c % 10 == 0)
+                std::cout << ' ';
+            UInt cellIdx = c * nCellsPerCol() + i;
+            std::cout << (_learnActiveStateT.isSet(cellIdx) ? 1 : 0);
+        }
+        std::cout << std::endl;
     }
 }
 
@@ -3059,7 +3056,7 @@ void Cells4::dumpSegmentUpdates()
 // Print input pattern queue
 void Cells4::dumpPrevPatterns(std::deque<std::vector<UInt>> &patterns)
 {
-    for (UInt p = 0; p < patterns.size(); p++)
+    for (size_t p = 0; p < patterns.size(); p++)
     {
         std::cout << "Pattern " << p << ": ";
         for (auto &elem : patterns[p])
@@ -3264,9 +3261,9 @@ void Cells4::computeForwardPropagation(CState &state)
     for (i = 0; i < multipleOf8; i += 8)
     {
         UInt64 eightStates = *(UInt64 *)(state.arrayPtr() + i);
-        for (int k = 0; eightStates != 0 && k < 8; eightStates >>= 8, k++)
+        for (int k = 0; eightStates != 0 && k < 8; eightStates >>= 8u, k++)
         {
-            if ((eightStates & 0xff) != 0)
+            if ((eightStates & 0xffu) != 0)
             {
                 std::vector<OutSynapse> &os = _outSynapses[i + k];
                 for (UInt j = 0; j != os.size(); ++j)
@@ -3415,3 +3412,5 @@ void Cells4::resetTimers()
 }
 
 } // namespace crucian
+
+#pragma clang diagnostic pop
