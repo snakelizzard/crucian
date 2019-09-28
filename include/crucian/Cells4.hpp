@@ -357,7 +357,7 @@ private:
 
     Real *_cellConfidenceCandidate;
     Real *_colConfidenceCandidate;
-    Real *_tmpInputBuffer;
+    std::vector<UInt> _tmpInputBuffer;
 #if SOME_STATES_NOT_INDEXED
     CState _infActiveStateCandidate;
     CState _infPredictedStateCandidate;
@@ -397,9 +397,9 @@ public:
     explicit Cells4(UInt nColumns = 0, UInt nCellsPerCol = 0,
            UInt activationThreshold = 1, UInt minThreshold = 1,
            UInt newSynapseCount = 1, UInt segUpdateValidDuration = 1,
-           Real permInitial = .5, Real permConnected = .8, Real permMax = 1,
-           Real permDec = .1, Real permInc = .1, Real globalDecay = 0,
-           bool doPooling = false, int seed = -1, bool initFromCpp = false,
+           Real permInitial = .5f, Real permConnected = .8f, Real permMax = 1,
+           Real permDec = .1f, Real permInc = .1f, Real globalDecay = 0,
+           bool doPooling = false, int seed = -1,
            bool checkSynapseConsistency = false);
 
     //----------------------------------------------------------------------
@@ -409,10 +409,9 @@ public:
     void initialize(UInt nColumns = 0, UInt nCellsPerCol = 0,
                     UInt activationThreshold = 1, UInt minThreshold = 1,
                     UInt newSynapseCount = 1, UInt segUpdateValidDuration = 1,
-                    Real permInitial = .5, Real permConnected = .8,
-                    Real permMax = 1, Real permDec = .1, Real permInc = .1,
-                    Real globalDecay = .1, bool doPooling = false,
-                    bool initFromCpp = false,
+                    Real permInitial = .5f, Real permConnected = .8f,
+                    Real permMax = 1, Real permDec = .1f, Real permInc = .1f,
+                    Real globalDecay = .1f, bool doPooling = false,
                     bool checkSynapseConsistency = false);
 
     //----------------------------------------------------------------------
@@ -428,70 +427,6 @@ public:
     //----------------------------------------------------------------------
     UInt version() const { return _version; }
 
-    //----------------------------------------------------------------------
-    /**
-     * Call this when allocating numpy arrays, to have pointers use those
-     * arrays.
-     */
-    void setStatePointers(Byte *infActiveT, Byte *infActiveT1, Byte *infPredT,
-                          Byte *infPredT1, Real *colConfidenceT,
-                          Real *colConfidenceT1, Real *cellConfidenceT,
-                          Real *cellConfidenceT1)
-    {
-        if (_ownsMemory)
-        {
-            delete[] _cellConfidenceT;
-            delete[] _cellConfidenceT1;
-            delete[] _colConfidenceT;
-            delete[] _colConfidenceT1;
-        }
-
-        _ownsMemory = false;
-
-        _infActiveStateT.usePythonMemory(infActiveT, _nCells);
-        _infActiveStateT1.usePythonMemory(infActiveT1, _nCells);
-        _infPredictedStateT.usePythonMemory(infPredT, _nCells);
-        _infPredictedStateT1.usePythonMemory(infPredT1, _nCells);
-        _cellConfidenceT = cellConfidenceT;
-        _cellConfidenceT1 = cellConfidenceT1;
-        _colConfidenceT = colConfidenceT;
-        _colConfidenceT1 = colConfidenceT1;
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * Use this when C++ allocates memory for the arrays, and Python needs to
-     * look at them.
-     */
-    void getStatePointers(Byte *&activeT, Byte *&activeT1, Byte *&predT,
-                          Byte *&predT1, Real *&colConfidenceT,
-                          Real *&colConfidenceT1, Real *&confidenceT,
-                          Real *&confidenceT1) const
-    {
-        NTA_ASSERT(_ownsMemory);
-
-        activeT = _infActiveStateT.arrayPtr();
-        activeT1 = _infActiveStateT1.arrayPtr();
-        predT = _infPredictedStateT.arrayPtr();
-        predT1 = _infPredictedStateT1.arrayPtr();
-        confidenceT = _cellConfidenceT;
-        confidenceT1 = _cellConfidenceT1;
-        colConfidenceT = _colConfidenceT;
-        colConfidenceT1 = _colConfidenceT1;
-    }
-
-    //-----------------------------------------------------------------------
-    /**
-     * Use this when Python needs to look up the learn states.
-     */
-    void getLearnStatePointers(Byte *&activeT, Byte *&activeT1, Byte *&predT,
-                               Byte *&predT1) const
-    {
-        activeT = _learnActiveStateT.arrayPtr();
-        activeT1 = _learnActiveStateT1.arrayPtr();
-        predT = _learnPredictedStateT.arrayPtr();
-        predT1 = _learnPredictedStateT1.arrayPtr();
-    }
 
     //----------------------------------------------------------------------
     /**
@@ -535,7 +470,7 @@ public:
         if (maxSegs != -1)
         {
             NTA_CHECK(maxSegs > 0);
-            NTA_CHECK(_globalDecay == 0.0);
+            NTA_CHECK(_globalDecay == 0.0f);
             NTA_CHECK(_maxAge == 0);
         }
         _maxSegmentsPerCell = maxSegs;
@@ -546,7 +481,7 @@ public:
         if (maxSyns != -1)
         {
             NTA_CHECK(maxSyns > 0);
-            NTA_CHECK(_globalDecay == 0.0);
+            NTA_CHECK(_globalDecay == 0.0f);
             NTA_CHECK(_maxAge == 0);
         }
         _maxSynapsesPerSegment = maxSyns;
@@ -624,7 +559,7 @@ public:
      * doInference:     if true, inference output will be computed
      * doLearning:      if true, learning will occur
      */
-    void compute(Real *input, Real *output, bool doInference, bool doLearning);
+    void compute(const std::vector<UInt>& input, std::vector<UInt>& output, bool doInference, bool doLearning);
 
     //-----------------------------------------------------------------------
     /**
@@ -762,8 +697,7 @@ public:
      *
      * activeColumns:   Indices of active columns
      */
-    void updateLearningState(const std::vector<UInt> &activeColumns,
-                             Real *input);
+    void updateLearningState(const std::vector<UInt> &activeColumns);
 
     //-----------------------------------------------------------------------
     /**
@@ -936,7 +870,7 @@ public:
      * each cell
      *
      */
-    void processSegmentUpdates(const Real *input, const CState &predictedState);
+    void processSegmentUpdates(const std::vector<UInt>& input, const CState &predictedState);
 
     //----------------------------------------------------------------------
     /**
@@ -1060,7 +994,7 @@ public:
         // TODO: this won't scale!
         std::stringstream tmp;
         this->save(tmp);
-        return tmp.str().size();
+        return static_cast<UInt> (tmp.str().size());
     }
 
     //----------------------------------------------------------------------

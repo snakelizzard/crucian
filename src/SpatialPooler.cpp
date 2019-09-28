@@ -65,6 +65,7 @@ public:
         : // TODO param nrows is unused
           ncols_(ncols)
     {
+        CRU_UNUSED(nrows);
     }
     UInt toRow(UInt index) { return index / ncols_; };
     UInt toCol(UInt index) { return index % ncols_; };

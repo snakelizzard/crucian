@@ -59,8 +59,8 @@ inline bool INVARIANT(bool cond, const char *msg)
         return false;
     }
 #else
-    CRU_NUSED(cond);
-    CRU_NUSED(msg);
+    CRU_UNUSED(cond);
+    CRU_UNUSED(msg);
 #endif
     return true;
 }

@@ -80,8 +80,6 @@ public:
                   UInt dutyCyclePeriod = 1000, Real boostStrength = 0.0,
                   Int seed = 1, UInt spVerbosity = 0, bool wrapAround = true);
 
-    virtual ~SpatialPooler() = default;
-
     /**
     Initialize the spatial pooler using the given parameters.
 
@@ -244,7 +242,7 @@ public:
           multi-dimensional, activeVector represents a flattened array
           of outputs.
      */
-    virtual void compute(UInt inputVector[], bool learn, UInt activeVector[]);
+    void compute(UInt inputVector[], bool learn, UInt activeVector[]);
 
     /**
      Removes the set of columns who have never been active from the set
@@ -263,7 +261,7 @@ public:
 
      * @returns Integer version number.
      */
-    virtual UInt version() const { return version_; };
+    UInt version() const { return version_; };
 
     /**
     Save (serialize) the current state of the spatial pooler to the
@@ -271,7 +269,7 @@ public:
 
     @param fd A valid file descriptor.
      */
-    virtual void save(std::ostream &outStream) const;
+    void save(std::ostream &outStream) const;
 
     /**
     Load (deserialize) and initialize the spatial pooler from the
@@ -279,7 +277,7 @@ public:
 
     @param inStream A valid istream.
      */
-    virtual void load(std::istream &inStream);
+    void load(std::istream &inStream);
 
     /**
     Returns the number of bytes that a save operation would result in.
@@ -288,7 +286,7 @@ public:
 
     @returns Integer number of bytes
      */
-    virtual UInt persistentSize() const;
+    UInt persistentSize() const;
 
     /**
     Returns the dimensions of the columns in the region.

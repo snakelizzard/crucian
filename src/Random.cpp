@@ -46,7 +46,7 @@ const UInt64 Random::MAX64 = std::numeric_limits<UInt64>::max();
 static NTA_UInt64 badSeeder()
 {
     NTA_THROW << "Logic error in initialization of Random subsystem.";
-    // return 0;
+    return 0;
 }
 
 /**

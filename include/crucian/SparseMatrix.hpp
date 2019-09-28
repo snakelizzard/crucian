@@ -196,6 +196,9 @@ protected:
         NTA_ASSERT(row >= 0 && row < nRows())
             << "SparseMatrix " << where << ": Invalid row index: " << row
             << " - Should be >= 0 and < " << nRows();
+#else
+        CRU_UNUSED(row);
+        CRU_UNUSED(where);
 #endif
     }
 
