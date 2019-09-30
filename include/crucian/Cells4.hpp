@@ -559,7 +559,13 @@ public:
      * doInference:     if true, inference output will be computed
      * doLearning:      if true, learning will occur
      */
-    void compute(const std::vector<UInt>& input, std::vector<UInt>& output, bool doInference, bool doLearning);
+    void compute(const std::vector<UInt>& input, bool doInference, bool doLearning);
+
+    //-----------------------------------------------------------------------
+    /**
+     * direct access to predicted state
+     */
+    const CState& predictedState() const;
 
     //-----------------------------------------------------------------------
     /**

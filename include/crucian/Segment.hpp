@@ -91,18 +91,9 @@ class CState
 public:
     static const UInt VERSION = 1;
 
-    CState()
-    {
-        _nCells = 0;
-        _pData = nullptr;
-        _fMemoryAllocatedByPython = false;
-        _version = VERSION;
-    }
-    ~CState()
-    {
-        if (!_fMemoryAllocatedByPython && _pData != nullptr)
-            delete[] _pData;
-    }
+    CState();
+    virtual ~CState();
+
     CState &operator=(const CState &o)
     {
         NTA_ASSERT(_nCells == o._nCells); // _nCells should be static, since it
@@ -110,10 +101,10 @@ public:
         memcpy(_pData, o._pData, _nCells);
         return *this;
     }
+
     bool operator==(const CState &other) const
     {
-        if (_version != other._version || _nCells != other._nCells ||
-            _fMemoryAllocatedByPython != other._fMemoryAllocatedByPython)
+        if (_version != other._version || _nCells != other._nCells)
         {
             return false;
         }
@@ -123,32 +114,13 @@ public:
         }
         return _pData == other._pData;
     }
+
     inline bool operator!=(const CState &other) const
     {
         return !operator==(other);
     }
-    bool initialize(const UInt nCells)
-    {
-        if (_nCells != 0) // if already initialized
-            return false; // don't do it again
-        if (nCells == 0)  // if a bogus value
-            return false; // bail out
-        _nCells = nCells;
-        _pData = new Byte[_nCells];
-        memset(_pData, 0, _nCells);
-        return true;
-    }
-    void usePythonMemory(Byte *pData, const UInt nCells)
-    {
-        // delete a prior allocation
-        if (!_fMemoryAllocatedByPython && _pData != nullptr)
-            delete[] _pData;
 
-        // use the supplied memory and remember its size
-        _nCells = nCells;
-        _pData = pData;
-        _fMemoryAllocatedByPython = true;
-    }
+    bool initialize(const UInt nCells);
     bool isSet(const UInt cellIdx) const { return _pData[cellIdx] != 0; }
     virtual void set(const UInt cellIdx) { _pData[cellIdx] = 1; }
     virtual void resetAll() { memset(_pData, 0, _nCells); }
@@ -161,38 +133,14 @@ public:
         return _pData;
     }
 
-    virtual void print(std::ostream &outStream) const
-    {
-        outStream << version() << " " << _fMemoryAllocatedByPython << " "
-                  << _nCells << std::endl;
-        for (UInt i = 0; i < _nCells; ++i)
-        {
-            outStream << _pData[i] << " ";
-        }
-        outStream << std::endl << "end" << std::endl;
-    }
-
-    virtual void load(std::istream &inStream)
-    {
-        UInt version;
-        inStream >> version;
-        NTA_CHECK(version == 1);
-        inStream >> _fMemoryAllocatedByPython >> _nCells;
-        for (UInt i = 0; i < _nCells; ++i)
-        {
-            inStream >> _pData[i];
-        }
-        std::string token;
-        inStream >> token;
-        NTA_CHECK(token == "end");
-    }
-    virtual UInt version() const { return _version; }
+    virtual void print(std::ostream &outStream) const;
+    virtual void load(std::istream &inStream);
+    UInt version() const;
 
 protected:
     UInt _version;
     UInt _nCells; // should be static, since same size for all CStates
     Byte *_pData; // protected in C++, but exposed to the Python code
-    bool _fMemoryAllocatedByPython;
 };
 /**
  * Add an index to CState so that we can find all On cells without
@@ -201,14 +149,7 @@ protected:
 class CStateIndexed : public CState
 {
 public:
-    static const UInt VERSION = 1;
-
-    CStateIndexed() : CState()
-    {
-        _version = VERSION;
-        _countOn = 0;
-        _isSorted = true;
-    }
+    CStateIndexed();
 
     CStateIndexed &operator=(const CStateIndexed &o)
     {
@@ -231,8 +172,7 @@ public:
     }
     bool operator==(const CStateIndexed &other) const
     {
-        if (_version != other._version || _countOn != other._countOn ||
-            _isSorted != other._isSorted)
+        if (_countOn != other._countOn || _isSorted != other._isSorted)
         {
             return false;
         }
@@ -280,50 +220,11 @@ public:
         _countOn = 0;
         _isSorted = true;
     }
-    void print(std::ostream &outStream) const override
-    {
-        outStream << version() << " " << _fMemoryAllocatedByPython << " "
-                  << _nCells << std::endl;
-        for (UInt i = 0; i < _nCells; ++i)
-        {
-            outStream << _pData[i] << " ";
-        }
-        outStream << _countOn << " ";
-        outStream << _cellsOn.size() << " ";
-        for (auto &elem : _cellsOn)
-        {
-            outStream << elem << " ";
-        }
-        outStream << "end" << std::endl;
-    }
-    void load(std::istream &inStream) override
-    {
-        UInt version;
-        inStream >> version;
-        NTA_CHECK(version == 1);
-        inStream >> _fMemoryAllocatedByPython >> _nCells;
-        for (UInt i = 0; i < _nCells; ++i)
-        {
-            inStream >> _pData[i];
-        }
-        inStream >> _countOn;
-        UInt nCellsOn;
-        inStream >> nCellsOn;
-        UInt v;
-        _cellsOn.clear();
-        for (UInt i = 0; i < nCellsOn; ++i)
-        {
-            inStream >> v;
-            _cellsOn.push_back(v);
-        }
-        std::string token;
-        inStream >> token;
-        NTA_CHECK(token == "end");
-    }
-    UInt version() const override { return _version; }
+
+    void print(std::ostream &outStream) const override;
+    void load(std::istream &inStream) override;
 
 private:
-    UInt _version;
     std::vector<UInt> _cellsOn;
     UInt _countOn;  // how many cells are On
     bool _isSorted; // avoid unnecessary sorting
@@ -336,9 +237,9 @@ const UInt _dutyCycleTiers[] = {0,     100,   320,    1000,  3200,
 
 // This is the alpha used in each tier. dutyCycleAlphas[n] is used when
 /// iterationIdx > dutyCycleTiers[n]
-const Real _dutyCycleAlphas[] = {0.0,      0.0032,    0.0010,
-                                 0.00032,  0.00010,   0.000032,
-                                 0.000010, 0.0000032, 0.0000010};
+const Real _dutyCycleAlphas[] = {0.0f,      0.0032f,    0.0010f,
+                                 0.00032f,  0.00010f,   0.000032f,
+                                 0.000010f, 0.0000032f, 0.0000010f};
 
 //-----------------------------------------------------------------------
 // Forward declarations
@@ -414,9 +315,9 @@ public:
     {
         static std::vector<UInt> indices;
         static UInt highWaterSize = 0;
-        if (highWaterSize < _synapses.size())
+        if (highWaterSize < static_cast<UInt> (_synapses.size()))
         {
-            highWaterSize = _synapses.size();
+            highWaterSize = static_cast<UInt> (_synapses.size());
             indices.reserve(highWaterSize);
         }
         indices.clear(); // purge residual data
@@ -464,7 +365,7 @@ public:
      * Various accessors
      */
     inline bool empty() const { return _synapses.empty(); }
-    inline UInt size() const { return _synapses.size(); }
+    inline UInt size() const { return static_cast<UInt> (_synapses.size()); }
     inline bool isSequenceSegment() const { return _seqSegFlag; }
     inline Real &frequency() { return _frequency; }
     inline Real getFrequency() const { return _frequency; }
@@ -486,10 +387,10 @@ public:
      */
     inline bool has(UInt srcCellIdx) const
     {
-        NTA_ASSERT(srcCellIdx != (UInt)-1);
+        NTA_ASSERT(srcCellIdx != static_cast<UInt> (-1));
 
         UInt lo = 0;
-        UInt hi = _synapses.size();
+        UInt hi = static_cast<UInt> (_synapses.size());
         while (lo < hi)
         {
             const UInt test = (lo + hi) / 2;
@@ -697,10 +598,10 @@ public:
 
                 setPermanence(i1, newPerm);
 
-                int wasConnected = (int)(oldPerm >= permConnected);
-                int isConnected = (int)(newPerm >= permConnected);
+                int wasConnected = static_cast<int>(oldPerm >= permConnected);
+                int isConnected = static_cast<int>(newPerm >= permConnected);
 
-                _nConnected += isConnected - wasConnected;
+                _nConnected += static_cast<UInt> (isConnected - wasConnected);
 
                 ++i1;
                 ++i2;

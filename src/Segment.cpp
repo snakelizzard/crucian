@@ -494,4 +494,106 @@ std::ostream &operator<<(std::ostream &outStream, const CStateIndexed &cstate)
     return outStream;
 }
 
+CState::CState()
+{
+    _nCells = 0;
+    _pData = nullptr;
+    _version = VERSION;
+}
+
+CState::~CState()
+{
+    if (_pData != nullptr)
+        delete[] _pData;
+}
+
+bool CState::initialize(const UInt nCells)
+{
+    if (_nCells != 0) // if already initialized
+        return false; // don't do it again
+    if (nCells == 0)  // if a bogus value
+        return false; // bail out
+    _nCells = nCells;
+    _pData = new Byte[_nCells];
+    memset(_pData, 0, _nCells);
+    return true;
+}
+
+void CState::print(std::ostream& outStream) const
+{
+    outStream << version() << " " << _nCells << std::endl;
+    for (UInt i = 0; i < _nCells; ++i)
+    {
+        outStream << _pData[i] << " ";
+    }
+    outStream << std::endl << "end" << std::endl;
+}
+
+void CState::load(std::istream& inStream)
+{
+    UInt version;
+    inStream >> version;
+    NTA_CHECK(version == 1);
+    inStream >> _nCells;
+    for (UInt i = 0; i < _nCells; ++i)
+    {
+        inStream >> _pData[i];
+    }
+    std::string token;
+    inStream >> token;
+    NTA_CHECK(token == "end");
+}
+
+UInt CState::version() const
+{
+    return _version;
+}
+
+CStateIndexed::CStateIndexed() : CState()
+{
+    _countOn = 0;
+    _isSorted = true;
+}
+
+void CStateIndexed::print(std::ostream& outStream) const
+{
+    outStream << version() << " " << _nCells << std::endl;
+    for (UInt i = 0; i < _nCells; ++i)
+    {
+        outStream << _pData[i] << " ";
+    }
+    outStream << _countOn << " ";
+    outStream << _cellsOn.size() << " ";
+    for (auto &elem : _cellsOn)
+    {
+        outStream << elem << " ";
+    }
+    outStream << "end" << std::endl;
+}
+
+void CStateIndexed::load(std::istream& inStream)
+{
+    UInt version;
+    inStream >> version;
+    NTA_CHECK(version == VERSION);
+    inStream >> _nCells;
+    for (UInt i = 0; i < _nCells; ++i)
+    {
+        inStream >> _pData[i];
+    }
+    inStream >> _countOn;
+    UInt nCellsOn;
+    inStream >> nCellsOn;
+    UInt v;
+    _cellsOn.clear();
+    for (UInt i = 0; i < nCellsOn; ++i)
+    {
+        inStream >> v;
+        _cellsOn.push_back(v);
+    }
+    std::string token;
+    inStream >> token;
+    NTA_CHECK(token == "end");
+}
+
 } // namespace crucian

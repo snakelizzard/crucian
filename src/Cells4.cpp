@@ -1320,8 +1320,7 @@ bool Cells4::inferPhase2()
 /**
  * Main compute routine, called for both learning and inference.
  */
-void Cells4::compute(const std::vector<UInt>& input, std::vector<UInt>& output, bool doInference,
-                     bool doLearning)
+void Cells4::compute(const std::vector<UInt>& input, bool doInference, bool doLearning)
 {
     TIMER(computeTimer.start());
     NTA_CHECK(doInference || doLearning);
@@ -1402,146 +1401,17 @@ void Cells4::compute(const std::vector<UInt>& input, std::vector<UInt>& output, 
 
     _resetCalled = false;
 
-    // compute output
-    // If the state arrays are not aligned, performance will suffer.
-    // An alternative design specifies _infPredictedStateT and _infActiveStateT
-    // as CStateIndexed objects instead of CState.  That will require us also
-    // to define 8 other objects as CStateIndexed,
-    //
-    //   _infActiveStateT1
-    //   _infPredictedStateT
-    //   _infPredictedStateT1
-    //   _learnPredictedStateT1
-    //   _infActiveStateCandidate
-    //   _infPredictedStateCandidate
-    //   _infActiveBackup
-    //   _infPredictedBackup
-    //
-    // which will add some unnecessary overhead.  More importantly, we will
-    // need to define TP10X2.predict() to keep TPTest.py from calling the
-    // base function in TP.py, which modifies various states, thereby
-    // invalidating our indexes.
-    memset(output.data(), 0, _nCells * sizeof(output[0])); // most output is zero
-#if SOME_STATES_NOT_INDEXED
-#if defined(NTA_ARCH_32)
-    const UInt multipleOf4 = 4 * (_nCells / 4);
-    UInt i;
-    for (i = 0; i < multipleOf4; i += 4)
-    {
-        UInt32 fourStates = *(UInt32 *)(_infPredictedStateT.arrayPtr() + i);
-        if (fourStates != 0)
-        {
-            if ((fourStates & 0x000000ff) != 0)
-                output[i + 0] = 1;
-            if ((fourStates & 0x0000ff00) != 0)
-                output[i + 1] = 1;
-            if ((fourStates & 0x00ff0000) != 0)
-                output[i + 2] = 1;
-            if ((fourStates & 0xff000000) != 0)
-                output[i + 3] = 1;
-        }
-        fourStates = *(UInt32 *)(_infActiveStateT.arrayPtr() + i);
-        if (fourStates != 0)
-        {
-            if ((fourStates & 0x000000ff) != 0)
-                output[i + 0] = 1;
-            if ((fourStates & 0x0000ff00) != 0)
-                output[i + 1] = 1;
-            if ((fourStates & 0x00ff0000) != 0)
-                output[i + 2] = 1;
-            if ((fourStates & 0xff000000) != 0)
-                output[i + 3] = 1;
-        }
-    }
-
-    // process the tail if (_nCells % 4) != 0
-    for (i = multipleOf4; i < _nCells; i++)
-    {
-        if (_infPredictedStateT.isSet(i))
-        {
-            output[i] = 1;
-        }
-        else if (_infActiveStateT.isSet(i))
-        {
-            output[i] = 1;
-        }
-    }
-#else
-    const UInt multipleOf8 = 8 * (_nCells / 8);
-    UInt i;
-    for (i = 0; i < multipleOf8; i += 8)
-    {
-        UInt64 eightStates = *(UInt64 *)(_infPredictedStateT.arrayPtr() + i);
-        if (eightStates != 0)
-        {
-            if ((eightStates & 0x00000000000000ffu) != 0)
-                output[i + 0] = 1;
-            if ((eightStates & 0x000000000000ff00u) != 0)
-                output[i + 1] = 1;
-            if ((eightStates & 0x0000000000ff0000u) != 0)
-                output[i + 2] = 1;
-            if ((eightStates & 0x00000000ff000000u) != 0)
-                output[i + 3] = 1;
-            if ((eightStates & 0x000000ff00000000u) != 0)
-                output[i + 4] = 1;
-            if ((eightStates & 0x0000ff0000000000u) != 0)
-                output[i + 5] = 1;
-            if ((eightStates & 0x00ff000000000000u) != 0)
-                output[i + 6] = 1;
-            if ((eightStates & 0xff00000000000000u) != 0)
-                output[i + 7] = 1;
-        }
-        eightStates = *(UInt64 *)(_infActiveStateT.arrayPtr() + i);
-        if (eightStates != 0)
-        {
-            if ((eightStates & 0x00000000000000ffu) != 0)
-                output[i + 0] = 1;
-            if ((eightStates & 0x000000000000ff00u) != 0)
-                output[i + 1] = 1;
-            if ((eightStates & 0x0000000000ff0000u) != 0)
-                output[i + 2] = 1;
-            if ((eightStates & 0x00000000ff000000u) != 0)
-                output[i + 3] = 1;
-            if ((eightStates & 0x000000ff00000000u) != 0)
-                output[i + 4] = 1;
-            if ((eightStates & 0x0000ff0000000000u) != 0)
-                output[i + 5] = 1;
-            if ((eightStates & 0x00ff000000000000u) != 0)
-                output[i + 6] = 1;
-            if ((eightStates & 0xff00000000000000u) != 0)
-                output[i + 7] = 1;
-        }
-    }
-
-    // process the tail if (_nCells % 8) != 0
-    for (i = multipleOf8; i < _nCells; i++)
-    {
-        if (_infPredictedStateT.isSet(i))
-        {
-            output[i] = 1;
-        }
-        else if (_infActiveStateT.isSet(i))
-        {
-            output[i] = 1;
-        }
-    }
-#endif // NTA_ARCH_32/64
-#else  // some states indexed
-    static std::vector<UInt> cellsOn;
-    std::vector<UInt>::iterator iterOn;
-    cellsOn = _infPredictedStateT.cellsOn();
-    for (iterOn = cellsOn.begin(); iterOn != cellsOn.end(); ++iterOn)
-        output[*iterOn] = 1;
-    cellsOn = _infActiveStateT.cellsOn();
-    for (iterOn = cellsOn.begin(); iterOn != cellsOn.end(); ++iterOn)
-        output[*iterOn] = 1;
-#endif // SOME_STATES_NOT_INDEXED
-
     if (_checkSynapseConsistency)
     {
         NTA_CHECK(invariants(true));
     }
     TIMER(computeTimer.stop());
+}
+
+//--------------------------------------------------------------------------------
+const CState& Cells4::predictedState() const
+{
+    return _infPredictedStateT;
 }
 
 //--------------------------------------------------------------------------------
